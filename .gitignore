@@ -1,0 +1,109 @@
+# -----------------------------
+# OS / editor noise
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/*.log
+.history/
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Python tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# Build / packaging artifacts
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# -----------------------------
+# uv
+# -----------------------------
+.python-version
+
+# -----------------------------
+# Logs / temp
+# -----------------------------
+*.log
+tmp/
+temp/
+
+# -----------------------------
+# Devcontainer / Docker
+# -----------------------------
+.devcontainer/.dart_tool/
+docker-data/
+*.pid
+
+# -----------------------------
+# Local database / runtime files
+# -----------------------------
+*.sqlite3
+*.db
+
+# -----------------------------
+# Flutter / Dart
+# -----------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+
+# Flutter generated platform/tooling dirs that are usually not committed
+client/.android/
+client/.ios/
+client/.macos/
+client/.linux/
+client/.windows/
+
+# Dart / Flutter coverage
+coverage/
+
+# -----------------------------
+# Node / web tooling, if added later
+# -----------------------------
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.next/
+.nuxt/
+.parcel-cache/
+
+# -----------------------------
+# Project-specific generated files
+# -----------------------------
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

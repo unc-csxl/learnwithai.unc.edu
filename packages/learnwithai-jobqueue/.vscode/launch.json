@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Worker: Dramatiq",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "dramatiq",
+      "args": [
+        "learnwithai_jobqueue.worker"
+      ],
+      "cwd": "${workspaceFolder:jobqueue}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder:jobqueue}/src",
+        "RABBITMQ_URL": "amqp://guest:guest@rabbitmq:5672/"
+      },
+      "justMyCode": true
+    }
+  ]
+}

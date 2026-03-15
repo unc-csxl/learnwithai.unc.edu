@@ -1,0 +1,59 @@
+{
+  "name": "learnwithai",
+  "dockerComposeFile": "compose.yaml",
+  "service": "dev",
+  "workspaceFolder": "/workspaces/learnwithai",
+  "shutdownAction": "stopCompose",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.9.0": {}
+  },
+  "forwardPorts": [8000, 5432, 5672, 15672],
+  "portsAttributes": {
+    "8000": {
+      "label": "FastAPI"
+    },
+    "5432": {
+      "label": "Postgres"
+    },
+    "5672": {
+      "label": "RabbitMQ"
+    },
+    "15672": {
+      "label": "RabbitMQ Management UI"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
+        "python.analysis.extraPaths": [
+          "/workspaces/learnwithai/packages/learnwithai-core/src"
+        ],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/.ruff_cache": true
+        },
+        "search.exclude": {
+          "**/.venv": true,
+          "**/__pycache__": true,
+          "**/.pytest_cache": true,
+          "**/.ruff_cache": true
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "dart-code.flutter"
+      ]
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode"
+}

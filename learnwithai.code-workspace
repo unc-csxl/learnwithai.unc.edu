@@ -1,0 +1,50 @@
+{
+    "folders": [
+        {
+            "name": "api",
+            "path": "api"
+        },
+        {
+            "name": "core",
+            "path": "packages/learnwithai-core"
+        },
+        {
+            "name": "jobqueue",
+            "path": "packages/learnwithai-jobqueue"
+        },
+        {
+            "name": "infra",
+            "path": "infra"
+        },
+        {
+            "name": "repo",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": true,
+            "**/__pycache__": true,
+            "**/.pytest_cache": true,
+            "**/.ruff_cache": true
+        },
+        "search.exclude": {
+            "**/.venv": true,
+            "**/__pycache__": true,
+            "**/.pytest_cache": true,
+            "**/.ruff_cache": true
+        }
+    },
+    "launch": {
+        "version": "0.2.0",
+        "compounds": [
+            {
+                "name": "Debug API + Worker",
+                "configurations": [
+                    "API: FastAPI",
+                    "Worker: Dramatiq"
+                ],
+            }
+        ]
+    }
+}

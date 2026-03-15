@@ -1,0 +1,77 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "repo: uv sync",
+            "type": "shell",
+            "command": "uv sync --all-packages --all-groups",
+            "options": {
+                "cwd": "${workspaceFolder:repo}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "api: run",
+            "type": "shell",
+            "command": "uv run --package learnwithai-api uvicorn api.main:app --reload --host 0.0.0.0 --port 8000",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*",
+                    "endsPattern": "Uvicorn running on"
+                }
+            },
+            "dependsOn": "uv sync"
+        },
+        {
+            "label": "worker: run",
+            "type": "shell",
+            "command": "uv run --package learnwithai-jobqueue dramatiq learnwithai_jobqueue.worker",
+            "options": {
+                "cwd": "${workspaceFolder:repo}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*",
+                    "endsPattern": "Worker Ready|Workers ready"
+                }
+            },
+            "dependsOn": "uv sync"
+        },
+        {
+            "label": "dev: run api + worker",
+            "dependsOn": [
+                "api: run",
+                "worker: run"
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": [
+                "$python"
+            ]
+        }
+    ]
+}

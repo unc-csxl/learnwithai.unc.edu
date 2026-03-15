@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "api": true,
+        "worker": true,
+        "packages": true,
+        "infra": true
+    },
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip",
+        }
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder:repo}/.venv",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder:repo}/packages/learnwithai-core/src",
+        "${workspaceFolder:api}/src",
+        "${workspaceFolder:worker}/src"
+    ]
+}
