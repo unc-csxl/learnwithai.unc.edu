@@ -1,6 +1,7 @@
 {
     "files.exclude": {
         "api": true,
+        "frontend": true,
         "worker": true,
         "packages": true,
         "infra": true

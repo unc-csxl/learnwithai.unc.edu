@@ -5,6 +5,10 @@
             "path": "api"
         },
         {
+            "name": "frontend",
+            "path": "frontend"
+        },
+        {
             "name": "core",
             "path": "packages/learnwithai-core"
         },
@@ -26,13 +30,18 @@
             "**/.git": true,
             "**/__pycache__": true,
             "**/.pytest_cache": true,
-            "**/.ruff_cache": true
+            "**/.ruff_cache": true,
+            "**/node_modules": true,
+            "**/.angular": true
         },
         "search.exclude": {
             "**/.venv": true,
             "**/__pycache__": true,
             "**/.pytest_cache": true,
-            "**/.ruff_cache": true
+            "**/.ruff_cache": true,
+            "**/node_modules": true,
+            "**/dist": true,
+            "**/.angular": true
         },
         "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
         "python.analysis.extraPaths": [
