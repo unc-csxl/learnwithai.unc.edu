@@ -9,9 +9,9 @@
       "args": [
         "learnwithai_jobqueue.worker"
       ],
-      "cwd": "${workspaceFolder:jobqueue}",
+      "cwd": "${workspaceFolder:job_queue}",
       "env": {
-        "PYTHONPATH": "${workspaceFolder:jobqueue}/src",
+        "PYTHONPATH": "${workspaceFolder:job_queue}/src",
         "RABBITMQ_URL": "amqp://guest:guest@rabbitmq:5672/"
       },
       "justMyCode": true
