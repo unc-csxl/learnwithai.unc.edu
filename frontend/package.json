@@ -1,0 +1,11 @@
+{
+  "name": "learnwithai-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "LearnWithAI frontend — Angular application (scaffold pending)",
+  "scripts": {
+    "build": "echo 'No build configured yet — run ng new to scaffold the Angular app'",
+    "test": "echo 'No tests configured yet — run ng new to scaffold the Angular app'",
+    "lint": "echo 'No linting configured yet — run ng new to scaffold the Angular app'"
+  }
+}
