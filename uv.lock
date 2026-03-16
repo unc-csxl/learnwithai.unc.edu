@@ -187,8 +187,8 @@ requires-dist = [
 dev = [
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "pyright", specifier = ">=1.1.400,<2" },
-    { name = "pytest", specifier = ">=8.3,<9" },
-    { name = "ruff", specifier = ">=0.11,<0.12" },
+    { name = "pytest", specifier = ">=8.3,<10" },
+    { name = "ruff", specifier = ">=0.11,<0.16" },
 ]
 
 [[package]]
@@ -212,8 +212,8 @@ requires-dist = [{ name = "pydantic", specifier = ">=2.8,<3" }]
 [package.metadata.requires-dev]
 dev = [
     { name = "pyright", specifier = ">=1.1.400,<2" },
-    { name = "pytest", specifier = ">=8.3,<9" },
-    { name = "ruff", specifier = ">=0.11,<0.12" },
+    { name = "pytest", specifier = ">=8.3,<10" },
+    { name = "ruff", specifier = ">=0.11,<0.16" },
 ]
 
 [[package]]
@@ -241,8 +241,8 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pyright", specifier = ">=1.1.400,<2" },
-    { name = "pytest", specifier = ">=8.3,<9" },
-    { name = "ruff", specifier = ">=0.11,<0.12" },
+    { name = "pytest", specifier = ">=8.3,<10" },
+    { name = "ruff", specifier = ">=0.11,<0.16" },
 ]
 
 [[package]]
