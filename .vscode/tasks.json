@@ -72,6 +72,15 @@
             "problemMatcher": [
                 "$python"
             ]
+        },
+        {
+            "label": "frontend: install",
+            "type": "shell",
+            "command": "pnpm install",
+            "options": {
+                "cwd": "${workspaceFolder:frontend}"
+            },
+            "problemMatcher": []
         }
     ]
 }

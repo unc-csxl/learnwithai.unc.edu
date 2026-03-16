@@ -6,7 +6,8 @@ services:
     volumes:
       - ..:/workspaces/learnwithai:cached
       - learnwithai-uv-cache:/home/vscode/.cache/uv
-      - learnwithai-pub-cache:/home/vscode/.pub-cache
+      - learnwithai-npm-cache:/home/vscode/.npm
+      - learnwithai-pnpm-store:/home/vscode/.local/share/pnpm/store
     working_dir: /workspaces/learnwithai
     command: sleep infinity
     environment:
@@ -14,9 +15,6 @@ services:
       UV_LINK_MODE: copy
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      FLUTTER_HOME: /usr/local/flutter
-      PUB_CACHE: /home/vscode/.pub-cache
-      PATH: /usr/local/flutter/bin:/home/vscode/.local/bin:${PATH}
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,4 +53,5 @@ services:
 volumes:
   learnwithai-postgres-data:
   learnwithai-uv-cache:
-  learnwithai-pub-cache:
+  learnwithai-npm-cache:
+  learnwithai-pnpm-store:
