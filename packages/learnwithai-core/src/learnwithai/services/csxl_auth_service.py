@@ -65,3 +65,22 @@ class CSXLAuthService:
             payload, self._settings.jwt_secret, algorithm=self._settings.jwt_algorithm
         )
         return token
+
+    def verify_jwt(self, token: str) -> str:
+        """Decode a JWT and return the user ID (sub claim).
+
+        Raises AuthenticationException on invalid or expired tokens.
+        """
+        try:
+            payload = jwt.decode(
+                token,
+                self._settings.jwt_secret,
+                algorithms=[self._settings.jwt_algorithm],
+            )
+            user_id: str = payload["sub"]
+            return user_id
+        except (jwt.InvalidTokenError, KeyError) as exc:
+            raise AuthenticationException() from exc
+
+    def get_user_by_id(self, user_id: str) -> User | None:
+        return self._user_repo.get_by_id(user_id)

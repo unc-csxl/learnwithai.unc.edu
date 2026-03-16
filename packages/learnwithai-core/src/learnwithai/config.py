@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Auth
     unc_auth_server_host: str = "csxl.unc.edu"
-    host: str = "localhost:8000"
+    host: str = "localhost:4200"
     jwt_secret: str = "reallysecuresecret"
     jwt_algorithm: str = "HS256"
 

@@ -70,3 +70,35 @@ def test_register_user_persists_and_returns_user(session: Session) -> None:
     fetched = repo.get_by_pid("987654321")
     assert fetched is not None
     assert fetched.id == result.id
+
+
+# --- get_by_id ---
+
+
+@pytest.mark.integration
+def test_get_by_id_returns_none_when_no_user_exists(session: Session) -> None:
+    # Arrange
+    repo = UserRepository(session)
+
+    # Act
+    result = repo.get_by_id("00000000-0000-0000-0000-000000000000")
+
+    # Assert
+    assert result is None
+
+
+@pytest.mark.integration
+def test_get_by_id_returns_user_when_exists(session: Session) -> None:
+    # Arrange
+    repo = UserRepository(session)
+    user = User(name="Test User", pid="111222333", onyen="testid")
+    session.add(user)
+    session.flush()
+
+    # Act
+    result = repo.get_by_id(str(user.id))
+
+    # Assert
+    assert result is not None
+    assert result.id == user.id
+    assert result.name == "Test User"
