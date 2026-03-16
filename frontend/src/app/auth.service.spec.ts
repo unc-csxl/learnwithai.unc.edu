@@ -84,10 +84,7 @@ describe('AuthService', () => {
   it('should fetch profile on construction when token exists', () => {
     localStorage.setItem('auth_token', 'existing-token');
 
-    // Recreate service so constructor runs with the token
-    const freshService = TestBed.inject(AuthService);
-    // The constructor call already happened for the first service;
-    // for a clean test, we need to create a new injector
+    // Recreate the injector so the constructor observes the persisted token.
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
