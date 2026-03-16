@@ -6,9 +6,11 @@
   },
   "prettier.prettierPath": "./node_modules/prettier",
   "prettier.configPath": "./.prettierrc",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "eslint.validate": ["typescript", "html"],
+  "js/ts.preferences.importModuleSpecifier": "relative",
+  "eslint.validate": [
+    "typescript",
+    "html"
+  ],
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,

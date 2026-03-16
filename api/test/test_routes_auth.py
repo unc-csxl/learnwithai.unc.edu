@@ -72,7 +72,7 @@ def test_onyen_login_redirect_returns_307_to_auth_server() -> None:
     # Assert
     assert response.status_code == 307
     assert "csxl.unc.edu/auth" in response.headers["location"]
-    assert "origin=localhost:8000/auth" in response.headers["location"]
+    assert "origin=localhost:8000/api/auth" in response.headers["location"]
 
 
 # ---- authenticate_with_csxl_callback ----
