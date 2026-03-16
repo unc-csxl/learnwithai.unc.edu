@@ -1,3 +1,5 @@
+from typing import Any
+
 import dramatiq
 
 from learnwithai.interfaces import JobQueue, JobHandler
@@ -12,6 +14,6 @@ class DramatiqJobQueue(JobQueue):
 @dramatiq.actor
 def job_queue(payload: dict) -> None:
     job: Job = job_adapter(payload)
-    HandlerClass: type[JobHandler] = job_handler_map[type(job)]
-    handler: JobHandler = HandlerClass()
+    handler_class: type[JobHandler[Any]] = job_handler_map[type(job)]
+    handler: JobHandler[Any] = handler_class()
     handler.handle(job)

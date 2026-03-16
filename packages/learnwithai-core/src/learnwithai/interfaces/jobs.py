@@ -1,19 +1,25 @@
-from typing import Protocol
-from pydantic import BaseModel
 from abc import ABC
+from typing import Protocol, TypeVar, runtime_checkable
+
+from pydantic import BaseModel
 
 
 class Job(BaseModel, ABC):
-    type: str
+    pass
 
-    @classmethod
-    def get_job_types(cls):
-        return tuple(cls.__subclasses__())
+
+@runtime_checkable
+class SupportsJobType(Protocol):
+    @property
+    def type(self) -> str: ...
+
+
+JobT = TypeVar("JobT", bound=Job, contravariant=True)
 
 
 class JobQueue(Protocol):
     def enqueue(self, job: Job) -> None: ...
 
 
-class JobHandler(Protocol):
-    def handle(self, job: Job) -> None: ...
+class JobHandler(Protocol[JobT]):
+    def handle(self, job: JobT) -> None: ...

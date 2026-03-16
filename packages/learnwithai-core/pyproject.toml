@@ -11,6 +11,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "pytest>=8.3,<10",
+  "pytest-cov>=6.0,<7",
   "ruff>=0.11,<0.16",
   "pyright>=1.1.400,<2",
   "sqlmodel>=0.0.37,<0.1.0",
