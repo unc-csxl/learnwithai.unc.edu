@@ -1,0 +1,15 @@
+[run]
+branch = True
+source =
+    api
+    learnwithai
+    learnwithai_jobqueue
+omit =
+    */test/*
+    */tests/*
+    */conftest.py
+
+[report]
+fail_under = 100
+show_missing = True
+skip_covered = False

@@ -33,7 +33,13 @@
             "**/__pycache__": true,
             "**/.pytest_cache": true,
             "**/.ruff_cache": true
-        }
+        },
+        "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
+        "python.analysis.extraPaths": [
+            "/workspaces/learnwithai/api/src",
+            "/workspaces/learnwithai/packages/learnwithai-core/src",
+            "/workspaces/learnwithai/packages/learnwithai-jobqueue/src"
+        ]
     },
     "launch": {
         "version": "0.2.0",

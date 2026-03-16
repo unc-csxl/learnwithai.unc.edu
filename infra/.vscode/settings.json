@@ -5,5 +5,7 @@
             "envManager": "ms-python.python:venv",
             "packageManager": "ms-python.python:pip"
         }
-    ]
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": false
 }

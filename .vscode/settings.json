@@ -12,11 +12,14 @@
             "packageManager": "ms-python.python:pip",
         }
     ],
-    "python.defaultInterpreterPath": "${workspaceFolder:repo}/.venv",
+    "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
     "python.analysis.extraPaths": [
-        "${workspaceFolder:repo}/packages/learnwithai-core/src",
-        "${workspaceFolder:api}/src",
-        "${workspaceFolder:worker}/src"
+        "/workspaces/learnwithai/api/src",
+        "/workspaces/learnwithai/packages/learnwithai-core/src",
+        "/workspaces/learnwithai/packages/learnwithai-jobqueue/src"
     ],
-    "python.terminal.useEnvFile": true
+    "python.terminal.useEnvFile": true,
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "/workspaces/learnwithai",
 }

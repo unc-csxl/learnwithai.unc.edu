@@ -9,4 +9,6 @@ cd "$ROOT_DIR"
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright .
-uv run pytest api/test packages/learnwithai-core/test packages/learnwithai-jobqueue/test --cov --cov-report=term-missing
+# Explicitly limit coverage measurement to source packages so test files are omitted
+uv run pytest api/test packages/learnwithai-core/test packages/learnwithai-jobqueue/test \
+	--cov=api --cov=learnwithai --cov=learnwithai_jobqueue --cov-report=term-missing
