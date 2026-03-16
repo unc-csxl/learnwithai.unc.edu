@@ -1,3 +1,5 @@
+"""Application configuration models and helpers."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -11,6 +13,8 @@ Environment = Literal["development", "test", "production"]
 
 
 class Settings(BaseSettings):
+    """Defines environment-backed settings used throughout the workspace."""
+
     app_name: str = "learnwithai"
     environment: Environment = "development"
 
@@ -42,6 +46,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def effective_database_url(self) -> str:
+        """Returns the configured database URL or the default for the environment."""
         if self.database_url:
             return self.database_url
 
@@ -55,6 +60,7 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def effective_rabbitmq_url(self) -> str:
+        """Returns the configured RabbitMQ URL or the default devcontainer URL."""
         if self.rabbitmq_url:
             return self.rabbitmq_url
 
@@ -64,19 +70,23 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def is_development(self) -> bool:
+        """Reports whether the current environment is development."""
         return self.environment == "development"
 
     @computed_field
     @property
     def is_test(self) -> bool:
+        """Reports whether the current environment is test."""
         return self.environment == "test"
 
     @computed_field
     @property
     def is_production(self) -> bool:
+        """Reports whether the current environment is production."""
         return self.environment == "production"
 
 
 @lru_cache
 def get_settings() -> Settings:
+    """Returns a cached settings instance for the current process."""
     return Settings()

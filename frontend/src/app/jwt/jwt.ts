@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/cor
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
+/** Handles the post-authentication redirect and persists the issued JWT. */
 @Component({
   selector: 'app-jwt',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,6 +13,7 @@ export class Jwt implements OnInit {
   private router = inject(Router);
   private auth = inject(AuthService);
 
+  /** Extracts the token from the callback URL and routes the user home. */
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (token) {

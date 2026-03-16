@@ -1,5 +1,5 @@
 """
-Run the Worker via `dramatic`:
+Run the worker via `dramatiq`:
 
 uv run --package learnwithai-jobqueue dramatiq learnwithai_jobqueue.worker
 """

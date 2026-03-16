@@ -1,7 +1,10 @@
+"""Health helpers shared across services."""
+
 from learnwithai.config import Settings
 
 
 def get_health_status() -> dict[str, str]:
+    """Builds a health payload for the running service."""
     settings = Settings()
     return {
         "status": "ok",

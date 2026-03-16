@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+/** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
   {
     path: 'jwt',

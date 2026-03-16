@@ -1,3 +1,5 @@
+"""Authentication routes for the public API."""
+
 from typing import Annotated
 from fastapi import APIRouter, Response, Query, HTTPException
 from fastapi.responses import RedirectResponse
@@ -14,6 +16,14 @@ router = APIRouter()
 
 @router.get("/onyen")
 def onyen_login_redirect(settings: SettingsDI) -> Response:
+    """Redirects the client to the UNC authentication flow.
+
+    Args:
+        settings: Application settings used to build the callback URL.
+
+    Returns:
+        A redirect response to the upstream authentication service.
+    """
     origin = f"{settings.host}/api/auth"
     continue_to = ""
     return RedirectResponse(
@@ -24,6 +34,14 @@ def onyen_login_redirect(settings: SettingsDI) -> Response:
 
 @router.get("/me")
 def get_current_user_profile(user: CurrentUserDI) -> dict:
+    """Returns the authenticated user's profile payload.
+
+    Args:
+        user: Authenticated user resolved from the bearer token.
+
+    Returns:
+        A serializable profile dictionary for the frontend.
+    """
     return {
         "id": str(user.id),
         "name": user.name,
@@ -39,6 +57,19 @@ def authenticate_with_csxl_callback(
     csxl_auth_svc: CSXLAuthServiceDI,
     token: Annotated[str | None, Query()] = None,
 ) -> RedirectResponse:
+    """Completes the CSXL callback flow and issues a local JWT.
+
+    Args:
+        session: Database session scoped to the request.
+        csxl_auth_svc: Service used to validate CSXL tokens and manage users.
+        token: Token returned by the upstream CSXL authentication flow.
+
+    Returns:
+        A redirect to the frontend with a local JWT when authentication succeeds.
+
+    Raises:
+        HTTPException: If authentication fails or user registration cannot complete.
+    """
     if token is None:
         return RedirectResponse(url="/", status_code=302)
 
