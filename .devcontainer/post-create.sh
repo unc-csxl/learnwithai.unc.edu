@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-sudo mkdir -p /home/vscode/.cache/uv /home/vscode/.pub-cache
-sudo chown -R vscode:vscode /home/vscode/.cache /home/vscode/.pub-cache
+sudo mkdir -p /home/vscode/.cache/uv /home/vscode/.npm
+sudo chown -R vscode:vscode /home/vscode/.cache /home/vscode/.npm
 
 cd /workspaces/learnwithai
 
 uv sync --all-packages --all-groups
 
-if [ -f "client/pubspec.yaml" ]; then
-  (cd client && flutter pub get)
+if [ -f "frontend/package.json" ]; then
+  (cd frontend && npm install)
 fi
