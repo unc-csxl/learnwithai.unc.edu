@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Response, Query, HTTPException
 from fastapi.responses import RedirectResponse
-from ..dependency_injection import CSXLAuthServiceDI, SettingsDI, SessionDI
+from ..dependency_injection import CSXLAuthServiceDI, SettingsDI, SessionDI, CurrentUserDI
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
 router = APIRouter()
@@ -15,6 +15,17 @@ def onyen_login_redirect(settings: SettingsDI) -> Response:
         url=f"https://{settings.unc_auth_server_host}/auth?origin={origin}&continue_to={continue_to}",
         status_code=307,
     )
+
+
+@router.get("/me")
+def get_current_user_profile(user: CurrentUserDI) -> dict:
+    return {
+        "id": str(user.id),
+        "name": user.name,
+        "pid": user.pid,
+        "onyen": user.onyen,
+        "email": user.email,
+    }
 
 
 @router.get("")

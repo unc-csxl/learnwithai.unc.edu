@@ -23,7 +23,9 @@ def test_app_registers_expected_routes() -> None:
     # Act
     has_health_route = "/health" in route_paths
     has_queue_route = "/queue" in route_paths
+    has_auth_me_route = "/auth/me" in route_paths
 
     # Assert
     assert has_health_route is True
     assert has_queue_route is True
+    assert has_auth_me_route is True

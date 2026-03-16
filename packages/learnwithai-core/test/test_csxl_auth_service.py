@@ -229,3 +229,74 @@ def test_issue_jwt_token_returns_decodable_jwt() -> None:
     )
     assert decoded["sub"] == str(user.id)
     assert "exp" in decoded
+
+
+# --- verify_jwt ---
+
+
+def test_verify_jwt_returns_user_id_for_valid_token() -> None:
+    # Arrange
+    user = _make_user()
+    svc = _build_service()
+    token = svc.issue_jwt_token(user)
+
+    # Act
+    user_id = svc.verify_jwt(token)
+
+    # Assert
+    assert user_id == str(user.id)
+
+
+def test_verify_jwt_raises_on_invalid_token() -> None:
+    # Arrange
+    svc = _build_service()
+
+    # Act / Assert
+    with pytest.raises(AuthenticationException):
+        svc.verify_jwt("invalid-token")
+
+
+def test_verify_jwt_raises_on_expired_token() -> None:
+    # Arrange
+    svc = _build_service()
+    expired_payload = {"sub": str(uuid.uuid4()), "exp": 0}
+    expired_token = jwt.encode(
+        expired_payload,
+        "really-secure-secret-is-really-secure",
+        algorithm="HS256",
+    )
+
+    # Act / Assert
+    with pytest.raises(AuthenticationException):
+        svc.verify_jwt(expired_token)
+
+
+# --- get_user_by_id ---
+
+
+def test_get_user_by_id_delegates_to_repository() -> None:
+    # Arrange
+    user = _make_user()
+    user_repo = MagicMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = user
+    svc = _build_service(user_repo=user_repo)
+
+    # Act
+    result = svc.get_user_by_id(str(user.id))
+
+    # Assert
+    assert result is user
+    user_repo.get_by_id.assert_called_once_with(str(user.id))
+
+
+def test_get_user_by_id_returns_none_when_not_found() -> None:
+    # Arrange
+    user_repo = MagicMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = None
+    svc = _build_service(user_repo=user_repo)
+
+    # Act
+    result = svc.get_user_by_id("nonexistent")
+
+    # Assert
+    assert result is None
