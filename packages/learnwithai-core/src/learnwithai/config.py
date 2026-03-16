@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     api_port: int = 8000
     log_level: str = "INFO"
 
+    # Auth
+    unc_auth_server_host: str = "csxl.unc.edu"
+    host: str = "localhost:8000"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
