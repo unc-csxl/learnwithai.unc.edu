@@ -5,6 +5,7 @@ description = "Shared core domain and business logic for LearnWithAI"
 requires-python = ">=3.12"
 dependencies = [
   "pydantic>=2.8,<3",
+  "pydantic-settings>=2.13.1,<3",
 ]
 
 [dependency-groups]
@@ -12,6 +13,7 @@ dev = [
   "pytest>=8.3,<10",
   "ruff>=0.11,<0.16",
   "pyright>=1.1.400,<2",
+  "sqlmodel>=0.0.37,<0.1.0",
 ]
 
 [tool.uv.build-backend]

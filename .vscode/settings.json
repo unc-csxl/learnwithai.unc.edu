@@ -17,5 +17,6 @@
         "${workspaceFolder:repo}/packages/learnwithai-core/src",
         "${workspaceFolder:api}/src",
         "${workspaceFolder:worker}/src"
-    ]
+    ],
+    "python.terminal.useEnvFile": true
 }

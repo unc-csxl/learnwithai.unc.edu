@@ -9,7 +9,7 @@
             "path": "packages/learnwithai-core"
         },
         {
-            "name": "jobqueue",
+            "name": "job_queue",
             "path": "packages/learnwithai-jobqueue"
         },
         {
