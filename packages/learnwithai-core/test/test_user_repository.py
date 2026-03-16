@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import os
+
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
 from learnwithai.models.user import User
 from learnwithai.repositories.user_repository import UserRepository
 
-TEST_DB_URL = "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
+DEFAULT_TEST_DB_URL = (
+    "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
+)
+TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
 
 
 @pytest.fixture()
