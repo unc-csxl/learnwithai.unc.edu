@@ -1,0 +1,13 @@
+[run]
+branch = True
+source =
+    src/api
+omit =
+    */test/*
+    */tests/*
+    */conftest.py
+
+[report]
+fail_under = 100
+show_missing = True
+skip_covered = False
