@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Auth
     unc_auth_server_host: str = "csxl.unc.edu"
     host: str = "localhost:8000"
-    jwt_secret: str = "secret"
+    jwt_secret: str = "reallysecuresecret"
     jwt_algorithm: str = "HS256"
 
     model_config = SettingsConfigDict(

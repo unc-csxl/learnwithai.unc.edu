@@ -24,7 +24,7 @@ def _build_service(
     if settings is None:
         settings = Settings.model_construct(
             unc_auth_server_host="csxl.unc.edu",
-            jwt_secret="test-secret",
+            jwt_secret="really-secure-secret-is-really-secure",
             jwt_algorithm="HS256",
         )
     if user_repo is None:
@@ -40,7 +40,7 @@ def _make_user(**overrides) -> User:
         onyen="testuser",
     )
     defaults.update(overrides)
-    return User.model_construct(**defaults)
+    return User.model_construct(_fields_set=None, **defaults)
 
 
 # --- verify_auth_token ---
@@ -50,11 +50,15 @@ def test_verify_auth_token_returns_onyen_and_pid_on_success() -> None:
     # Arrange
     svc = _build_service()
     mock_response = httpx.Response(
-        200, json={"uid": "testuser", "pid": "123456789"}, request=httpx.Request("GET", "https://example.com")
+        200,
+        json={"uid": "testuser", "pid": "123456789"},
+        request=httpx.Request("GET", "https://example.com"),
     )
 
     # Act
-    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
+    with patch(
+        "learnwithai.services.csxl_auth_service.httpx.Client"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -73,7 +77,9 @@ def test_verify_auth_token_raises_on_non_200() -> None:
     )
 
     # Act / Assert
-    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
+    with patch(
+        "learnwithai.services.csxl_auth_service.httpx.Client"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -150,7 +156,9 @@ def test_unc_directory_lookup_returns_parsed_result_on_success() -> None:
     )
 
     # Act
-    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
+    with patch(
+        "learnwithai.services.csxl_auth_service.httpx.Client"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -170,7 +178,9 @@ def test_unc_directory_lookup_returns_default_on_empty_results() -> None:
     )
 
     # Act
-    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
+    with patch(
+        "learnwithai.services.csxl_auth_service.httpx.Client"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -189,7 +199,9 @@ def test_unc_directory_lookup_returns_default_on_non_200() -> None:
     )
 
     # Act
-    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
+    with patch(
+        "learnwithai.services.csxl_auth_service.httpx.Client"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -212,6 +224,8 @@ def test_issue_jwt_token_returns_decodable_jwt() -> None:
     token = svc.issue_jwt_token(user)
 
     # Assert
-    decoded = jwt.decode(token, "test-secret", algorithms=["HS256"])
+    decoded = jwt.decode(
+        token, "really-secure-secret-is-really-secure", algorithms=["HS256"]
+    )
     assert decoded["sub"] == str(user.id)
     assert "exp" in decoded

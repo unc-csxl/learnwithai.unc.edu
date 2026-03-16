@@ -6,9 +6,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from learnwithai.models.user import User
 from learnwithai.repositories.user_repository import UserRepository
 
-TEST_DB_URL = (
-    "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-)
+TEST_DB_URL = "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
 
 
 @pytest.fixture()

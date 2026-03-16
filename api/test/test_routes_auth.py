@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +22,7 @@ from learnwithai.services.csxl_auth_service import AuthenticationException
 
 # ---- helpers ----
 
+
 def _stub_settings(**overrides) -> Settings:
     defaults = dict(
         host="localhost:8000",
@@ -30,7 +31,7 @@ def _stub_settings(**overrides) -> Settings:
         jwt_algorithm="HS256",
     )
     defaults.update(overrides)
-    return Settings.model_construct(**defaults)
+    return Settings.model_construct(_fields_set=None, **defaults)
 
 
 def _stub_user(**overrides) -> User:
@@ -41,7 +42,7 @@ def _stub_user(**overrides) -> User:
         onyen="testuser",
     )
     defaults.update(overrides)
-    return User.model_construct(**defaults)
+    return User.model_construct(_fields_set=None, **defaults)
 
 
 # ---- onyen_login_redirect ----
@@ -117,7 +118,9 @@ def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
     csxl_auth_svc.issue_jwt_token.return_value = "jwt-token-123"
 
     # Act
-    response = authenticate_with_csxl_callback(session, csxl_auth_svc, token="valid-token")
+    response = authenticate_with_csxl_callback(
+        session, csxl_auth_svc, token="valid-token"
+    )
 
     # Assert
     assert response.status_code == 302
@@ -144,10 +147,7 @@ def test_onyen_endpoint_redirects_to_auth_server(client: TestClient) -> None:
 
 @pytest.mark.integration
 def test_auth_callback_redirects_home_without_token(client: TestClient) -> None:
-    # Arrange
-    session = MagicMock()
-    csxl_auth_svc = MagicMock()
-    app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
+    # Arrange (no overrides needed — token defaults to None)
 
     # Act
     response = client.get("/auth", follow_redirects=False)
