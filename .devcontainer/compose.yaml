@@ -7,6 +7,7 @@ services:
       - ..:/workspaces/learnwithai:cached
       - learnwithai-uv-cache:/home/vscode/.cache/uv
       - learnwithai-npm-cache:/home/vscode/.npm
+      - learnwithai-pnpm-store:/home/vscode/.local/share/pnpm/store
     working_dir: /workspaces/learnwithai
     command: sleep infinity
     environment:
@@ -53,3 +54,4 @@ volumes:
   learnwithai-postgres-data:
   learnwithai-uv-cache:
   learnwithai-npm-cache:
+  learnwithai-pnpm-store:

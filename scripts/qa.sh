@@ -19,5 +19,5 @@ uv run pytest api/test packages/learnwithai-core/test packages/learnwithai-jobqu
 if [ -f "frontend/package.json" ] && grep -q '"test"' frontend/package.json; then
   echo ""
   echo "=== Frontend ==="
-  (cd frontend && npm run lint --if-present && npm test --if-present)
+  (cd frontend && pnpm --if-present lint && pnpm --if-present test --watch=false)
 fi

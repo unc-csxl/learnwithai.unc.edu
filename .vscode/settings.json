@@ -4,7 +4,8 @@
         "frontend": true,
         "worker": true,
         "packages": true,
-        "infra": true
+        "infra": true,
+        ".pnpm-store": true
     },
     "python-envs.pythonProjects": [
         {

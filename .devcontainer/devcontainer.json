@@ -39,6 +39,7 @@
           "**/__pycache__": true,
           "**/.pytest_cache": true,
           "**/.ruff_cache": true,
+          "**/.pnpm-store": true,
           "**/node_modules": true,
           "**/.angular": true
         },
@@ -47,6 +48,7 @@
           "**/__pycache__": true,
           "**/.pytest_cache": true,
           "**/.ruff_cache": true,
+          "**/.pnpm-store": true,
           "**/node_modules": true,
           "**/dist": true,
           "**/.angular": true

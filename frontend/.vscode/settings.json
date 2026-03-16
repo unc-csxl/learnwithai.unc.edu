@@ -4,6 +4,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.configPath": "./.prettierrc",
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.tsdk": "node_modules/typescript/lib",
   "eslint.validate": ["typescript", "html"],

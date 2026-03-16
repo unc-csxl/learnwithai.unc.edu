@@ -76,7 +76,7 @@
         {
             "label": "frontend: install",
             "type": "shell",
-            "command": "npm install",
+            "command": "pnpm install",
             "options": {
                 "cwd": "${workspaceFolder:frontend}"
             },

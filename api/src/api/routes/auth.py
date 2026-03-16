@@ -15,6 +15,7 @@ def health(settings: SettingsDI) -> Response:
         status_code=307,
     )
 
+
 @router.get("")
 def authenticate_with_csxl_callback(
     settings: SettingsDI,

@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG NODE_MAJOR=22
+ARG NODE_MAJOR=24
 
 # Core OS packages and Python tooling
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -27,7 +27,7 @@ git checkout -b wip/flutter-to-typescript
 - Remove the `git clone` of the Flutter SDK and `FLUTTER_HOME` / `PATH` entries.
 - Remove the `flutter config` / `dart --disable-analytics` / `flutter doctor` warm-up.
 - **Add** Node.js (LTS) installation via the NodeSource setup script or `nvm`.
-- Install `npm` (comes with Node) and optionally `pnpm` or keep npm only.
+- Install Node.js with Corepack enabled and use `pnpm` for the frontend.
 
 ### 3. Update `compose.yaml`
 
@@ -35,7 +35,7 @@ git checkout -b wip/flutter-to-typescript
 
 - Remove `FLUTTER_HOME`, `PUB_CACHE`, and Flutter `PATH` entries from `environment`.
 - Remove the `learnwithai-pub-cache` volume (both the mount and the volume definition).
-- Add a named volume for the npm/node_modules cache if desired.
+- Add a named volume for the pnpm store cache if desired.
 
 ### 4. Update `devcontainer.json`
 
@@ -55,7 +55,7 @@ git checkout -b wip/flutter-to-typescript
 
 - Remove the `pub-cache` ownership fix.
 - Remove the `flutter pub get` block.
-- Add: if `frontend/package.json` exists → `cd frontend && npm install`.
+- Add: if `frontend/package.json` exists → `cd frontend && pnpm install`.
 
 ### 6. Update `.gitignore`
 
