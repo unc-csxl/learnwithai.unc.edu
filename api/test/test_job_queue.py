@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from api.job_queue import job_queue_factory
+from api.dependency_injection import job_queue_factory
 
 
 def test_job_queue_factory_builds_dramatiq_job_queue() -> None:

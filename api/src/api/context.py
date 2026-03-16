@@ -1,11 +1,19 @@
 from typing import Annotated, TypeAlias
 from fastapi import Depends
-from .job_queue import JobQueueDI
+from .dependency_injection import SessionDI, JobQueueDI
 
 
-class Context:
-    def __init__(self, job_queue: JobQueueDI):
+class PublicContext:
+    def __init__(self, session: SessionDI, job_queue: JobQueueDI):
+        self.session = session
         self.job_queue = job_queue
 
 
-ContextDI: TypeAlias = Annotated[Context, Depends()]
+class UserContext:
+    def __init__(self, session: SessionDI, job_queue: JobQueueDI):
+        self.session = session
+        self.job_queue = job_queue
+
+
+PublicContextDI: TypeAlias = Annotated[PublicContext, Depends()]
+UserContextDI: TypeAlias = Annotated[UserContext, Depends()]

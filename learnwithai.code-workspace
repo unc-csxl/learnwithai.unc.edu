@@ -1,12 +1,12 @@
 {
     "folders": [
         {
-            "name": "api",
-            "path": "api"
-        },
-        {
             "name": "frontend",
             "path": "frontend"
+        },
+        {
+            "name": "api",
+            "path": "api"
         },
         {
             "name": "core",

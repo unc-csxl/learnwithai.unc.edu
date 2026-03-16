@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from learnwithai.interfaces import Job
+from learnwithai.db import Session
+from unittest.mock import MagicMock
 
-from api.context import Context
+from api.context import PublicContext
 
 
 class StubJobQueue:
@@ -13,9 +15,10 @@ class StubJobQueue:
 def test_context_stores_job_queue_dependency() -> None:
     # Arrange
     job_queue = StubJobQueue()
+    session = MagicMock(spec=Session)
 
     # Act
-    context = Context(job_queue=job_queue)
+    context = PublicContext(job_queue=job_queue, session=session)
 
     # Assert
     assert context.job_queue is job_queue
