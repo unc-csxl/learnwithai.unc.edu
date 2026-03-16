@@ -56,8 +56,9 @@
         "version": "0.2.0",
         "compounds": [
             {
-                "name": "Debug API + Worker",
+                "name": "Debug Frontend + API + Worker",
                 "configurations": [
+                    "Frontend: serve",
                     "API: FastAPI",
                     "Worker: Dramatiq"
                 ],

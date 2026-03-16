@@ -37,7 +37,7 @@
             "dependsOn": "uv sync"
         },
         {
-            "label": "worker: run",
+            "label": "job queue: run",
             "type": "shell",
             "command": "uv run --package learnwithai-jobqueue dramatiq learnwithai_jobqueue.worker",
             "options": {
@@ -63,14 +63,15 @@
             "dependsOn": "uv sync"
         },
         {
-            "label": "dev: run api + worker",
+            "label": "dev: run frontend + api + job queue",
             "dependsOn": [
+                "frontend: run",
                 "api: run",
-                "worker: run"
+                "job queue: run"
             ],
             "dependsOrder": "parallel",
             "problemMatcher": [
-                "$python"
+                "$python", "$tsc"
             ]
         },
         {
