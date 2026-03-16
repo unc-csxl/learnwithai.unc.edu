@@ -37,7 +37,9 @@ def test_job_adapter_rejects_unknown_job_type() -> None:
     # Arrange
     payload = {"type": "missing", "message": "hello"}
 
-    # Act / Assert
+    # Act
+
+    # Assert
     with pytest.raises(ValidationError):
         job_adapter(payload)
 
