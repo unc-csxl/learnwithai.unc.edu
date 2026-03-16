@@ -13,6 +13,24 @@ members = [
   "packages/learnwithai-jobqueue"
 ]
 
+[tool.pytest.ini_options]
+markers = [
+  "integration: marks tests that exercise cross-module or framework integration",
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+  "api",
+  "learnwithai",
+  "learnwithai_jobqueue",
+]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = false
+
 [build-system]
 requires = ["uv_build>=0.10.9,<0.11.0"]
 build-backend = "uv_build"
