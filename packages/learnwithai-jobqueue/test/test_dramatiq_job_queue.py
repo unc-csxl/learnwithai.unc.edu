@@ -29,10 +29,13 @@ def test_job_queue_actor_dispatches_to_handler_class() -> None:
     payload = {"type": "echo", "message": "hello"}
 
     # Act
-    with patch("learnwithai_jobqueue.dramatiq_job_queue.job_adapter", return_value=job), patch.dict(
-        "learnwithai_jobqueue.dramatiq_job_queue.job_handler_map",
-        {EchoJob: handler_class},
-        clear=True,
+    with (
+        patch("learnwithai_jobqueue.dramatiq_job_queue.job_adapter", return_value=job),
+        patch.dict(
+            "learnwithai_jobqueue.dramatiq_job_queue.job_handler_map",
+            {EchoJob: handler_class},
+            clear=True,
+        ),
     ):
         job_queue.fn(payload)
 
@@ -48,9 +51,10 @@ def test_job_queue_actor_integrates_adapter_and_handler() -> None:
     expected_status = {"status": "ok", "environment": "test"}
 
     # Act
-    with patch("learnwithai.jobs.echo.get_health_status", return_value=expected_status), patch(
-        "builtins.print"
-    ) as print_mock:
+    with (
+        patch("learnwithai.jobs.echo.get_health_status", return_value=expected_status),
+        patch("builtins.print") as print_mock,
+    ):
         job_queue.fn(payload)
 
     # Assert

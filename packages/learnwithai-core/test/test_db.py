@@ -14,9 +14,12 @@ def test_get_engine_builds_engine_from_settings() -> None:
     )
 
     # Act
-    with patch("learnwithai.db.get_settings", return_value=expected_settings), patch(
-        "learnwithai.db.create_engine", return_value="engine"
-    ) as create_engine_mock:
+    with (
+        patch("learnwithai.db.get_settings", return_value=expected_settings),
+        patch(
+            "learnwithai.db.create_engine", return_value="engine"
+        ) as create_engine_mock,
+    ):
         db.get_engine.cache_clear()
         engine = db.get_engine()
 
@@ -33,9 +36,12 @@ def test_get_engine_returns_cached_engine() -> None:
     )
 
     # Act
-    with patch("learnwithai.db.get_settings", return_value=expected_settings), patch(
-        "learnwithai.db.create_engine", return_value="engine"
-    ) as create_engine_mock:
+    with (
+        patch("learnwithai.db.get_settings", return_value=expected_settings),
+        patch(
+            "learnwithai.db.create_engine", return_value="engine"
+        ) as create_engine_mock,
+    ):
         db.get_engine.cache_clear()
         first_engine = db.get_engine()
         second_engine = db.get_engine()
@@ -50,9 +56,10 @@ def test_create_db_and_tables_uses_cached_engine() -> None:
     expected_engine = object()
 
     # Act
-    with patch("learnwithai.db.get_engine", return_value=expected_engine), patch(
-        "learnwithai.db.SQLModel.metadata.create_all"
-    ) as create_all_mock:
+    with (
+        patch("learnwithai.db.get_engine", return_value=expected_engine),
+        patch("learnwithai.db.SQLModel.metadata.create_all") as create_all_mock,
+    ):
         db.create_db_and_tables()
 
     # Assert
@@ -64,9 +71,10 @@ def test_get_session_builds_session_from_engine() -> None:
     expected_engine = object()
 
     # Act
-    with patch("learnwithai.db.get_engine", return_value=expected_engine), patch(
-        "learnwithai.db.Session", return_value="session"
-    ) as session_mock:
+    with (
+        patch("learnwithai.db.get_engine", return_value=expected_engine),
+        patch("learnwithai.db.Session", return_value="session") as session_mock,
+    ):
         session = db.get_session()
 
     # Assert

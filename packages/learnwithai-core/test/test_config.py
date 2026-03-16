@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from learnwithai.config import Settings, get_settings
 
 
+def build_settings(**overrides: Any) -> Settings:
+    settings_data = {
+        "app_name": "learnwithai",
+        "environment": "development",
+        "database_url": None,
+        "db_echo": False,
+        "rabbitmq_url": None,
+        "api_host": "0.0.0.0",
+        "api_port": 8000,
+        "log_level": "INFO",
+    }
+    settings_data.update(overrides)
+    return Settings.model_construct(**settings_data)
+
+
 def test_effective_database_url_uses_explicit_database_url() -> None:
     # Arrange
-    settings = Settings(database_url="sqlite:///explicit.db", _env_file=None)
+    settings = build_settings(database_url="sqlite:///explicit.db")
 
     # Act
     database_url = settings.effective_database_url
@@ -21,7 +38,7 @@ def test_effective_database_url_uses_test_default_for_test_environment(
 ) -> None:
     # Arrange
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    settings = Settings(environment="test", _env_file=None)
+    settings = build_settings(environment="test")
 
     # Act
     database_url = settings.effective_database_url
@@ -35,7 +52,7 @@ def test_effective_database_url_uses_default_for_non_test_environment(
 ) -> None:
     # Arrange
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    settings = Settings(environment="development", _env_file=None)
+    settings = build_settings(environment="development")
 
     # Act
     database_url = settings.effective_database_url
@@ -46,7 +63,7 @@ def test_effective_database_url_uses_default_for_non_test_environment(
 
 def test_effective_rabbitmq_url_uses_explicit_value() -> None:
     # Arrange
-    settings = Settings(rabbitmq_url="amqp://custom-host/", _env_file=None)
+    settings = build_settings(rabbitmq_url="amqp://custom-host/")
 
     # Act
     rabbitmq_url = settings.effective_rabbitmq_url
@@ -60,7 +77,7 @@ def test_effective_rabbitmq_url_uses_default_value(
 ) -> None:
     # Arrange
     monkeypatch.delenv("RABBITMQ_URL", raising=False)
-    settings = Settings(_env_file=None)
+    settings = build_settings()
 
     # Act
     rabbitmq_url = settings.effective_rabbitmq_url
@@ -71,9 +88,9 @@ def test_effective_rabbitmq_url_uses_default_value(
 
 def test_environment_flags_reflect_current_environment() -> None:
     # Arrange
-    development_settings = Settings(environment="development", _env_file=None)
-    test_settings = Settings(environment="test", _env_file=None)
-    production_settings = Settings(environment="production", _env_file=None)
+    development_settings = build_settings(environment="development")
+    test_settings = build_settings(environment="test")
+    production_settings = build_settings(environment="production")
 
     # Act
     development_flags = (

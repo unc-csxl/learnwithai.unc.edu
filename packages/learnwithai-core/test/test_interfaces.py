@@ -4,12 +4,8 @@ from pydantic import BaseModel
 
 import learnwithai
 from learnwithai.config import Settings
-from learnwithai.interfaces import Job
+from learnwithai.interfaces import SupportsJobType
 from learnwithai.jobs.echo import EchoJob
-
-
-class DummyJob(Job):
-    type: str = "dummy"
 
 
 def test_package_exports_settings() -> None:
@@ -31,21 +27,22 @@ def test_interfaces_export_job_class() -> None:
     # Act
     exported_names = interfaces.__all__
     exported_job_class = interfaces.Job
+    exported_job_type_protocol = interfaces.SupportsJobType
 
     # Assert
-    assert exported_names == ["JobQueue", "JobHandler", "Job"]
+    assert exported_names == ["JobQueue", "JobHandler", "Job", "SupportsJobType"]
     assert issubclass(exported_job_class, BaseModel)
+    assert exported_job_type_protocol is SupportsJobType
 
 
-def test_get_job_types_includes_known_and_new_subclasses() -> None:
+def test_echo_job_satisfies_read_only_job_type_protocol() -> None:
     # Arrange
-    known_job_types = {job_type.__name__ for job_type in Job.get_job_types()}
+    job = EchoJob(message="hello")
 
     # Act
-    has_echo_job = EchoJob in Job.get_job_types()
-    has_dummy_job = DummyJob in Job.get_job_types()
+    supports_job_type = isinstance(job, SupportsJobType)
+    job_type = job.type
 
     # Assert
-    assert "EchoJob" in known_job_types
-    assert has_echo_job is True
-    assert has_dummy_job is True
+    assert supports_job_type is True
+    assert job_type == "echo"

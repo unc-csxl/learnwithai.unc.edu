@@ -9,7 +9,7 @@ class EchoJob(Job):
     message: str
 
 
-class EchoJobHandler(JobHandler):
+class EchoJobHandler(JobHandler[EchoJob]):
     def handle(self, job: EchoJob) -> None:
         status = get_health_status()
         print(

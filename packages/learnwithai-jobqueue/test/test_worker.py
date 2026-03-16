@@ -11,7 +11,9 @@ def test_worker_logs_ready_message_on_import() -> None:
     logger = Mock()
 
     # Act
-    with patch("learnwithai_jobqueue.worker.logging.getLogger", return_value=logger) as get_logger_mock:
+    with patch(
+        "learnwithai_jobqueue.worker.logging.getLogger", return_value=logger
+    ) as get_logger_mock:
         reloaded_worker = importlib.reload(worker)
 
     # Assert
