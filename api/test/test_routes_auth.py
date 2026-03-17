@@ -219,7 +219,7 @@ def test_onyen_endpoint_redirects_to_auth_server(client: TestClient) -> None:
     app.dependency_overrides[settings_factory] = lambda: settings
 
     # Act
-    response = client.get("/auth/onyen", follow_redirects=False)
+    response = client.get("/api/auth/onyen", follow_redirects=False)
 
     # Assert
     assert response.status_code == 307
@@ -231,7 +231,7 @@ def test_auth_callback_redirects_home_without_token(client: TestClient) -> None:
     # Arrange (no overrides needed — token defaults to None)
 
     # Act
-    response = client.get("/auth", follow_redirects=False)
+    response = client.get("/api/auth", follow_redirects=False)
 
     # Assert
     assert response.status_code == 302
@@ -246,7 +246,7 @@ def test_auth_callback_returns_401_for_invalid_token(client: TestClient) -> None
     app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
 
     # Act
-    response = client.get("/auth?token=bad-token")
+    response = client.get("/api/auth?token=bad-token")
 
     # Assert
     assert response.status_code == 401
@@ -293,7 +293,7 @@ def test_auth_me_returns_user_profile(client: TestClient) -> None:
     app.dependency_overrides[get_current_user] = lambda: user
 
     # Act
-    response = client.get("/auth/me")
+    response = client.get("/api/auth/me")
 
     # Assert
     assert response.status_code == 200
@@ -308,7 +308,7 @@ def test_auth_me_returns_401_without_token(client: TestClient) -> None:
     # Arrange (no overrides — real get_current_user will reject)
 
     # Act
-    response = client.get("/auth/me")
+    response = client.get("/api/auth/me")
 
     # Assert
     assert response.status_code == 401
