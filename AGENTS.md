@@ -1,0 +1,72 @@
+# AGENTS.md
+
+This file is the repository-wide contribution guide for both human contributors and generative agents.
+
+## Start Here
+
+Before making changes:
+
+1. Read `README.md` in the repository root.
+2. Read the workspace-level `README.md` for the area you are touching.
+3. Read the nearest `AGENTS.md` file for local rules.
+
+If guidance conflicts, the more local `AGENTS.md` wins.
+
+## Repository Expectations
+
+- Keep architecture boundaries clear.
+- Put shared business logic in `packages/learnwithai-core/`.
+- Keep API route handlers thin and focused on HTTP concerns.
+- Keep queue wiring in `packages/learnwithai-jobqueue/`.
+- Keep frontend components focused on UI concerns.
+- Update documentation when behavior, architecture, commands, or workflows change.
+
+## Code Quality Rules
+
+- Use explicit type annotations in Python for public functions, methods, and important variables when inference is not obvious.
+- Keep TypeScript strict. Do not introduce `any` unless there is a documented and unavoidable reason.
+- Prefer small, composable functions and services over large mixed-responsibility files.
+- Write Google-style docstrings for Python modules, classes, and functions that are part of the maintained codebase.
+- Keep comments high signal. Explain why or clarify non-obvious behavior, not line-by-line mechanics.
+
+## Testing Expectations
+
+- New and changed behavior must be covered by automated tests.
+- The repository target is full confidence, not minimal smoke coverage.
+- Python changes should maintain the repository's 100% coverage expectation.
+- Frontend changes should include or update Angular tests when behavior changes.
+- Prefer targeted tests while developing, then run the full repository QA check before you stop.
+
+## Validation Workflow
+
+Use this order unless the task specifically requires something else:
+
+1. Run targeted tests for the files or workspace you changed.
+2. Run any local formatters or linters that apply.
+3. Run `./scripts/qa.sh --check` before considering the task complete.
+
+When you want local autofixes first, run:
+
+```bash
+./scripts/qa.sh
+```
+
+The final check before finishing a task is still:
+
+```bash
+./scripts/qa.sh --check
+```
+
+## Documentation Expectations
+
+- Write for early career engineers, not only for experts.
+- Explain intent and boundaries before details.
+- Prefer concrete paths, commands, and examples over abstract descriptions.
+- When a change affects setup, QA, architecture, or developer workflow, update the related README or AGENTS file in the same branch.
+
+## Agent-Specific Guidance
+
+- Do not guess how the repository works when a file can answer the question.
+- Prefer the existing task, script, and workspace entrypoints over inventing new commands.
+- Do not finish a task with unvalidated changes if the relevant QA commands can be run.
+- If you touch multiple workspaces, check the documentation and AGENTS guidance for each one.
