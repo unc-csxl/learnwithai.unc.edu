@@ -30,6 +30,7 @@ Today the app is intentionally small so it is easy to understand:
 - The home screen is lazy loaded from `src/app/home/`
 - The authentication callback route is lazy loaded from `src/app/jwt/`
 - Auth-related client behavior lives in `src/app/auth.service.ts`
+- API authentication headers are attached centrally by `src/app/auth-token.interceptor.ts` for requests to `/api/*`
 
 That makes the frontend a good place to learn three ideas at once:
 

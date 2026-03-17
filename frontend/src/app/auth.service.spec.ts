@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
 import { User } from './user.model';
+import { authTokenInterceptor } from './auth-token.interceptor';
+import { AUTH_TOKEN_KEY } from './auth-token.service';
 
 const fakeUser: User = {
   id: '123',
@@ -19,7 +21,10 @@ describe('AuthService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([authTokenInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(AuthService);
     httpTesting = TestBed.inject(HttpTestingController);
@@ -50,16 +55,16 @@ describe('AuthService', () => {
   });
 
   it('logout should clear token and user', () => {
-    localStorage.setItem('auth_token', 'some-token');
+    localStorage.setItem(AUTH_TOKEN_KEY, 'some-token');
     service.logout();
-    expect(localStorage.getItem('auth_token')).toBeNull();
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
     expect(service.user()).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
   });
 
   it('handleToken should store token and fetch profile', () => {
     service.handleToken('my-jwt-token');
-    expect(localStorage.getItem('auth_token')).toBe('my-jwt-token');
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBe('my-jwt-token');
 
     const req = httpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer my-jwt-token');
@@ -70,13 +75,13 @@ describe('AuthService', () => {
   });
 
   it('fetchProfile should clear token on error', () => {
-    localStorage.setItem('auth_token', 'bad-token');
+    localStorage.setItem(AUTH_TOKEN_KEY, 'bad-token');
     service.fetchProfile();
 
     const req = httpTesting.expectOne('/api/me');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(localStorage.getItem('auth_token')).toBeNull();
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
     expect(service.user()).toBeNull();
   });
 
@@ -86,12 +91,15 @@ describe('AuthService', () => {
   });
 
   it('should fetch profile on construction when token exists', () => {
-    localStorage.setItem('auth_token', 'existing-token');
+    localStorage.setItem(AUTH_TOKEN_KEY, 'existing-token');
 
     // Recreate the injector so the constructor observes the persisted token.
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([authTokenInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     const newService = TestBed.inject(AuthService);
     const newHttpTesting = TestBed.inject(HttpTestingController);
