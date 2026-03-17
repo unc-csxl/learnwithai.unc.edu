@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: learnwithai-postgres-data
+  namespace: learnwithai
+  labels:
+    app.kubernetes.io/part-of: learnwithai
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnwithai-postgres
+  namespace: learnwithai
+  labels:
+    app.kubernetes.io/part-of: learnwithai
+    app.kubernetes.io/component: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: learnwithai-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: learnwithai-postgres
+        app.kubernetes.io/part-of: learnwithai
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: learnwithai-postgres-credentials
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - learnwithai
+                - -d
+                - learnwithai
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - learnwithai
+                - -d
+                - learnwithai
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: learnwithai-postgres-data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: learnwithai-postgres
+  namespace: learnwithai
+  labels:
+    app.kubernetes.io/part-of: learnwithai
+    app.kubernetes.io/component: database
+spec:
+  selector:
+    app.kubernetes.io/name: learnwithai-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
