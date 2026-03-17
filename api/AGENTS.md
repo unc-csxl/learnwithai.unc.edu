@@ -1,0 +1,22 @@
+# AGENTS.md
+
+Read the repository root `AGENTS.md` first. This file adds API-specific guidance.
+
+## Scope
+
+This workspace owns FastAPI request handling, routing, dependency wiring, and HTTP responses.
+
+## Expectations
+
+- Keep route handlers thin.
+- Put reusable business logic in `packages/learnwithai-core/`.
+- Use dependency injection for sessions, settings, auth helpers, and shared services.
+- Define DI types and factories in `src/api/dependency_injection.py`.
+- Add Google-style docstrings to maintained Python modules and public functions.
+- Keep type annotations explicit on public APIs.
+
+## Testing And Validation
+
+- Add or update tests in `api/test/` for route behavior and adapter logic.
+- Run targeted tests with `uv run pytest api/test`.
+- Before finishing, run `./scripts/qa.sh --check` from the repository root.

@@ -30,27 +30,6 @@ The repository is designed to work especially well in VS Code with the multi-roo
 
 The dev container also starts PostgreSQL and RabbitMQ for you through Docker Compose.
 
-### Local setup without the dev container
-
-You can also work locally if you already have the toolchain installed.
-
-Prerequisites:
-
-- Python 3.12+
-- `uv`
-- Node.js 22+
-- `pnpm`
-- Docker, or another way to provide PostgreSQL and RabbitMQ
-
-Install dependencies:
-
-```bash
-uv sync --all-packages --all-groups
-cd frontend && pnpm install
-```
-
-Then start PostgreSQL and RabbitMQ, followed by the frontend, API, and worker.
-
 ## QA Quick Start
 
 The repository-level quality gate is `scripts/qa.sh`.

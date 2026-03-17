@@ -1,3 +1,15 @@
+Read the repository root `AGENTS.md` first. This file adds frontend-specific guidance.
+
+## Frontend Contribution Rules
+
+- Keep UI concerns in the frontend. Move shared business rules to backend packages when appropriate.
+- New or changed behavior should include Angular tests.
+- Keep TypeScript strict. Do not introduce `any` without a strong documented reason.
+- Validate frontend changes with `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
+- The final repository-level validation is `./scripts/qa.sh --check` from the root.
+
+## Framework Guidance
+
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
 ## TypeScript Best Practices
