@@ -12,16 +12,26 @@
 #   3. The initial deploy.sh has already been run
 #
 # Usage:
-#   ./infra/scripts/rollout.sh          # build from latest main
-#   ./infra/scripts/rollout.sh abc123   # build from a specific commit
+#   ./infra/scripts/rollout.sh <namespace>          # build from latest main
+#   ./infra/scripts/rollout.sh <namespace> abc123   # build from a specific commit
+#
+# Example:
+#   ./infra/scripts/rollout.sh comp423-25s-ta-krissemern
+#   ./infra/scripts/rollout.sh comp423-25s-ta-krissemern abc123
 #
 # =============================================================================
 
 set -euo pipefail
 
-NAMESPACE="learnwithai"
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <namespace> [commit]" >&2
+    echo "Example: $0 comp423-25s-ta-krissemern" >&2
+    exit 1
+fi
+
+NAMESPACE="$1"
 BUILD_NAME="learnwithai-app"
-COMMIT="${1:-}"
+COMMIT="${2:-}"
 
 # -- Colors / helpers ---------------------------------------------------------
 RED='\033[0;31m'

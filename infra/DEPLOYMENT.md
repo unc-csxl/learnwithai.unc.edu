@@ -98,7 +98,7 @@ The same image is used by both the `app` and `worker` Deployments with different
 
 Plain YAML manifests using standard Kubernetes resources plus the OKD `Route` kind. No Helm, no Kustomize — just `oc apply -f`.
 
-- **namespace.yaml** — creates the `learnwithai` project.
+- **namespace.yaml** — creates the OKD project. The namespace is parameterized via `${NAMESPACE}` — scripts substitute the actual value at deploy time.
 - **secrets.yaml** — a documented template with placeholder values that operators fill in before applying. Contains `DATABASE_URL`, `RABBITMQ_URL`, `JWT_SECRET`, etc.
 - **postgres.yaml** — Deployment, Service, PVC for PostgreSQL 16.
 - **rabbitmq.yaml** — Deployment, Service for RabbitMQ.
@@ -108,8 +108,8 @@ Plain YAML manifests using standard Kubernetes resources plus the OKD `Route` ki
 
 ### Step 4: Create deployment scripts
 
-- **`infra/scripts/deploy.sh`** — guided first-time deployment. Checks prerequisites (`oc` logged in, namespace exists), applies manifests in order, waits for rollouts, runs a health check.
-- **`infra/scripts/rollout.sh`** — builds the image via `oc start-build`, waits for the build, triggers a rollout. Used by CI, can also be run manually.
+- **`infra/scripts/deploy.sh`** — guided first-time deployment. Takes the target namespace as a required argument, substitutes `${NAMESPACE}` placeholders in manifests via `envsubst`, checks prerequisites (`oc` logged in), applies manifests in order, waits for rollouts, runs a health check.
+- **`infra/scripts/rollout.sh`** — takes namespace as the first argument, builds the image via `oc start-build`, waits for the build, triggers a rollout. Used by CI, can also be run manually.
 
 ### Step 5: Create the GitHub Actions CD workflow
 
@@ -151,11 +151,11 @@ Add `oc` CLI installation to `.devcontainer/Dockerfile` so developers can intera
 
 ## Rollback
 
-Rolling back is a single command:
+Rolling back is a single command (replace `<your-namespace>`):
 
 ```bash
-oc rollout undo deployment/learnwithai-app -n learnwithai
-oc rollout undo deployment/learnwithai-worker -n learnwithai
+oc rollout undo deployment/learnwithai-app -n <your-namespace>
+oc rollout undo deployment/learnwithai-worker -n <your-namespace>
 ```
 
 OKD retains previous ReplicaSets by default, making rollback instant.

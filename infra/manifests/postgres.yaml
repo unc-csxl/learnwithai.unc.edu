@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: learnwithai-postgres-data
-  namespace: learnwithai
+  namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: database
@@ -18,7 +18,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: learnwithai-postgres
-  namespace: learnwithai
+  namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: database
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: learnwithai-postgres
-  namespace: learnwithai
+  namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: database

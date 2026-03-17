@@ -29,4 +29,4 @@ jobs:
           OKD_TOKEN: ${{ secrets.OKD_TOKEN }}
 
       - name: Build and roll out
-        run: ./infra/scripts/rollout.sh "${{ github.event.workflow_run.head_sha }}"
+        run: ./infra/scripts/rollout.sh "${{ secrets.OKD_NAMESPACE }}" "${{ github.event.workflow_run.head_sha }}"

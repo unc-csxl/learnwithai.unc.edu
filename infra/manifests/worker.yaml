@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: learnwithai-worker
-  namespace: learnwithai
+  namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: worker

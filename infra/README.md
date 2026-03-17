@@ -8,6 +8,8 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the full deployment plan and architecture
 
 ### First-Time Deployment
 
+Replace `<your-namespace>` below with the OKD project name your sysadmin assigned to your team (e.g. `comp423-25s-ta-krissemern`).
+
 ```bash
 # 1. Log into your OKD cluster
 oc login https://your-cluster-api:6443
@@ -16,8 +18,8 @@ oc login https://your-cluster-api:6443
 cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
 # ... edit secrets.local.yaml with real passwords ...
 
-# 3. Run the deployment script
-./infra/scripts/deploy.sh
+# 3. Run the deployment script with your namespace
+./infra/scripts/deploy.sh <your-namespace>
 ```
 
 ### Updating After a Code Change
@@ -25,24 +27,25 @@ cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
 If CI/CD is configured (see below), pushing to `main` triggers automatic deployment. For manual rollouts:
 
 ```bash
-./infra/scripts/rollout.sh
+./infra/scripts/rollout.sh <your-namespace>
 ```
 
 ### Setting Up CI/CD
 
 Add these GitHub Actions secrets to your repository:
 
-| Secret       | Value                                      |
-|--------------|--------------------------------------------|
-| `OKD_SERVER` | OKD API server URL (e.g. `https://api.cloud.unc.edu:6443`) |
-| `OKD_TOKEN`  | Service account token with deploy permissions |
+| Secret          | Value                                      |
+|-----------------|--------------------------------------------|
+| `OKD_SERVER`    | OKD API server URL (e.g. `https://api.cloud.unc.edu:6443`) |
+| `OKD_TOKEN`     | Service account token with deploy permissions |
+| `OKD_NAMESPACE` | OKD project/namespace to deploy into       |
 
-To create a service account token:
+To create a service account token (replace `<your-namespace>`):
 
 ```bash
-oc create serviceaccount deployer -n learnwithai
-oc policy add-role-to-user edit -z deployer -n learnwithai
-oc create token deployer -n learnwithai --duration=8760h
+oc create serviceaccount deployer -n <your-namespace>
+oc policy add-role-to-user edit -z deployer -n <your-namespace>
+oc create token deployer -n <your-namespace> --duration=8760h
 ```
 
 ## Directory Layout
@@ -74,23 +77,25 @@ Developer infrastructure still lives in repository-level files:
 
 ## Useful OKD Commands
 
+Replace `<your-namespace>` with your team's OKD project name.
+
 ```bash
 # View running pods
-oc get pods -n learnwithai
+oc get pods -n <your-namespace>
 
 # Tail application logs
-oc logs -f deployment/learnwithai-app -n learnwithai
+oc logs -f deployment/learnwithai-app -n <your-namespace>
 
 # Tail worker logs
-oc logs -f deployment/learnwithai-worker -n learnwithai
+oc logs -f deployment/learnwithai-worker -n <your-namespace>
 
 # Check route URL
-oc get route -n learnwithai
+oc get route -n <your-namespace>
 
 # Rollback to previous version
-oc rollout undo deployment/learnwithai-app -n learnwithai
-oc rollout undo deployment/learnwithai-worker -n learnwithai
+oc rollout undo deployment/learnwithai-app -n <your-namespace>
+oc rollout undo deployment/learnwithai-worker -n <your-namespace>
 
 # Open a shell in the app pod
-oc rsh deployment/learnwithai-app -n learnwithai
+oc rsh deployment/learnwithai-app -n <your-namespace>
 ```

@@ -2,7 +2,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: learnwithai
-  namespace: learnwithai
+  namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: app

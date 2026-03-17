@@ -9,7 +9,14 @@
 #   3. You have edited infra/manifests/secrets.yaml with real values
 #
 # Usage:
-#   ./infra/scripts/deploy.sh
+#   ./infra/scripts/deploy.sh <namespace>
+#
+# Example:
+#   ./infra/scripts/deploy.sh comp423-25s-ta-krissemern
+#
+# The namespace is the OKD project your sysadmin gave you. Every manifest
+# uses the placeholder ${NAMESPACE} which this script substitutes at apply
+# time. Nothing is written to disk — the checked-in YAML stays generic.
 #
 # This script is idempotent — you can safely re-run it.
 # =============================================================================
@@ -30,9 +37,24 @@ warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 fail()  { error "$@"; exit 1; }
 
+# -- Namespace argument -------------------------------------------------------
+
+if [ $# -lt 1 ]; then
+    fail "Usage: $0 <namespace>\n       Example: $0 comp423-25s-ta-krissemern"
+fi
+
+export NAMESPACE="$1"
+info "Target namespace: $NAMESPACE"
+
+# Helper: substitute ${NAMESPACE} in a manifest and pipe to oc apply
+apply_manifest() {
+    envsubst '${NAMESPACE}' < "$1" | oc apply -f -
+}
+
 # -- Pre-flight checks -------------------------------------------------------
 
 command -v oc >/dev/null 2>&1 || fail "oc CLI not found. Install it first: https://docs.okd.io/latest/cli_reference/openshift_cli/getting-started-cli.html"
+command -v envsubst >/dev/null 2>&1 || fail "envsubst not found. Install gettext: apt-get install gettext-base"
 
 oc whoami >/dev/null 2>&1 || fail "Not logged into an OKD cluster. Run: oc login <cluster-url>"
 
@@ -49,55 +71,55 @@ fi
 # -- Apply manifests in order -------------------------------------------------
 
 info "Step 1/6: Creating namespace..."
-oc apply -f "$MANIFESTS_DIR/namespace.yaml"
+apply_manifest "$MANIFESTS_DIR/namespace.yaml"
 echo
 
 info "Step 2/6: Applying secrets..."
-oc apply -f "$MANIFESTS_DIR/secrets.yaml"
+apply_manifest "$MANIFESTS_DIR/secrets.yaml"
 echo
 
 info "Step 3/6: Deploying PostgreSQL..."
-oc apply -f "$MANIFESTS_DIR/postgres.yaml"
+apply_manifest "$MANIFESTS_DIR/postgres.yaml"
 echo
 
 info "Step 4/6: Deploying RabbitMQ..."
-oc apply -f "$MANIFESTS_DIR/rabbitmq.yaml"
+apply_manifest "$MANIFESTS_DIR/rabbitmq.yaml"
 echo
 
 info "Waiting for PostgreSQL to be ready..."
-oc rollout status deployment/learnwithai-postgres -n learnwithai --timeout=120s
+oc rollout status deployment/learnwithai-postgres -n "$NAMESPACE" --timeout=120s
 
 info "Waiting for RabbitMQ to be ready..."
-oc rollout status deployment/learnwithai-rabbitmq -n learnwithai --timeout=120s
+oc rollout status deployment/learnwithai-rabbitmq -n "$NAMESPACE" --timeout=120s
 echo
 
 info "Step 5/6: Deploying application..."
-oc apply -f "$MANIFESTS_DIR/app.yaml"
-oc apply -f "$MANIFESTS_DIR/worker.yaml"
+apply_manifest "$MANIFESTS_DIR/app.yaml"
+apply_manifest "$MANIFESTS_DIR/worker.yaml"
 echo
 
 info "Step 6/6: Creating route..."
-oc apply -f "$MANIFESTS_DIR/route.yaml"
+apply_manifest "$MANIFESTS_DIR/route.yaml"
 echo
 
 # -- Trigger initial build (if needed) ----------------------------------------
 
 info "Starting initial image build..."
-oc start-build learnwithai-app -n learnwithai --follow || warn "Build may already be running."
+oc start-build learnwithai-app -n "$NAMESPACE" --follow || warn "Build may already be running."
 echo
 
 # -- Wait for rollouts --------------------------------------------------------
 
 info "Waiting for app deployment..."
-oc rollout status deployment/learnwithai-app -n learnwithai --timeout=300s
+oc rollout status deployment/learnwithai-app -n "$NAMESPACE" --timeout=300s
 
 info "Waiting for worker deployment..."
-oc rollout status deployment/learnwithai-worker -n learnwithai --timeout=300s
+oc rollout status deployment/learnwithai-worker -n "$NAMESPACE" --timeout=300s
 echo
 
 # -- Health check --------------------------------------------------------------
 
-ROUTE_HOST=$(oc get route learnwithai -n learnwithai -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
+ROUTE_HOST=$(oc get route learnwithai -n "$NAMESPACE" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
 if [ -n "$ROUTE_HOST" ]; then
     info "Route: https://$ROUTE_HOST"
     info "Running health check..."
