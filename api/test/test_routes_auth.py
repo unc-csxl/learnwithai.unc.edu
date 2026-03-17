@@ -15,7 +15,6 @@ from api.main import app
 from api.routes.auth import (
     onyen_login_redirect,
     authenticate_with_csxl_callback,
-    get_current_user_profile,
 )
 from learnwithai.config import Settings
 from learnwithai.models.user import User
@@ -247,68 +246,6 @@ def test_auth_callback_returns_401_for_invalid_token(client: TestClient) -> None
 
     # Act
     response = client.get("/api/auth?token=bad-token")
-
-    # Assert
-    assert response.status_code == 401
-
-
-# ---- get_current_user_profile ----
-
-
-def test_get_current_user_profile_returns_user_dict() -> None:
-    # Arrange
-    user = _stub_user(email="test@example.com")
-
-    # Act
-    result = get_current_user_profile(user)
-
-    # Assert
-    assert result == {
-        "id": str(user.id),
-        "name": "Test User",
-        "pid": "123456789",
-        "onyen": "testuser",
-        "email": "test@example.com",
-    }
-
-
-def test_get_current_user_profile_returns_null_email_when_missing() -> None:
-    # Arrange
-    user = _stub_user(email=None)
-
-    # Act
-    result = get_current_user_profile(user)
-
-    # Assert
-    assert result["email"] is None
-
-
-# ---- integration tests for /auth/me ----
-
-
-@pytest.mark.integration
-def test_auth_me_returns_user_profile(client: TestClient) -> None:
-    # Arrange
-    user = _stub_user(email="test@example.com")
-    app.dependency_overrides[get_current_user] = lambda: user
-
-    # Act
-    response = client.get("/api/auth/me")
-
-    # Assert
-    assert response.status_code == 200
-    body = response.json()
-    assert body["name"] == "Test User"
-    assert body["onyen"] == "testuser"
-    assert body["email"] == "test@example.com"
-
-
-@pytest.mark.integration
-def test_auth_me_returns_401_without_token(client: TestClient) -> None:
-    # Arrange (no overrides — real get_current_user will reject)
-
-    # Act
-    response = client.get("/api/auth/me")
 
     # Assert
     assert response.status_code == 401

@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.routes.health import router as health_router
 from api.routes.auth import router as auth_router
+from api.routes.me import router as me_router
 
 from learnwithai.config import Settings
 
@@ -72,8 +73,8 @@ def mount_spa(application: FastAPI, static_dir: Path) -> None:
 settings = Settings()
 
 app = FastAPI(title=settings.app_name)
-app.include_router(health_router, prefix="/api")
-app.include_router(auth_router, prefix="/api/auth")
+routers = [health_router, me_router, auth_router]
+map(lambda router: app.include_router(router, prefix="/api"), routers)
 
 static_dir = _resolve_static_dir(settings)
 if settings.is_production and static_dir.is_dir():
