@@ -9,7 +9,7 @@ from learnwithai.services.csxl_auth_service import (
 )
 from learnwithai.db import get_session, Session
 from learnwithai.interfaces import JobQueue
-from learnwithai.models.user import User
+from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 

@@ -7,7 +7,7 @@ single dummy user for developer testing.
 
 import learnwithai.models  # noqa: F401
 from learnwithai.db import create_db_and_tables, get_session
-from learnwithai.models.user import User
+from learnwithai.tables.user import User
 
 
 def main() -> None:

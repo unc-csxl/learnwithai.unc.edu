@@ -9,7 +9,7 @@ import pytest
 
 from learnwithai.config import Settings
 from learnwithai.models.unc import UNCDirectorySearch
-from learnwithai.models.user import User
+from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.services.csxl_auth_service import (
     AuthenticationException,

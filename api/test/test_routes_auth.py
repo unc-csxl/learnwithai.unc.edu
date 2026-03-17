@@ -17,7 +17,7 @@ from api.routes.auth import (
     authenticate_with_csxl_callback,
 )
 from learnwithai.config import Settings
-from learnwithai.models.user import User
+from learnwithai.tables.user import User
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
 

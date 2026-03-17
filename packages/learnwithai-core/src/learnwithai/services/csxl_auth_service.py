@@ -4,7 +4,7 @@ import httpx
 import jwt
 from datetime import datetime, timezone, timedelta
 from ..config import Settings
-from ..models.user import User
+from ..tables.user import User
 from ..models.unc import UNCDirectorySearch
 from ..repositories.user_repository import UserRepository
 

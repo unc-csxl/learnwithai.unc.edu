@@ -5,7 +5,7 @@ import os
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
-from learnwithai.models.user import User
+from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
 
 DEFAULT_TEST_DB_URL = (

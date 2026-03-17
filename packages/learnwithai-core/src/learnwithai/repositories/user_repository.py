@@ -1,7 +1,7 @@
 """Persistence helpers for user records."""
 
 from ..db import Session
-from ..models.user import User
+from ..tables.user import User
 from sqlmodel import select, col
 
 

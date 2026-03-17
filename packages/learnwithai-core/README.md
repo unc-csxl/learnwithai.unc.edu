@@ -14,7 +14,8 @@
 
 - `src/learnwithai/config.py`: application settings
 - `src/learnwithai/db.py`: database helpers
-- `src/learnwithai/models/`: domain entities and schemas
+- `src/learnwithai/models/`: domain models (API facing)
+- `src/learnwithai/tables/`: domain entities (DB facing)
 - `src/learnwithai/repositories/`: data access
 - `src/learnwithai/services/`: shared business logic
 - `src/learnwithai/jobs/`: queueable job definitions

@@ -10,7 +10,7 @@ from api.dependency_injection import get_current_user
 from api.main import app
 from api.models import UserProfile
 from api.routes.me import get_current_user_profile
-from learnwithai.models import User
+from learnwithai.tables.user import User
 
 
 def _stub_user(
