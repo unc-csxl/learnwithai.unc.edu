@@ -1,0 +1,32 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Quality Gates"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install oc CLI
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: "4"
+
+      - name: Log in to OKD
+        run: oc login "${{ secrets.OKD_SERVER }}" --token="${{ secrets.OKD_TOKEN }}" --insecure-skip-tls-verify
+        env:
+          OKD_SERVER: ${{ secrets.OKD_SERVER }}
+          OKD_TOKEN: ${{ secrets.OKD_TOKEN }}
+
+      - name: Build and roll out
+        run: ./infra/scripts/rollout.sh "${{ github.event.workflow_run.head_sha }}"
