@@ -1,65 +1,101 @@
-# Learnwithai
+# Frontend Workspace
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.2.
+This workspace contains the Angular frontend for LearnWithAI. If you are new to frontend development, treat this app as the browser-facing layer of the system: it renders UI, responds to user interaction, and calls the API.
 
-## Development server
+The frontend should not own backend business rules. It should present data, collect input, and coordinate with the API cleanly.
 
-Install dependencies with:
+## What Lives Here
+
+```text
+frontend/
+|- src/
+|  |- main.ts                  Angular bootstrap entrypoint
+|  `- app/
+|     |- app.ts                Root shell component
+|     |- app.routes.ts         Top-level lazy routes
+|     |- auth.service.ts       Client-side auth integration
+|     |- home/                 Home route feature
+|     `- jwt/                  JWT callback route feature
+|- public/                     Static public assets
+|- .vscode/                    Frontend-specific tasks and launch configs
+|- package.json                Frontend scripts and dependencies
+```
+
+## Current Application Shape
+
+Today the app is intentionally small so it is easy to understand:
+
+- The root shell is in `src/app/app.ts`
+- Routes are declared in `src/app/app.routes.ts`
+- The home screen is lazy loaded from `src/app/home/`
+- The authentication callback route is lazy loaded from `src/app/jwt/`
+- Auth-related client behavior lives in `src/app/auth.service.ts`
+
+That makes the frontend a good place to learn three ideas at once:
+
+- Component-based UI
+- Client-side routing
+- Calling backend services from the browser
+
+## How To Run The Frontend
+
+From the `frontend/` directory:
 
 ```bash
 pnpm install
-```
-
-To start a local development server, run:
-
-```bash
 pnpm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Or in VS Code, run the `start` task from the `frontend` workspace.
 
-## Code scaffolding
+Then open `http://localhost:4200`.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Frontend QA Commands
 
-```bash
-pnpm ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+From the `frontend/` directory:
 
 ```bash
-pnpm ng generate --help
+pnpm format:check
+pnpm lint
+pnpm test:ci
 ```
 
-## Building
-
-To build the project run:
+If you want local autofixes first:
 
 ```bash
-pnpm build
+pnpm format
+pnpm lint:fix
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+The repository-level final check is still run from the root:
 
 ```bash
-pnpm test
+./scripts/qa.sh --check
 ```
 
-## Running end-to-end tests
+## How To Navigate This App
 
-For end-to-end (e2e) testing, run:
+If you are tracing a frontend feature:
 
-```bash
-pnpm ng e2e
-```
+1. Start in `src/app/app.routes.ts`.
+2. Open the route's component folder.
+3. Check any supporting services such as `auth.service.ts`.
+4. Follow network calls into the API workspace.
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+If you are adding a new screen:
 
-## Additional Resources
+1. Create a focused component or feature folder under `src/app/`.
+2. Add a route in `app.routes.ts`.
+3. Add or update tests near the changed code.
+4. Validate with linting and frontend tests.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## VS Code Support In This Workspace
+
+This workspace includes:
+
+- A `start` task for the dev server
+- A `test` task for watch-mode testing
+- A `Frontend: serve` launch configuration
+- A `Frontend: test` launch configuration
+
+Those are useful when you are still learning the CLI and want repeatable entrypoints.
