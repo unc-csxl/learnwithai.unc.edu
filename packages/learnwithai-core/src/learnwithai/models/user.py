@@ -14,9 +14,9 @@ class User(SQLModel, table=True):
         primary_key=True,
         default_factory=uuid.uuid4,
     )
-    name: str
-    pid: str
-    onyen: str
+    name: str = Field()
+    pid: str = Field(index=True)
+    onyen: str = Field()
     family_name: str | None = Field(default=None)
     given_name: str | None = Field(default=None)
     email: str | None = Field(default=None)
