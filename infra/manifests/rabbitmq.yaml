@@ -29,27 +29,30 @@ spec:
           envFrom:
             - secretRef:
                 name: learnwithai-rabbitmq-credentials
+          startupProbe:
+            tcpSocket:
+              port: 5672
+            periodSeconds: 5
+            failureThreshold: 24
           readinessProbe:
-            exec:
-              command:
-                - rabbitmq-diagnostics
-                - check_port_connectivity
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            tcpSocket:
+              port: 5672
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
-            exec:
-              command:
-                - rabbitmq-diagnostics
-                - check_port_connectivity
+            tcpSocket:
+              port: 5672
             initialDelaySeconds: 30
-            periodSeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 3
           resources:
             requests:
-              memory: 256Mi
-              cpu: 100m
+              memory: 128Mi
+              cpu: 60m
             limits:
-              memory: 512Mi
-              cpu: 500m
+              memory: 256Mi
+              cpu: 200m
 
 ---
 apiVersion: v1

@@ -3,8 +3,9 @@
 # rollout.sh — Build and roll out a new version of LearnWithAI
 # =============================================================================
 #
-# This script triggers an OKD build from the Git repository, waits for it to
-# complete, then rolls out the new image to the app and worker deployments.
+# This script uploads the checked-out working tree to an OKD binary build, waits
+# for it to complete, then rolls out the new image to the app and worker
+# deployments.
 #
 # Prerequisites:
 #   1. `oc` CLI installed and on your PATH
@@ -32,6 +33,8 @@ fi
 NAMESPACE="$1"
 BUILD_NAME="learnwithai-app"
 COMMIT="${2:-}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # -- Colors / helpers ---------------------------------------------------------
 RED='\033[0;31m'
@@ -52,13 +55,13 @@ oc whoami >/dev/null 2>&1 || fail "Not logged into OKD. Run: oc login <cluster-u
 BUILD_ARGS=()
 if [ -n "$COMMIT" ]; then
     BUILD_ARGS+=(--commit="$COMMIT")
-    info "Building from commit: $COMMIT"
+    info "Building from local working tree at commit: $COMMIT"
 else
-    info "Building from latest main branch"
+    info "Building from the current local working tree"
 fi
 
 info "Starting build..."
-oc start-build "$BUILD_NAME" -n "$NAMESPACE" --follow "${BUILD_ARGS[@]}"
+oc start-build "$BUILD_NAME" -n "$NAMESPACE" --from-dir="$REPO_ROOT" --follow "${BUILD_ARGS[@]}"
 echo
 
 # -- Roll out -----------------------------------------------------------------

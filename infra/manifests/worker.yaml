@@ -20,12 +20,9 @@ spec:
     spec:
       containers:
         - name: worker
-          image: learnwithai-app:latest
+          image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest
           command:
-            - uv
-            - run
-            - --no-dev
-            - dramatiq
+            - /app/.venv/bin/dramatiq
             - learnwithai_jobqueue.worker
           envFrom:
             - secretRef:
@@ -37,8 +34,8 @@ spec:
               value: "INFO"
           resources:
             requests:
-              memory: 256Mi
-              cpu: 100m
+              memory: 96Mi
+              cpu: 60m
             limits:
-              memory: 512Mi
-              cpu: 500m
+              memory: 192Mi
+              cpu: 150m

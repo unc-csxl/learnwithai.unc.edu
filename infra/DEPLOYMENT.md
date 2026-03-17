@@ -6,7 +6,7 @@ This document describes how to deploy LearnWithAI to an OKD (OpenShift-origin) c
 
 1. **Minimal tooling** — use plain Kubernetes/OKD YAML manifests, a small shell script, and `oc` (installed in the devcontainer for operator convenience).
 2. **Foolproof initial setup** — a single `infra/scripts/deploy.sh` walks first-time operators through initial cluster deployment.
-3. **Continuous deployment** — a push to `main` that passes QA triggers a GitHub Actions workflow that builds container images, pushes them to the OKD integrated registry, and rolls out the new version.
+3. **Continuous deployment** — a push to `main` that passes QA triggers a GitHub Actions workflow that uploads the checked-out repository as a binary build source, builds container images in OKD, and rolls out the new version.
 4. **Production-ready architecture** — FastAPI serves both the API and the pre-built Angular static assets behind a single Route, with PostgreSQL and RabbitMQ running as separate pods.
 
 ## Production Architecture
@@ -39,9 +39,9 @@ This document describes how to deploy LearnWithAI to an OKD (OpenShift-origin) c
 
 | Component   | Image / Source              | Replicas | Persistent Storage |
 |-------------|-----------------------------|----------|--------------------|
-| **app**     | Custom Dockerfile (multi-stage) | 1    | None               |
+| **app**     | Custom Dockerfile (multi-stage) via binary build | 1 | None |
 | **worker**  | Same image as app           | 1        | None               |
-| **postgres**| `postgres:16`               | 1        | PVC (1 Gi)         |
+| **postgres**| `quay.io/sclorg/postgresql-16-c9s` | 1 | PVC (1 Gi)         |
 | **rabbitmq**| `rabbitmq:3-management`     | 1        | None               |
 
 ### How Requests Are Routed
@@ -65,7 +65,7 @@ infra/
 │   ├── secrets.yaml       ← template for production secrets
 │   ├── postgres.yaml      ← PostgreSQL Deployment + Service + PVC
 │   ├── rabbitmq.yaml      ← RabbitMQ Deployment + Service
-│   ├── app.yaml           ← App Deployment + Service
+│   ├── app.yaml           ← BuildConfig + ImageStream + app Deployment + Service
 │   ├── worker.yaml        ← Worker Deployment
 │   └── route.yaml         ← OKD Route (TLS edge)
 └── scripts/
@@ -100,16 +100,16 @@ Plain YAML manifests using standard Kubernetes resources plus the OKD `Route` ki
 
 - **namespace.yaml** — creates the OKD project. The namespace is parameterized via `${NAMESPACE}` — scripts substitute the actual value at deploy time.
 - **secrets.yaml** — a documented template with placeholder values that operators fill in before applying. Contains `DATABASE_URL`, `RABBITMQ_URL`, `JWT_SECRET`, etc.
-- **postgres.yaml** — Deployment, Service, PVC for PostgreSQL 16.
+- **postgres.yaml** — Deployment, Service, PVC for an OpenShift-compatible PostgreSQL 16 image.
 - **rabbitmq.yaml** — Deployment, Service for RabbitMQ.
-- **app.yaml** — Deployment and Service for the app container.
+- **app.yaml** — BuildConfig, ImageStream, Deployment, and Service for the app container.
 - **worker.yaml** — Deployment for the Dramatiq worker (same image, different command).
 - **route.yaml** — OKD Route with TLS edge termination.
 
 ### Step 4: Create deployment scripts
 
-- **`infra/scripts/deploy.sh`** — guided first-time deployment. Takes the target namespace as a required argument, substitutes `${NAMESPACE}` placeholders in manifests via `envsubst`, checks prerequisites (`oc` logged in), applies manifests in order, waits for rollouts, runs a health check.
-- **`infra/scripts/rollout.sh`** — takes namespace as the first argument, builds the image via `oc start-build`, waits for the build, triggers a rollout. Used by CI, can also be run manually.
+- **`infra/scripts/deploy.sh`** — guided first-time deployment. Takes the target namespace as a required argument, substitutes `${NAMESPACE}` placeholders in manifests via `envsubst`, checks prerequisites (`oc` logged in), applies manifests in order, uploads the local repository checkout as the initial binary build source, waits for rollouts, and runs a health check.
+- **`infra/scripts/rollout.sh`** — takes namespace as the first argument, uploads the checked-out repository via `oc start-build --from-repo`, waits for the build, then triggers a rollout. Used by CI, can also be run manually.
 
 ### Step 5: Create the GitHub Actions CD workflow
 
@@ -117,7 +117,7 @@ A new workflow `.github/workflows/deploy.yml` that:
 
 1. Triggers on push to `main` (only after QA passes by depending on the existing `qa` job).
 2. Logs into the OKD cluster using a service account token stored as a GitHub secret.
-3. Triggers the build and rollout via `oc` commands.
+3. Triggers the build and rollout via `oc` commands against the checked-out workflow commit.
 
 ### Step 6: Install `oc` in the devcontainer
 

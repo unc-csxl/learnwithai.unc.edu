@@ -41,10 +41,11 @@ COPY --from=frontend-build /build/frontend/dist/learnwithai/browser/ /app/static
 USER app
 
 ENV ENVIRONMENT=production \
+    PATH=/app/.venv/bin:$PATH \
     STATIC_DIR=/app/static \
     PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
 # Default command: run the API server
-CMD ["uv", "run", "--no-dev", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -25,6 +25,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFESTS_DIR="$SCRIPT_DIR/../manifests"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # -- Colors / helpers ---------------------------------------------------------
 RED='\033[0;31m'
@@ -51,6 +52,15 @@ apply_manifest() {
     envsubst '${NAMESPACE}' < "$1" | oc apply -f -
 }
 
+ensure_namespace() {
+    if oc get namespace "$NAMESPACE" >/dev/null 2>&1; then
+        warn "Namespace $NAMESPACE already exists. Reusing it without modifying cluster-scoped metadata."
+        return
+    fi
+
+    envsubst '${NAMESPACE}' < "$MANIFESTS_DIR/namespace.yaml" | oc create -f -
+}
+
 # -- Pre-flight checks -------------------------------------------------------
 
 command -v oc >/dev/null 2>&1 || fail "oc CLI not found. Install it first: https://docs.okd.io/latest/cli_reference/openshift_cli/getting-started-cli.html"
@@ -64,18 +74,18 @@ echo
 
 # -- Check that secrets template has been filled in ---------------------------
 
-if grep -q '<PLACEHOLDER>\|<DB_PASSWORD>\|<RABBITMQ_PASSWORD>\|<GENERATE_A_STRONG_SECRET>\|<PUBLIC_HOSTNAME>' "$MANIFESTS_DIR/secrets.yaml"; then
-    fail "secrets.yaml still contains placeholder values. Edit it before deploying."
+if grep -q '<PLACEHOLDER>\|<DB_PASSWORD>\|<RABBITMQ_PASSWORD>\|<GENERATE_A_STRONG_SECRET>\|<PUBLIC_HOSTNAME>' "$MANIFESTS_DIR/secrets.local.yaml"; then
+    fail "secrets.local.yaml still contains placeholder values. Edit it before deploying."
 fi
 
 # -- Apply manifests in order -------------------------------------------------
 
 info "Step 1/6: Creating namespace..."
-apply_manifest "$MANIFESTS_DIR/namespace.yaml"
+ensure_namespace
 echo
 
 info "Step 2/6: Applying secrets..."
-apply_manifest "$MANIFESTS_DIR/secrets.yaml"
+apply_manifest "$MANIFESTS_DIR/secrets.local.yaml"
 echo
 
 info "Step 3/6: Deploying PostgreSQL..."
@@ -104,8 +114,8 @@ echo
 
 # -- Trigger initial build (if needed) ----------------------------------------
 
-info "Starting initial image build..."
-oc start-build learnwithai-app -n "$NAMESPACE" --follow || warn "Build may already be running."
+info "Starting initial image build from the local working tree..."
+oc start-build learnwithai-app -n "$NAMESPACE" --from-dir="$REPO_ROOT" --follow || warn "Build may already be running."
 echo
 
 # -- Wait for rollouts --------------------------------------------------------

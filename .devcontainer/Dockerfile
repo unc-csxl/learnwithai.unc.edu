@@ -32,10 +32,17 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
 # Install oc CLI (OpenShift / OKD)
-ARG OC_VERSION=4.17.0
-RUN curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/oc/${OC_VERSION}/linux/oc.tar.gz" \
-    | tar xz -C /usr/local/bin oc \
-    && chmod +x /usr/local/bin/oc
+# Add `oc` OpenShift Client to DevContainer
+RUN arch="$(arch)"; \
+    case "$arch" in \
+        x86_64) export TARGET='' ;; \
+        aarch64) export TARGET='arm64-' ;; \
+    esac; \
+    wget -O /tmp/oc.tgz "https://github.com/okd-project/okd/releases/download/4.22.0-okd-scos.ec.9/openshift-client-linux-${TARGET}4.22.0-okd-scos.ec.9.tar.gz" && \
+    cd /tmp && \
+    tar -xvzf oc.tgz && \
+    sudo mv oc kubectl /usr/bin && \
+    rm oc.tgz README.md
 
 ENV PATH="/home/vscode/.local/bin:${PATH}"
 

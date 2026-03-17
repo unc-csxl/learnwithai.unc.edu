@@ -22,6 +22,10 @@ cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
 ./infra/scripts/deploy.sh <your-namespace>
 ```
 
+If the namespace already exists and your account only has project-level permissions, the deploy script reuses that namespace instead of trying to modify cluster-scoped namespace metadata.
+
+The OKD image build uses the checked-out repository as a binary source archive, so the cluster does not need direct clone access to a private GitHub repository.
+
 ### Updating After a Code Change
 
 If CI/CD is configured (see below), pushing to `main` triggers automatic deployment. For manual rollouts:
@@ -29,6 +33,16 @@ If CI/CD is configured (see below), pushing to `main` triggers automatic deploym
 ```bash
 ./infra/scripts/rollout.sh <your-namespace>
 ```
+
+### Tearing Down A Deployment
+
+To delete the LearnWithAI resources from a namespace with a confirmation prompt:
+
+```bash
+./infra/scripts/destroy.sh <your-namespace>
+```
+
+To skip prompts, pass `--yes`. To also remove the namespace itself, add `--delete-namespace`.
 
 ### Setting Up CI/CD
 
@@ -63,8 +77,9 @@ infra/
 │   ├── worker.yaml      # Dramatiq worker Deployment
 │   └── route.yaml       # OKD Route (TLS edge termination)
 └── scripts/
-    ├── deploy.sh        # Guided first-time deployment
-    └── rollout.sh       # Build + rolling update (used by CI)
+    ├── deploy.sh        # Guided first-time deployment + initial binary build
+    ├── destroy.sh       # Tear down manifest-managed resources
+    └── rollout.sh       # Binary build + rolling update (used by CI)
 ```
 
 ## Other Infrastructure
