@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: learnwithai
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/part-of: learnwithai
+    app.kubernetes.io/component: app
+spec:
+  # Replace with your cluster's application hostname
+  # host: learnwithai.apps.your-cluster.example.com
+  to:
+    kind: Service
+    name: learnwithai-app
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

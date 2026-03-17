@@ -21,9 +21,9 @@ def test_app_registers_expected_routes() -> None:
     route_paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
 
     # Act
-    has_health_route = "/health" in route_paths
-    has_queue_route = "/queue" in route_paths
-    has_auth_me_route = "/auth/me" in route_paths
+    has_health_route = "/api/health" in route_paths
+    has_queue_route = "/api/queue" in route_paths
+    has_auth_me_route = "/api/auth/me" in route_paths
 
     # Assert
     assert has_health_route is True

@@ -44,7 +44,7 @@ def test_health_endpoint_returns_json_payload(client: TestClient) -> None:
 
     # Act
     with patch("api.routes.health.get_health_status", return_value=expected_status):
-        response = client.get("/health")
+        response = client.get("/api/health")
 
     # Assert
     assert response.status_code == 200
@@ -58,7 +58,7 @@ def test_queue_endpoint_uses_dependency_overrides(client: TestClient) -> None:
     app.dependency_overrides[job_queue_factory] = lambda: job_queue
 
     # Act
-    response = client.post("/queue")
+    response = client.post("/api/queue")
 
     # Assert
     assert response.status_code == 200

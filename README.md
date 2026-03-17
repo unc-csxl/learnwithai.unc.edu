@@ -25,7 +25,7 @@ The repository is designed to work especially well in VS Code with the multi-roo
    - Worker: run the `job queue: run` task from the repository workspace
 5. Open the running services:
    - Frontend: `http://localhost:4200`
-   - API health check: `http://localhost:8000/health`
+   - API health check: `http://localhost:8000/api/health`
    - RabbitMQ management UI: `http://localhost:15672`
 
 The dev container also starts PostgreSQL and RabbitMQ for you through Docker Compose.
@@ -45,6 +45,19 @@ What it runs:
 - Prettier, ESLint, and Angular tests in the frontend workspace
 
 If you are not sure whether your work is ready, run `./scripts/qa.sh --check`. That is the closest local match to the GitHub Actions workflow.
+
+## Deployment
+
+The application deploys to an OKD cluster. See `infra/DEPLOYMENT.md` for the full architecture and plan.
+
+**First-time setup:**
+
+```bash
+# Edit secrets, then run:
+./infra/scripts/deploy.sh
+```
+
+**CI/CD:** Pushing to `main` and passing QA automatically triggers a new deployment via GitHub Actions. See `infra/README.md` for setup instructions.
 
 ## How The Repository Is Organized
 
