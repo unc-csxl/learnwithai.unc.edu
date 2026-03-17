@@ -31,6 +31,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 
+# Install oc CLI (OpenShift / OKD)
+ARG OC_VERSION=4.17.0
+RUN curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/oc/${OC_VERSION}/linux/oc.tar.gz" \
+    | tar xz -C /usr/local/bin oc \
+    && chmod +x /usr/local/bin/oc
+
 ENV PATH="/home/vscode/.local/bin:${PATH}"
 
 USER vscode

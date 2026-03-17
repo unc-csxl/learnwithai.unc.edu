@@ -1,39 +1,96 @@
 # Infra Workspace
 
-This workspace is reserved for infrastructure-related assets.
+This workspace holds everything needed to deploy LearnWithAI to an OKD cluster.
 
-Right now, most active infrastructure configuration lives outside this folder in repository-level files such as:
+## Quick Start
 
-- `.devcontainer/devcontainer.json`
-- `.devcontainer/compose.yaml`
-- `.devcontainer/Dockerfile`
-- `.github/workflows/quality-gates.yml`
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full deployment plan and architecture.
 
-That means `infra/` is currently lightweight, but it still matters as the natural home for future infrastructure code such as deployment manifests, local environment helpers, or cloud-specific configuration.
+### First-Time Deployment
 
-## How To Think About Infrastructure In This Repository
+```bash
+# 1. Log into your OKD cluster
+oc login https://your-cluster-api:6443
 
-There are two main categories today:
+# 2. Edit secrets with real values (never commit real secrets)
+cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
+# ... edit secrets.local.yaml with real passwords ...
 
-- Developer infrastructure: the dev container, local Docker Compose services, forwarded ports, and editor setup
-- CI infrastructure: GitHub Actions workflows that install dependencies and run QA
+# 3. Run the deployment script
+./infra/scripts/deploy.sh
+```
 
-## Current Local Services
+### Updating After a Code Change
 
-The recommended dev container stack provides:
+If CI/CD is configured (see below), pushing to `main` triggers automatic deployment. For manual rollouts:
 
-- PostgreSQL on port `5432`
-- RabbitMQ on port `5672`
-- RabbitMQ management UI on port `15672`
-- The app container where you run `uv`, `pnpm`, and editor tasks
+```bash
+./infra/scripts/rollout.sh
+```
 
-## When To Put Something Here
+### Setting Up CI/CD
 
-Add files to `infra/` when they primarily exist to provision, configure, or operate environments rather than implement application features.
+Add these GitHub Actions secrets to your repository:
 
-Examples:
+| Secret       | Value                                      |
+|--------------|--------------------------------------------|
+| `OKD_SERVER` | OKD API server URL (e.g. `https://api.cloud.unc.edu:6443`) |
+| `OKD_TOKEN`  | Service account token with deploy permissions |
 
-- Deployment manifests
-- Environment bootstrap helpers
-- Infrastructure module documentation
-- Service topology notes that do not belong in the root README
+To create a service account token:
+
+```bash
+oc create serviceaccount deployer -n learnwithai
+oc policy add-role-to-user edit -z deployer -n learnwithai
+oc create token deployer -n learnwithai --duration=8760h
+```
+
+## Directory Layout
+
+```
+infra/
+├── DEPLOYMENT.md        # Full deployment plan and architecture diagram
+├── Dockerfile           # Multi-stage production image (frontend + backend)
+├── manifests/
+│   ├── namespace.yaml   # OKD project/namespace
+│   ├── secrets.yaml     # Template for production secrets
+│   ├── postgres.yaml    # PostgreSQL Deployment + Service + PVC
+│   ├── rabbitmq.yaml    # RabbitMQ Deployment + Service
+│   ├── app.yaml         # BuildConfig + ImageStream + app Deployment + Service
+│   ├── worker.yaml      # Dramatiq worker Deployment
+│   └── route.yaml       # OKD Route (TLS edge termination)
+└── scripts/
+    ├── deploy.sh        # Guided first-time deployment
+    └── rollout.sh       # Build + rolling update (used by CI)
+```
+
+## Other Infrastructure
+
+Developer infrastructure still lives in repository-level files:
+
+- `.devcontainer/` — local development container (Dockerfile, compose.yaml)
+- `.github/workflows/quality-gates.yml` — CI quality gates
+- `.github/workflows/deploy.yml` — CD deployment pipeline
+
+## Useful OKD Commands
+
+```bash
+# View running pods
+oc get pods -n learnwithai
+
+# Tail application logs
+oc logs -f deployment/learnwithai-app -n learnwithai
+
+# Tail worker logs
+oc logs -f deployment/learnwithai-worker -n learnwithai
+
+# Check route URL
+oc get route -n learnwithai
+
+# Rollback to previous version
+oc rollout undo deployment/learnwithai-app -n learnwithai
+oc rollout undo deployment/learnwithai-worker -n learnwithai
+
+# Open a shell in the app pod
+oc rsh deployment/learnwithai-app -n learnwithai
+```
