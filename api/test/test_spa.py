@@ -6,7 +6,23 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from api.main import guess_media_type, mount_spa
+from api.main import guess_media_type, mount_spa, _resolve_static_dir
+from learnwithai.config import Settings
+
+
+# ---- _resolve_static_dir ----
+
+
+def test_resolve_static_dir_uses_setting_when_provided() -> None:
+    settings = Settings.model_construct(static_dir="/custom/path")
+    assert _resolve_static_dir(settings) == Path("/custom/path")
+
+
+def test_resolve_static_dir_falls_back_when_empty() -> None:
+    settings = Settings.model_construct(static_dir="")
+    result = _resolve_static_dir(settings)
+    # Should resolve to a path ending with "static" relative to the package
+    assert result.name == "static"
 
 
 # ---- guess_media_type ----

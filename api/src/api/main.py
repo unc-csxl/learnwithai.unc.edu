@@ -11,7 +11,13 @@ from api.routes.auth import router as auth_router
 
 from learnwithai.config import Settings
 
-STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "static"
+
+def _resolve_static_dir(settings: Settings) -> Path:
+    """Returns the static directory from settings or a sensible default."""
+    if settings.static_dir:
+        return Path(settings.static_dir)
+    # Fallback: look relative to the repository root (works in dev layouts)
+    return Path(__file__).resolve().parent.parent.parent / "static"
 
 _MEDIA_TYPES: dict[str, str] = {
     ".js": "application/javascript",
@@ -68,5 +74,6 @@ app = FastAPI(title=settings.app_name)
 app.include_router(health_router, prefix="/api")
 app.include_router(auth_router, prefix="/api/auth")
 
-if settings.is_production and STATIC_DIR.is_dir():
-    mount_spa(app, STATIC_DIR)
+static_dir = _resolve_static_dir(settings)
+if settings.is_production and static_dir.is_dir():
+    mount_spa(app, static_dir)

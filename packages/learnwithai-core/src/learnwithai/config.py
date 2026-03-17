@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "reallysecuresecret"
     jwt_algorithm: str = "HS256"
 
+    # Static files
+    static_dir: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
