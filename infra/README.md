@@ -24,7 +24,7 @@ cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
 
 If the namespace already exists and your account only has project-level permissions, the deploy script reuses that namespace instead of trying to modify cluster-scoped namespace metadata.
 
-The OKD image build uses the checked-out repository as a binary source archive, so the cluster does not need direct clone access to a private GitHub repository.
+The OKD image build uses the current local working tree as a binary source archive, so the cluster does not need direct clone access to a private GitHub repository.
 
 ### Updating After a Code Change
 
@@ -33,6 +33,27 @@ If CI/CD is configured (see below), pushing to `main` triggers automatic deploym
 ```bash
 ./infra/scripts/rollout.sh <your-namespace>
 ```
+
+The rollout script reapplies the local working tree through OpenShift binary build input, then restarts the app and worker deployments.
+
+### Resetting The Deployed Database
+
+For developer resets in a deployment namespace, use:
+
+```bash
+./infra/scripts/reset_db.sh <your-namespace>
+```
+
+The reset workflow scales the app and worker down, drops and recreates the PostgreSQL database using the local `postgres` superuser inside the PostgreSQL container, creates a short-lived ConfigMap from the checked-out bootstrap script, runs a one-off bootstrap job from the app image with that script mounted in, and then restores the app and worker replicas. If any reset step fails, the script restores the previous replica counts before exiting.
+
+The bootstrap logic lives in [packages/learnwithai-core/scripts/bootstrap_deployment_db.py](/workspaces/learnwithai/packages/learnwithai-core/scripts/bootstrap_deployment_db.py) so the seeded behavior is easy to audit and review, and the reset flow does not depend on the currently deployed image already containing the latest bootstrap file.
+
+The dummy seeded user is:
+
+- Name: `Demo User`
+- Onyen: `demo`
+- PID: `999999999`
+- Email: `demo@example.com`
 
 ### Tearing Down A Deployment
 
@@ -68,6 +89,7 @@ oc create token deployer -n <your-namespace> --duration=8760h
 infra/
 ├── DEPLOYMENT.md        # Full deployment plan and architecture diagram
 ├── Dockerfile           # Multi-stage production image (frontend + backend)
+├── helm/                # Helm chart alternative and wrapper scripts
 ├── manifests/
 │   ├── namespace.yaml   # OKD project/namespace
 │   ├── secrets.yaml     # Template for production secrets
@@ -79,6 +101,7 @@ infra/
 └── scripts/
     ├── deploy.sh        # Guided first-time deployment + initial binary build
     ├── destroy.sh       # Tear down manifest-managed resources
+    ├── reset_db.sh      # Reset deployed DB and seed demo data
     └── rollout.sh       # Binary build + rolling update (used by CI)
 ```
 
