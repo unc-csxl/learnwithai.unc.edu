@@ -6,7 +6,7 @@ This document describes how LearnWithAI is deployed to an OKD (OpenShift-origin)
 
 1. **Minimal tooling** — use plain Kubernetes/OKD YAML manifests, a small shell script, and `oc` (installed in the devcontainer for operator convenience).
 2. **Foolproof initial setup** — a single `infra/scripts/deploy.sh` walks first-time operators through initial cluster deployment.
-3. **Continuous deployment** — a push to `main` that passes QA triggers a GitHub Actions workflow that checks out the target commit, uploads it as an OpenShift binary build source, builds container images in OKD, and rolls out the new version.
+3. **Continuous deployment** — a push to `main` that passes QA triggers a GitHub Actions workflow that POSTs to an OKD webhook. OKD clones the private repository with its own deploy key, builds the image in-cluster, and rolls the app and worker forward through image stream triggers.
 4. **Production-ready architecture** — FastAPI serves both the API and the pre-built Angular static assets behind a single Route, with PostgreSQL and RabbitMQ running as separate pods.
 
 ## Production Architecture
@@ -37,16 +37,17 @@ This document describes how LearnWithAI is deployed to an OKD (OpenShift-origin)
 
 ### Components
 
-| Component   | Image / Source              | Replicas | Persistent Storage |
-|-------------|-----------------------------|----------|--------------------|
-| **app**     | Custom Dockerfile (multi-stage) via binary build | 1 | None |
-| **worker**  | Same image as app           | 1        | None               |
-| **postgres**| `quay.io/sclorg/postgresql-16-c9s` | 1 | PVC (1 Gi)         |
-| **rabbitmq**| `rabbitmq:3-management`     | 1        | None               |
+| Component    | Image / Source                                   | Replicas | Persistent Storage |
+| ------------ | ------------------------------------------------ | -------- | ------------------ |
+| **app**      | Custom Dockerfile (multi-stage) via BuildConfig  | 1        | None               |
+| **worker**   | Same image as app                                | 1        | None               |
+| **postgres** | `quay.io/sclorg/postgresql-16-c9s`               | 1        | PVC (1 Gi)         |
+| **rabbitmq** | `rabbitmq:3-management`                          | 1        | None               |
 
 Current operational profile:
 
 - The app and worker use the same built image from the internal OpenShift registry.
+- Standard Kubernetes Deployments are annotated with OpenShift image triggers so a fresh image stream tag automatically causes a rollout.
 - PostgreSQL uses the OpenShift-compatible `quay.io/sclorg/postgresql-16-c9s` image.
 - RabbitMQ uses TCP-based startup, readiness, and liveness probes so it can become Ready before the worker connects.
 - Resource requests and limits are tuned for a modest single-developer namespace, not a production multi-user workload.
@@ -111,14 +112,15 @@ Plain YAML manifests using standard Kubernetes resources plus the OKD `Route` ki
 - **secrets.yaml** — a documented template with placeholder values that operators fill in before applying. Contains `DATABASE_URL`, `RABBITMQ_URL`, `JWT_SECRET`, etc.
 - **postgres.yaml** — Deployment, Service, PVC for an OpenShift-compatible PostgreSQL 16 image.
 - **rabbitmq.yaml** — Deployment and Service for RabbitMQ, using TCP startup/readiness/liveness probes to avoid readiness deadlock during broker startup.
-- **app.yaml** — BuildConfig, ImageStream, Deployment, and Service for the app container.
+- **app.yaml** — BuildConfig, ImageStream, webhook triggers, Deployment, and Service for the app container.
 - **worker.yaml** — Deployment for the Dramatiq worker (same image, different command).
+- **webhook-rbac.yaml** — namespace-local RoleBinding that grants `system:unauthenticated` the `system:webhook` role needed for inbound webhook calls.
 - **route.yaml** — OKD Route with TLS edge termination.
 
 ### Step 4: Create deployment scripts
 
-- **`infra/scripts/deploy.sh`** — guided first-time deployment. Takes the target namespace as a required argument, substitutes `${NAMESPACE}` placeholders in manifests via `envsubst`, reuses an existing namespace when cluster-scoped namespace patch permissions are unavailable, applies manifests in order, uploads the local working tree as the initial binary build source, waits for rollouts, and runs a health check.
-- **`infra/scripts/rollout.sh`** — takes namespace as the first argument, uploads the current local working tree via `oc start-build --from-dir`, waits for the build, then triggers a rollout. Used by CI after it checks out the target commit, and can also be run manually.
+- **`infra/scripts/deploy.sh`** — guided first-time deployment. Takes the target namespace as a required argument, generates an SSH deploy key for OKD, pauses so the operator can add the public key to GitHub as a read-only deploy key, creates OKD source clone and webhook secrets, applies manifests in order, starts the initial build from the local checkout, waits for image-triggered rollouts, and prints the generic webhook URL to store in GitHub Actions.
+- **`infra/scripts/rollout.sh`** — takes namespace as the first argument, streams the current local Git checkout into the existing BuildConfig with `oc start-build --from-repo`, waits for the build, and then waits for the app and worker Deployments to roll via image stream triggers.
 - **`infra/scripts/destroy.sh`** — deletes the manifest-managed resources in reverse order with a confirmation prompt, and can optionally delete the namespace as well.
 - **`infra/scripts/reset_db.sh`** — developer-oriented database reset workflow that scales app and worker to zero, drops and recreates the deployed database via the local PostgreSQL `postgres` superuser, mounts an audited bootstrap script from the local checkout into a one-off Job that uses the app image to create SQLModel tables and insert a dummy user, and restores the app and worker deployments even if an intermediate step fails.
 
@@ -127,8 +129,8 @@ Plain YAML manifests using standard Kubernetes resources plus the OKD `Route` ki
 A new workflow `.github/workflows/deploy.yml` that:
 
 1. Triggers on push to `main` (only after QA passes by depending on the existing `qa` job).
-2. Logs into the OKD cluster using a service account token stored as a GitHub secret.
-3. Triggers the build and rollout via `oc` commands against the checked-out workflow commit.
+2. Calls the OKD generic webhook URL stored as a GitHub Actions secret.
+3. Passes the tested branch ref and commit SHA in the webhook payload so OKD builds the exact QA-approved revision.
 
 ### Step 6: Install `oc` in the devcontainer
 
@@ -201,39 +203,24 @@ Dummy seeded user:
 - `pid`: `999999999`
 - `email`: `demo@example.com`
 
-## Helm Alternative
-
-An alternate Helm-based implementation now lives under `infra/helm/`.
-
-It keeps the same core behavior:
-
-- OpenShift `BuildConfig` with binary source uploads
-- internal-registry app image
-- PostgreSQL, RabbitMQ, app, worker, and Route resources
-- wrapper scripts for deploy, rollout, and destroy
-
-The main tradeoff is operational style:
-
-- `infra/manifests/` favors direct, explicit `oc apply` workflows.
-- `infra/helm/` favors release-oriented `helm upgrade --install` workflows.
-
 ## Environment Variables for Production
 
-| Variable               | Required | Notes                                  |
-|------------------------|----------|----------------------------------------|
-| `ENVIRONMENT`          | Yes      | Set to `production`                    |
-| `DATABASE_URL`         | Yes      | Full PostgreSQL connection string      |
-| `RABBITMQ_URL`         | Yes      | Full AMQP connection string            |
-| `JWT_SECRET`           | Yes      | Strong random secret (≥32 chars)       |
+| Variable               | Required | Notes                                        |
+| ---------------------- | -------- | -------------------------------------------- |
+| `ENVIRONMENT`          | Yes      | Set to `production`                          |
+| `DATABASE_URL`         | Yes      | Full PostgreSQL connection string            |
+| `RABBITMQ_URL`         | Yes      | Full AMQP connection string                  |
+| `JWT_SECRET`           | Yes      | Strong random secret (≥32 chars)             |
 | `HOST`                 | Yes      | Public URL (e.g. `learnwithai.apps.unc.edu`) |
-| `UNC_AUTH_SERVER_HOST`             | No       | Defaults to `csxl.unc.edu`            |
-| `LOG_LEVEL`            | No       | Defaults to `INFO`                     |
+| `UNC_AUTH_SERVER_HOST` | No       | Defaults to `csxl.unc.edu`                   |
+| `LOG_LEVEL`            | No       | Defaults to `INFO`                           |
 
 ## Security Notes
 
 - Secrets are stored in OKD `Secret` resources, never committed to the repository.
-- The `secrets.yaml` manifest is a *template* — it contains placeholder values and comments explaining each field.
-- The GitHub Actions workflow authenticates to OKD using a service account token stored as a GitHub Actions secret.
+- The `secrets.yaml` manifest is a _template_ — it contains placeholder values and comments explaining each field.
+- The GitHub Actions workflow does not need cluster login credentials. It only needs the OKD generic webhook URL.
+- The OKD BuildConfig authenticates to GitHub using an SSH deploy key stored as a namespace secret.
 - The production image runs as a non-root user.
 - TLS is terminated at the OKD Route level (edge termination).
 

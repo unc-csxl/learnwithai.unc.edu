@@ -14,21 +14,23 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Install oc CLI
-        uses: redhat-actions/openshift-tools-installer@v1
-        with:
-          oc: "4"
-
-      - name: Log in to OKD
-        run: oc login "${{ secrets.OKD_SERVER }}" --token="${{ secrets.OKD_TOKEN }}" --insecure-skip-tls-verify
+      - name: Trigger OKD deployment webhook
         env:
-          OKD_SERVER: ${{ secrets.OKD_SERVER }}
-          OKD_TOKEN: ${{ secrets.OKD_TOKEN }}
+          OKD_GENERIC_WEBHOOK_URL: ${{ secrets.OKD_GENERIC_WEBHOOK_URL }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          cat <<EOF > payload.json
+          {
+            "git": {
+              "ref": "refs/heads/${HEAD_BRANCH}",
+              "commit": "${HEAD_SHA}"
+            }
+          }
+          EOF
 
-      - name: Build and roll out
-        run: ./infra/scripts/rollout.sh "${{ secrets.OKD_NAMESPACE }}" "${{ github.event.workflow_run.head_sha }}"
+          curl --fail --silent --show-error \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data-binary @payload.json \
+            "$OKD_GENERIC_WEBHOOK_URL"

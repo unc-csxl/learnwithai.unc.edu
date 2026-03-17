@@ -3,9 +3,9 @@
 # rollout.sh — Build and roll out a new version of LearnWithAI
 # =============================================================================
 #
-# This script uploads the checked-out working tree to an OKD binary build, waits
-# for it to complete, then rolls out the new image to the app and worker
-# deployments.
+# This script streams the local repository to the OKD BuildConfig, waits for the
+# build to complete, and then waits for the image stream triggers to update the
+# app and worker Deployments.
 #
 # Prerequisites:
 #   1. `oc` CLI installed and on your PATH
@@ -55,23 +55,21 @@ oc whoami >/dev/null 2>&1 || fail "Not logged into OKD. Run: oc login <cluster-u
 BUILD_ARGS=()
 if [ -n "$COMMIT" ]; then
     BUILD_ARGS+=(--commit="$COMMIT")
-    info "Building from local working tree at commit: $COMMIT"
+    info "Building from the local repository at commit: $COMMIT"
 else
-    info "Building from the current local working tree"
+    info "Building from the current local repository checkout"
 fi
 
 info "Starting build..."
-oc start-build "$BUILD_NAME" -n "$NAMESPACE" --from-dir="$REPO_ROOT" --follow "${BUILD_ARGS[@]}"
+oc start-build "$BUILD_NAME" -n "$NAMESPACE" --from-repo="$REPO_ROOT" --follow "${BUILD_ARGS[@]}"
 echo
 
-# -- Roll out -----------------------------------------------------------------
+# -- Wait for image-triggered rollouts ----------------------------------------
 
-info "Rolling out app deployment..."
-oc rollout restart deployment/learnwithai-app -n "$NAMESPACE"
+info "Waiting for app deployment to pick up the new image..."
 oc rollout status deployment/learnwithai-app -n "$NAMESPACE" --timeout=300s
 
-info "Rolling out worker deployment..."
-oc rollout restart deployment/learnwithai-worker -n "$NAMESPACE"
+info "Waiting for worker deployment to pick up the new image..."
 oc rollout status deployment/learnwithai-worker -n "$NAMESPACE" --timeout=300s
 echo
 

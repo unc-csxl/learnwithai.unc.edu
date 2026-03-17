@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: learnwithai-worker
   namespace: ${NAMESPACE}
+  annotations:
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"learnwithai-app:latest","namespace":"${NAMESPACE}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"worker\")].image"}]
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: worker
@@ -20,7 +23,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest
+          image: learnwithai-app:latest
           command:
             - /app/.venv/bin/dramatiq
             - learnwithai_jobqueue.worker

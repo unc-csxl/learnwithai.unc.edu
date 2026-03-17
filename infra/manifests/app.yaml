@@ -1,5 +1,5 @@
 # =============================================================================
-# BuildConfig — builds the app image from a binary source archive
+# BuildConfig — builds the app image from Git or a locally streamed override
 # =============================================================================
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
@@ -10,9 +10,26 @@ metadata:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: app
 spec:
+  runPolicy: SerialLatestOnly
+  successfulBuildsHistoryLimit: 3
+  failedBuildsHistoryLimit: 3
   source:
-    type: Binary
-    binary: {}
+    type: Git
+    git:
+      uri: ${GIT_REPO_URL}
+      ref: ${GIT_REF}
+    sourceSecret:
+      name: learnwithai-git-source
+  triggers:
+    - type: ConfigChange
+    - type: GitHub
+      github:
+        secretReference:
+          name: learnwithai-github-webhook
+    - type: Generic
+      generic:
+        secretReference:
+          name: learnwithai-generic-webhook
   strategy:
     type: Docker
     dockerStrategy:
@@ -41,6 +58,9 @@ kind: Deployment
 metadata:
   name: learnwithai-app
   namespace: ${NAMESPACE}
+  annotations:
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"learnwithai-app:latest","namespace":"${NAMESPACE}"},"fieldPath":"spec.template.spec.containers[?(@.name==\"app\")].image"}]
   labels:
     app.kubernetes.io/part-of: learnwithai
     app.kubernetes.io/component: app
@@ -58,7 +78,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest
+          image: learnwithai-app:latest
           ports:
             - containerPort: 8000
           envFrom:

@@ -24,7 +24,13 @@ cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
 
 If the namespace already exists and your account only has project-level permissions, the deploy script reuses that namespace instead of trying to modify cluster-scoped namespace metadata.
 
-The OKD image build uses the current local working tree as a binary source archive, so the cluster does not need direct clone access to a private GitHub repository.
+The first deploy now creates three OKD-side pieces for private-repository builds:
+
+- a source clone secret that contains an SSH deploy key for GitHub
+- webhook secrets for OKD build triggers
+- a namespace-local role binding that allows webhook callers to trigger builds
+
+The deploy script generates the SSH keypair for you, prints the public key, and pauses so you can add it to GitHub as a read-only deploy key before the first build runs.
 
 ### Updating After a Code Change
 
@@ -34,7 +40,7 @@ If CI/CD is configured (see below), pushing to `main` triggers automatic deploym
 ./infra/scripts/rollout.sh <your-namespace>
 ```
 
-The rollout script reapplies the local working tree through OpenShift binary build input, then restarts the app and worker deployments.
+The rollout script streams the local repository into the existing OKD BuildConfig. When the build finishes, OKD image stream triggers update the app and worker Deployments automatically.
 
 ### Resetting The Deployed Database
 
@@ -67,20 +73,20 @@ To skip prompts, pass `--yes`. To also remove the namespace itself, add `--delet
 
 ### Setting Up CI/CD
 
-Add these GitHub Actions secrets to your repository:
+After the first successful `deploy.sh` run, save this GitHub Actions secret in the repository:
 
-| Secret          | Value                                      |
-|-----------------|--------------------------------------------|
-| `OKD_SERVER`    | OKD API server URL (e.g. `https://api.cloud.unc.edu:6443`) |
-| `OKD_TOKEN`     | Service account token with deploy permissions |
-| `OKD_NAMESPACE` | OKD project/namespace to deploy into       |
+| Secret                    | Value |
+|---------------------------|-------|
+| `OKD_GENERIC_WEBHOOK_URL` | The full generic webhook URL printed by `deploy.sh` |
 
-To create a service account token (replace `<your-namespace>`):
+That webhook path is the only cluster credential GitHub Actions needs. The OKD cluster handles the Git clone itself by using the SSH deploy key stored in the namespace secret.
+
+Optional: if you want GitHub to trigger OKD builds directly on repository push events outside the QA-gated workflow, `deploy.sh` also prints a GitHub-specific webhook URL that you can paste into GitHub Settings -> Webhooks. The default repository workflow in `.github/workflows/deploy.yml` uses the generic webhook instead so deployment still happens only after QA passes.
+
+If the cluster requires the namespace-local webhook RBAC to be added manually, this is the resource `deploy.sh` applies:
 
 ```bash
-oc create serviceaccount deployer -n <your-namespace>
-oc policy add-role-to-user edit -z deployer -n <your-namespace>
-oc create token deployer -n <your-namespace> --duration=8760h
+NAMESPACE=<your-namespace> envsubst '${NAMESPACE}' < infra/manifests/webhook-rbac.yaml | oc apply -f -
 ```
 
 ## Directory Layout
@@ -97,6 +103,7 @@ infra/
 │   ├── rabbitmq.yaml    # RabbitMQ Deployment + Service
 │   ├── app.yaml         # BuildConfig + ImageStream + app Deployment + Service
 │   ├── worker.yaml      # Dramatiq worker Deployment
+│   ├── webhook-rbac.yaml # Namespace-local webhook access RoleBinding
 │   └── route.yaml       # OKD Route (TLS edge termination)
 └── scripts/
     ├── deploy.sh        # Guided first-time deployment + initial binary build
@@ -111,7 +118,7 @@ Developer infrastructure still lives in repository-level files:
 
 - `.devcontainer/` — local development container (Dockerfile, compose.yaml)
 - `.github/workflows/quality-gates.yml` — CI quality gates
-- `.github/workflows/deploy.yml` — CD deployment pipeline
+- `.github/workflows/deploy.yml` — CD workflow that POSTs to the OKD generic webhook
 
 ## Useful OKD Commands
 

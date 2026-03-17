@@ -54,10 +54,12 @@ The application deploys to an OKD cluster. See `infra/DEPLOYMENT.md` for the ful
 
 ```bash
 # Edit secrets, then run:
-./infra/scripts/deploy.sh
+./infra/scripts/deploy.sh <your-namespace>
 ```
 
-**CI/CD:** Pushing to `main` and passing QA automatically triggers a new deployment via GitHub Actions. See `infra/README.md` for setup instructions.
+On the first run, the deploy script now generates an SSH deploy key for OKD, prints the public key, and waits for you to add it as a read-only deploy key in GitHub. After that, OKD can clone the private repository directly for webhook-triggered builds.
+
+**CI/CD:** Pushing to `main` and passing QA triggers a GitHub Actions workflow that calls an OKD webhook. GitHub no longer needs direct `oc login` access to the cluster. See `infra/README.md` for the required webhook secret setup.
 
 ## How The Repository Is Organized
 
