@@ -67,7 +67,22 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "tsconfig.spec.json"
+          },
+          "configurations": {
+            "ci": {
+              "coverage": true,
+              "coverageExclude": ["src/main.ts"],
+              "coverageThresholds": {
+                "statements": 100,
+                "branches": 100,
+                "functions": 100,
+                "lines": 100
+              }
+            }
+          }
         }
       }
     }

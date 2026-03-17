@@ -39,10 +39,14 @@ describe('AuthService', () => {
     expect(service.user()).toBeNull();
   });
 
-  it('login should set window.location.href', () => {
-    // window.location.href assignment triggers navigation.
-    // We cannot spy on it directly in jsdom, so verify the method exists.
-    expect(typeof service.login).toBe('function');
+  it('login should redirect to auth endpoint', () => {
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true,
+      configurable: true,
+    });
+    service.login();
+    expect(window.location.href).toBe('/api/auth/onyen');
   });
 
   it('logout should clear token and user', () => {
