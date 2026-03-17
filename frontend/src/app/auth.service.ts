@@ -45,7 +45,7 @@ export class AuthService {
       return;
     }
     this.http
-      .get<User>('/api/auth/me', {
+      .get<User>('/api/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe({

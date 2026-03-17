@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Response, Query, HTTPException
+from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
 
 from ..dependency_injection import (
@@ -12,9 +12,16 @@ from ..dependency_injection import (
 )
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@router.get("/onyen")
+
+@router.get(
+    "/onyen",
+    summary="Start UNC authentication",
+    status_code=307,
+    response_description="Redirect to the upstream UNC authentication flow.",
+    responses={307: {"description": "Temporary redirect to UNC authentication."}},
+)
 def onyen_login_redirect(settings: SettingsDI) -> Response:
     """Redirects the client to the UNC authentication flow.
 
@@ -32,11 +39,23 @@ def onyen_login_redirect(settings: SettingsDI) -> Response:
     )
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="Complete UNC authentication callback",
+    response_description="Redirect to the frontend after authentication completes.",
+    responses={
+        302: {"description": "Redirect to the frontend after authentication."},
+        401: {"description": "The provided upstream authentication token is invalid."},
+        500: {"description": "The user could not be registered locally."},
+    },
+)
 def authenticate_with_csxl_callback(
     session: SessionDI,
     csxl_auth_svc: CSXLAuthServiceDI,
-    token: Annotated[str | None, Query()] = None,
+    token: Annotated[
+        str | None,
+        Query(description="Token returned by the upstream CSXL authentication flow."),
+    ] = None,
 ) -> RedirectResponse:
     """Completes the CSXL callback flow and issues a local JWT.
 

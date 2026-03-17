@@ -61,7 +61,7 @@ describe('AuthService', () => {
     service.handleToken('my-jwt-token');
     expect(localStorage.getItem('auth_token')).toBe('my-jwt-token');
 
-    const req = httpTesting.expectOne('/api/auth/me');
+    const req = httpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer my-jwt-token');
     req.flush(fakeUser);
 
@@ -73,7 +73,7 @@ describe('AuthService', () => {
     localStorage.setItem('auth_token', 'bad-token');
     service.fetchProfile();
 
-    const req = httpTesting.expectOne('/api/auth/me');
+    const req = httpTesting.expectOne('/api/me');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(localStorage.getItem('auth_token')).toBeNull();
@@ -82,7 +82,7 @@ describe('AuthService', () => {
 
   it('fetchProfile should do nothing without a token', () => {
     service.fetchProfile();
-    httpTesting.expectNone('/api/auth/me');
+    httpTesting.expectNone('/api/me');
   });
 
   it('should fetch profile on construction when token exists', () => {
@@ -96,7 +96,7 @@ describe('AuthService', () => {
     const newService = TestBed.inject(AuthService);
     const newHttpTesting = TestBed.inject(HttpTestingController);
 
-    const req = newHttpTesting.expectOne('/api/auth/me');
+    const req = newHttpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer existing-token');
     req.flush(fakeUser);
 

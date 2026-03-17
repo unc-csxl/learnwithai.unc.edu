@@ -71,7 +71,7 @@ def test_auth_me_returns_user_profile(client: TestClient) -> None:
     app.dependency_overrides[get_current_user] = lambda: user
 
     # Act
-    response = client.get("/api/auth/me")
+    response = client.get("/api/me")
 
     # Assert
     assert response.status_code == 200
@@ -87,7 +87,7 @@ def test_auth_me_returns_401_without_token(client: TestClient) -> None:
     # Arrange (no overrides — real get_current_user will reject)
 
     # Act
-    response = client.get("/api/auth/me")
+    response = client.get("/api/me")
 
     # Assert
     assert response.status_code == 401

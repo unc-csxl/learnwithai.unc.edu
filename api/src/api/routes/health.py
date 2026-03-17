@@ -7,16 +7,24 @@ from learnwithai.jobs import EchoJob
 
 from ..dependency_injection import JobQueueDI
 
-router = APIRouter()
+router = APIRouter(tags=["Operations"])
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    summary="Get service health",
+    response_description="Current health details for the API service.",
+)
 def health() -> dict[str, str]:
     """Returns the current service health payload."""
     return get_health_status()
 
 
-@router.post("/queue")
+@router.post(
+    "/queue",
+    summary="Enqueue a sample background job",
+    response_description="Acknowledgement that the demo job was submitted.",
+)
 def queue(job_queue: JobQueueDI) -> str:
     """Enqueues a sample background job.
 
