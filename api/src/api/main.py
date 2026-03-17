@@ -19,6 +19,7 @@ def _resolve_static_dir(settings: Settings) -> Path:
     # Fallback: look relative to the repository root (works in dev layouts)
     return Path(__file__).resolve().parent.parent.parent / "static"
 
+
 _MEDIA_TYPES: dict[str, str] = {
     ".js": "application/javascript",
     ".css": "text/css",
@@ -76,4 +77,4 @@ app.include_router(auth_router, prefix="/api/auth")
 
 static_dir = _resolve_static_dir(settings)
 if settings.is_production and static_dir.is_dir():
-    mount_spa(app, static_dir)
+    mount_spa(app, static_dir)  # pragma: no cover
