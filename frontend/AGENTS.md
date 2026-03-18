@@ -8,6 +8,15 @@ Read the repository root `AGENTS.md` first. This file adds frontend-specific gui
 - Validate frontend changes with `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
 - The final repository-level validation is `./scripts/qa.sh --check` from the root.
 
+## Generated API Client
+
+Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI spec using ng-openapi-gen. The generated code lives in `src/app/api/generated/`.
+
+- Do **not** edit files inside `src/app/api/generated/`. They are overwritten on every regeneration.
+- Import generated models (e.g. `CourseResponse`, `UserProfile`) from `api/generated/models/` using relative paths.
+- When backend routes or response shapes change, run `pnpm api:sync` to regenerate, then update affected services and components.
+- Do **not** create hand-written model interfaces for API shapes. Use the generated models instead.
+
 ## Framework Guidance
 
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.

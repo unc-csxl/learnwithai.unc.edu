@@ -1,0 +1,4 @@
+# Mark auto-generated frontend client code so GitHub collapses diffs and
+# excludes the files from language statistics.
+frontend/src/app/api/generated/** linguist-generated=true
+frontend/openapi.json linguist-generated=true
