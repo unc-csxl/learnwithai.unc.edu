@@ -30,15 +30,15 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
     responses={401: {"description": "Not authenticated."}},
 )
 def create_course(
-    body: Annotated[CreateCourseRequest, Body()],
     subject: AuthenticatedUserDI,
+    body: Annotated[CreateCourseRequest, Body()],
     course_svc: CourseServiceDI,
 ) -> CourseResponse:
     """Creates a new course and enrolls the caller as instructor.
 
     Args:
-        body: Course creation payload.
         subject: Authenticated subject.
+        body: Course creation payload.
         course_svc: Service used to create the course.
 
     Returns:
@@ -84,8 +84,8 @@ def list_my_courses(
     },
 )
 def get_course_roster(
-    course: CourseByCourseIDPathDI,
     subject: AuthenticatedUserDI,
+    course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
 ) -> list[MembershipResponse]:
     """Returns the full roster for a course.
@@ -93,14 +93,14 @@ def get_course_roster(
     Only instructors and TAs may view the roster.
 
     Args:
-        course: Course loaded via DI and course_id Path param.
         subject: Authenticated subject.
+        course: Course loaded via DI and course_id Path param.
         course_svc: Service used to query the roster.
 
     Returns:
         List of memberships for the course.
     """
-    memberships = course_svc.get_course_roster(course, subject)
+    memberships = course_svc.get_course_roster(subject, course)
     return [MembershipResponse.model_validate(m) for m in memberships]
 
 
@@ -117,9 +117,9 @@ def get_course_roster(
     },
 )
 def add_member(
+    subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     add_member_request: Annotated[AddMemberRequest, Body()],
-    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
     user_repo: UserRepositoryDI,
 ) -> MembershipResponse:
@@ -128,9 +128,9 @@ def add_member(
     Only the instructor of the course may add members.
 
     Args:
+        subject: Authenticated subject.
         course: Course loaded via DI and course_id path param.
         add_member_request: Member addition payload.
-        subject: Authenticated subject.
         course_svc: Service used to manage memberships.
         user_repo: Repository used to load the target user from the request body.
 
@@ -142,8 +142,8 @@ def add_member(
         raise HTTPException(status_code=404, detail="User not found.")
 
     membership = course_svc.add_member(
-        course,
         subject,
+        course,
         target_user,
         add_member_request.type,
     )
@@ -162,9 +162,9 @@ def add_member(
     },
 )
 def drop_member(
+    subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     target_user: UserByPIDPathDI,
-    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> MembershipResponse:
     """Drops a member from a course.
@@ -172,9 +172,9 @@ def drop_member(
     Instructors can drop anyone. Students and TAs can drop themselves.
 
     Args:
+        subject: Authenticated subject.
         course: Course loaded via DI and course_id path param.
         target_user: User loaded via DI and pid path param.
-        subject: Authenticated subject.
         course_svc: Service used to manage memberships.
 
     Returns:

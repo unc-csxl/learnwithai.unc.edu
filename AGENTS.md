@@ -23,6 +23,15 @@ If guidance conflicts, the more local `AGENTS.md` wins.
 - Keep frontend components focused on UI concerns.
 - Update documentation when behavior, architecture, commands, or workflows change.
 
+## Parameter Ordering Convention
+
+Whenever `subject` (the authenticated user) appears as a parameter in a service method or route handler, it must always come first. After `subject`, list additional domain model parameters in order from most generic to most specific (e.g., `course` before `target_user`). Service and repository parameters come last.
+
+Correct: `def get_course_roster(self, subject: User, course: Course) -> ...`
+Incorrect: `def get_course_roster(self, course: Course, subject: User) -> ...`
+
+This applies uniformly to service methods in `learnwithai-core` and to FastAPI route handler signatures. Consistent ordering makes authorization intent immediately visible at every call site.
+
 ## Code Quality Rules
 
 - Use explicit type annotations in Python for public functions, methods, and important variables when inference is not obvious.

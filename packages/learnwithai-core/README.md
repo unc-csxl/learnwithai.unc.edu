@@ -56,6 +56,19 @@ test/
 - Raw scalar identifiers belong in explicit lookup methods such as `get_by_id()` and `get_by_pid()`.
 - Services should operate on loaded domain models for non-lookup behavior. If an HTTP route receives raw ids, resolve them in the API layer first so the route can return the right `404` before calling the service.
 
+## Parameter Ordering Convention
+
+Any service method that accepts a `subject` parameter (the authenticated user performing the action) must list `subject` **first**. Subsequent domain model parameters follow in order from most generic to most specific. Repositories and other infrastructure parameters come last.
+
+```python
+# Correct
+def get_course_roster(self, subject: User, course: Course) -> list[Membership]: ...
+def add_member(self, subject: User, course: Course, target_user: User, membership_type: MembershipType) -> Membership: ...
+
+# Wrong
+def get_course_roster(self, course: Course, subject: User) -> list[Membership]: ...
+```
+
 ## Database Scripts
 
 - `scripts/create_database.py` creates the configured development database tables.

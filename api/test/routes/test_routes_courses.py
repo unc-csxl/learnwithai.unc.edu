@@ -87,7 +87,7 @@ def test_create_course_returns_course_response() -> None:
     body = CreateCourseRequest(name="Intro to CS", term="Fall 2026", section="001")
 
     # Act
-    result = create_course(body, subject, course_svc)
+    result = create_course(subject, body, course_svc)
 
     # Assert
     assert isinstance(result, CourseResponse)
@@ -139,12 +139,12 @@ def test_get_course_roster_returns_membership_list() -> None:
     course_svc.get_course_roster.return_value = [roster_membership]
 
     # Act
-    result = get_course_roster(course, user, course_svc)
+    result = get_course_roster(user, course, course_svc)
 
     # Assert
     assert len(result) == 1
     assert isinstance(result[0], MembershipResponse)
-    course_svc.get_course_roster.assert_called_once_with(course, user)
+    course_svc.get_course_roster.assert_called_once_with(user, course)
 
 
 # ---- add_member ----
@@ -164,9 +164,9 @@ def test_add_member_returns_membership_response() -> None:
 
     # Act
     result = add_member(
+        user,
         course,
         body,
-        user,
         course_svc,
         user_repo,
     )
@@ -176,8 +176,8 @@ def test_add_member_returns_membership_response() -> None:
     assert result.state == MembershipState.PENDING
     user_repo.get_by_pid.assert_called_once_with(999)
     course_svc.add_member.assert_called_once_with(
-        course,
         user,
+        course,
         target_user,
         MembershipType.STUDENT,
     )
@@ -194,7 +194,7 @@ def test_add_member_raises_404_when_target_user_is_missing() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        add_member(course, body, subject, course_svc, user_repo)
+        add_member(subject, course, body, course_svc, user_repo)
 
     assert exc_info.value.status_code == 404  # type: ignore[union-attr]
     assert exc_info.value.detail == "User not found."  # type: ignore[union-attr]
@@ -216,9 +216,9 @@ def test_drop_member_returns_membership_response() -> None:
 
     # Act
     result = drop_member(
+        user,
         course,
         target_user,
-        user,
         course_svc,
     )
 
@@ -295,7 +295,7 @@ def test_get_roster_endpoint(client: TestClient) -> None:
     body = response.json()
     assert len(body) == 1
     assert body[0]["type"] == "instructor"
-    mock_svc.get_course_roster.assert_called_once_with(course, user)
+    mock_svc.get_course_roster.assert_called_once_with(user, course)
 
 
 @pytest.mark.integration
@@ -352,8 +352,8 @@ def test_add_member_endpoint(client: TestClient) -> None:
     assert body["user_pid"] == 999
     assert body["state"] == "pending"
     mock_svc.add_member.assert_called_once_with(
-        course,
         user,
+        course,
         target_user,
         MembershipType.STUDENT,
     )

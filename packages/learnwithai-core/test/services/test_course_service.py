@@ -146,7 +146,7 @@ def test_get_course_roster_returns_roster_for_instructor() -> None:
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.get_course_roster(course, user)
+    result = svc.get_course_roster(user, course)
 
     # Assert
     assert result == roster
@@ -166,7 +166,7 @@ def test_get_course_roster_returns_roster_for_ta() -> None:
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.get_course_roster(course, user)
+    result = svc.get_course_roster(user, course)
 
     # Assert
     assert result == roster
@@ -181,7 +181,7 @@ def test_get_course_roster_raises_for_student() -> None:
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.get_course_roster(_make_course(), _make_user())
+        svc.get_course_roster(_make_user(), _make_course())
 
 
 def test_get_course_roster_raises_for_non_member() -> None:
@@ -192,7 +192,7 @@ def test_get_course_roster_raises_for_non_member() -> None:
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.get_course_roster(_make_course(), _make_user())
+        svc.get_course_roster(_make_user(), _make_course())
 
 
 # --- add_member ---
@@ -212,8 +212,8 @@ def test_add_member_creates_pending_membership() -> None:
 
     # Act
     result = svc.add_member(
-        course,
         requesting_user,
+        course,
         target_user,
         MembershipType.STUDENT,
     )
@@ -239,8 +239,8 @@ def test_add_member_raises_for_non_instructor() -> None:
     # Act / Assert
     with pytest.raises(AuthorizationError):
         svc.add_member(
-            _make_course(),
             _make_user(),
+            _make_course(),
             _make_user(999),
             MembershipType.STUDENT,
         )
@@ -257,8 +257,8 @@ def test_add_member_raises_for_unpersisted_course() -> None:
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):
         svc.add_member(
-            draft_course,
             _make_user(),
+            draft_course,
             _make_user(999),
             MembershipType.STUDENT,
         )

@@ -17,6 +17,21 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 - Add Google-style docstrings to maintained Python modules and public functions.
 - Keep type annotations explicit on public APIs.
 
+## Parameter Ordering Convention
+
+In every route handler and service method that takes a `subject` parameter (the authenticated user), `subject` must be the **first** parameter. After `subject`, list additional domain model parameters in order from most generic to most specific (for example, `course` before `target_user`). Body inputs come after domain models. Service and repository parameters come last.
+
+```python
+# Correct
+def create_course(subject: AuthenticatedUserDI, body: Annotated[CreateCourseRequest, Body()], course_svc: CourseServiceDI) -> CourseResponse: ...
+def get_course_roster(subject: AuthenticatedUserDI, course: CourseByCourseIDPathDI, course_svc: CourseServiceDI) -> list[MembershipResponse]: ...
+
+# Wrong — subject buried after domain models
+def create_course(body: ..., subject: ..., course_svc: ...) -> ...: ...
+```
+
+This same ordering applies to service methods in `learnwithai-core`. Consistent ordering makes authorization intent visible at every call site and prevents confusion when reading or reviewing code.
+
 ## Transaction Management
 
 The `get_session` dependency in `learnwithai-core` is a yield-based FastAPI dependency that owns the full transaction lifecycle:

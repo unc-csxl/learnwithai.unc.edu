@@ -72,16 +72,16 @@ class CourseService:
 
     def get_course_roster(
         self,
-        course: Course,
         subject: User,
+        course: Course,
     ) -> list[Membership]:
         """Returns the full roster for a course.
 
         Only instructors and TAs may view the roster.
 
         Args:
-            course: Course whose roster should be returned.
             subject: Authenticated subject requesting the roster.
+            course: Course whose roster should be returned.
 
         Returns:
             List of all memberships for the course.
@@ -100,8 +100,8 @@ class CourseService:
 
     def add_member(
         self,
-        course: Course,
         subject: User,
+        course: Course,
         target_user: User,
         membership_type: MembershipType,
     ) -> Membership:
@@ -110,8 +110,8 @@ class CourseService:
         Only an instructor of the course may add members.
 
         Args:
-            course: Course to add the member to.
             subject: Authenticated subject performing the action.
+            course: Course to add the member to.
             target_user: User to enroll.
             membership_type: Role to assign.
 
