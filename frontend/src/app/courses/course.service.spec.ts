@@ -1,99 +1,73 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideHttpClient } from '@angular/common/http';
 import { CourseService } from './course.service';
-import { CourseResponse } from '../api/generated/models/course-response';
-import { MembershipResponse } from '../api/generated/models/membership-response';
+import { Api } from '../api/generated/api';
+import { listMyCourses } from '../api/generated/fn/courses/list-my-courses';
+import { createCourse } from '../api/generated/fn/courses/create-course';
+import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
+import { addMember } from '../api/generated/fn/courses/add-member';
+import { dropMember } from '../api/generated/fn/courses/drop-member';
+import { Course, Membership } from '../api/models';
 
 describe('CourseService', () => {
   let service: CourseService;
-  let httpTesting: HttpTestingController;
+  let api: { invoke: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    api = { invoke: vi.fn() };
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [{ provide: Api, useValue: api }],
     });
     service = TestBed.inject(CourseService);
-    httpTesting = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpTesting.verify());
-
-  it('fetches courses from GET /api/courses', () => {
-    const mockCourses: CourseResponse[] = [
-      { id: 1, name: 'Intro', term: 'Fall 2026', section: '001' },
-    ];
-    service.getMyCourses().subscribe((courses) => {
-      expect(courses).toEqual(mockCourses);
-    });
-    const req = httpTesting.expectOne('/api/courses');
-    expect(req.request.method).toBe('GET');
-    req.flush(mockCourses);
+  it('fetches courses via listMyCourses', async () => {
+    const mockCourses: Course[] = [{ id: 1, name: 'Intro', term: 'Fall 2026', section: '001' }];
+    api.invoke.mockResolvedValue(mockCourses);
+    const result = await service.getMyCourses();
+    expect(result).toEqual(mockCourses);
+    expect(api.invoke).toHaveBeenCalledWith(listMyCourses);
   });
 
-  it('creates a course via POST /api/courses', () => {
-    const created: CourseResponse = {
-      id: 2,
-      name: 'Algo',
-      term: 'Spring 2027',
-      section: '002',
-    };
-    service
-      .createCourse({ name: 'Algo', term: 'Spring 2027', section: '002' })
-      .subscribe((course) => {
-        expect(course).toEqual(created);
-      });
-    const req = httpTesting.expectOne('/api/courses');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({
+  it('creates a course via createCourse', async () => {
+    const created: Course = { id: 2, name: 'Algo', term: 'Spring 2027', section: '002' };
+    api.invoke.mockResolvedValue(created);
+    const result = await service.createCourse({
       name: 'Algo',
       term: 'Spring 2027',
       section: '002',
     });
-    req.flush(created);
-  });
-
-  it('fetches roster via GET /api/courses/:id/roster', () => {
-    const members: MembershipResponse[] = [
-      {
-        user_pid: 123,
-        course_id: 1,
-        type: 'instructor',
-        state: 'enrolled',
-      },
-    ];
-    service.getRoster(1).subscribe((roster) => {
-      expect(roster).toEqual(members);
+    expect(result).toEqual(created);
+    expect(api.invoke).toHaveBeenCalledWith(createCourse, {
+      body: { name: 'Algo', term: 'Spring 2027', section: '002' },
     });
-    const req = httpTesting.expectOne('/api/courses/1/roster');
-    expect(req.request.method).toBe('GET');
-    req.flush(members);
   });
 
-  it('adds a member via POST /api/courses/:id/members', () => {
-    const member: MembershipResponse = {
-      user_pid: 999,
-      course_id: 1,
-      type: 'student',
-      state: 'pending',
-    };
-    service.addMember(1, { pid: 999, type: 'student' }).subscribe((m) => expect(m).toEqual(member));
-    const req = httpTesting.expectOne('/api/courses/1/members');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ pid: 999, type: 'student' });
-    req.flush(member);
+  it('fetches roster via getCourseRoster', async () => {
+    const members: Membership[] = [
+      { user_pid: 123, course_id: 1, type: 'instructor', state: 'enrolled' },
+    ];
+    api.invoke.mockResolvedValue(members);
+    const result = await service.getRoster(1);
+    expect(result).toEqual(members);
+    expect(api.invoke).toHaveBeenCalledWith(getCourseRoster, { course_id: 1 });
   });
 
-  it('drops a member via DELETE /api/courses/:id/members/:pid', () => {
-    const member: MembershipResponse = {
-      user_pid: 999,
+  it('adds a member via addMember', async () => {
+    const member: Membership = { user_pid: 999, course_id: 1, type: 'student', state: 'pending' };
+    api.invoke.mockResolvedValue(member);
+    const result = await service.addMember(1, { pid: 999, type: 'student' });
+    expect(result).toEqual(member);
+    expect(api.invoke).toHaveBeenCalledWith(addMember, {
       course_id: 1,
-      type: 'student',
-      state: 'dropped',
-    };
-    service.dropMember(1, 999).subscribe((m) => expect(m).toEqual(member));
-    const req = httpTesting.expectOne('/api/courses/1/members/999');
-    expect(req.request.method).toBe('DELETE');
-    req.flush(member);
+      body: { pid: 999, type: 'student' },
+    });
+  });
+
+  it('drops a member via dropMember', async () => {
+    const member: Membership = { user_pid: 999, course_id: 1, type: 'student', state: 'dropped' };
+    api.invoke.mockResolvedValue(member);
+    const result = await service.dropMember(1, 999);
+    expect(result).toEqual(member);
+    expect(api.invoke).toHaveBeenCalledWith(dropMember, { course_id: 1, pid: 999 });
   });
 });

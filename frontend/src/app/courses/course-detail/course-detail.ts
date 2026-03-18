@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CourseService } from '../course.service';
-import { MembershipResponse } from '../../api/generated/models/membership-response';
+import { Membership } from '../../api/models';
 
 /** Displays the roster for a course. Instructors see all members. */
 @Component({
@@ -62,19 +62,19 @@ export class CourseDetail {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
 
-  protected readonly roster = signal<MembershipResponse[]>([]);
+  protected readonly roster = signal<Membership[]>([]);
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly courseId: number;
 
   constructor() {
     this.courseId = Number(this.route.snapshot.paramMap.get('id'));
-    this.courseService.getRoster(this.courseId).subscribe({
-      next: (roster) => {
+    this.courseService.getRoster(this.courseId).then(
+      (roster) => {
         this.roster.set(roster);
         this.loaded.set(true);
       },
-      error: (err) => {
+      (err) => {
         if (err.status === 403) {
           this.errorMessage.set('You do not have permission to view this roster.');
         } else {
@@ -82,6 +82,6 @@ export class CourseDetail {
         }
         this.loaded.set(true);
       },
-    });
+    );
   }
 }

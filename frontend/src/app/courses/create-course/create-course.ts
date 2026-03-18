@@ -45,8 +45,8 @@ export class CreateCourse {
       return;
     }
     const { name, term, section } = this.form.getRawValue();
-    this.courseService.createCourse({ name, term, section }).subscribe({
-      next: (course) => this.router.navigate(['/courses', course.id]),
-    });
+    this.courseService
+      .createCourse({ name, term, section })
+      .then((course) => this.router.navigate(['/courses', course.id]));
   }
 }
