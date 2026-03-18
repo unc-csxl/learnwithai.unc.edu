@@ -69,10 +69,21 @@ describe('Layout', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should show app title in toolbar', () => {
+  it('should show app title in sidenav on desktop', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('mat-toolbar')?.textContent).toContain('LearnWithAI');
+    const brand = el.querySelector('.sidenav-brand');
+    expect(brand?.textContent).toContain('LEARN');
+    expect(brand?.textContent).toContain('with');
+    expect(brand?.textContent).toContain('AI');
+  });
+
+  it('should show app title in toolbar on handset', () => {
+    const { fixture } = setup({ authenticated: false, handset: true });
+    const el: HTMLElement = fixture.nativeElement;
+    const brand = el.querySelector('.toolbar-brand');
+    expect(brand?.textContent).toContain('LEARN');
+    expect(brand?.textContent).toContain('AI');
   });
 
   it('should show login button when unauthenticated', () => {

@@ -35,12 +35,75 @@ import { ThemeService, ThemeMode } from '../theme.service';
       height: 100vh;
     }
 
+    .app-toolbar {
+      gap: 12px;
+      min-height: 72px;
+      padding-inline: 16px;
+    }
+
+    .toolbar-brand {
+      margin-left: 4px;
+    }
+
+    .brand,
+    .sidenav-brand {
+      align-items: flex-start;
+      color: inherit;
+      display: inline-flex;
+      flex-direction: column;
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    .brand:visited,
+    .sidenav-brand:visited {
+      color: inherit;
+    }
+
+    .brand-learn {
+      font-size: 1.38rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+
+    .brand-line-two {
+      align-items: baseline;
+      display: flex;
+      gap: 0.3rem;
+      margin-top: 0.1rem;
+    }
+
+    .brand-with {
+      font-size: 0.86rem;
+      font-style: italic;
+      letter-spacing: 0.08em;
+      opacity: 0.88;
+      text-transform: lowercase;
+    }
+
+    .brand-ai {
+      font-size: 1.14rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+
     .sidenav-container {
       flex: 1;
     }
 
     .sidenav {
       width: 240px;
+    }
+
+    .sidenav-brand-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px 12px;
+    }
+
+    .sidenav-brand {
+      align-items: center;
+      text-align: center;
     }
 
     .spacer {
