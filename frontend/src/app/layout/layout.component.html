@@ -1,0 +1,45 @@
+<mat-toolbar color="primary">
+  @if (isHandset()) {
+    <button mat-icon-button aria-label="Toggle navigation" (click)="toggleDrawer()">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+  <span>LearnWithAI</span>
+  <span class="spacer"></span>
+  <button
+    mat-icon-button
+    [attr.aria-label]="themeTooltip()"
+    [matTooltip]="themeTooltip()"
+    (click)="theme.toggle()"
+  >
+    <mat-icon>{{ themeIcon() }}</mat-icon>
+  </button>
+  @if (auth.isAuthenticated()) {
+    <button mat-button (click)="auth.logout()">Logout</button>
+  } @else {
+    <button mat-button (click)="auth.login()">Login</button>
+  }
+</mat-toolbar>
+
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #drawer
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    [attr.role]="'navigation'"
+    class="sidenav"
+  >
+    <mat-nav-list>
+      <a mat-list-item routerLink="/courses" routerLinkActive="active-link" (click)="closeMobileSidenav()">
+        <mat-icon matListItemIcon>school</mat-icon>
+        <span matListItemTitle>Courses</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
