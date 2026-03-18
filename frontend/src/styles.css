@@ -1,3 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* High-visibility focus for accessibility (WCAG AA) */
+*:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+/* Application-wide base styles */
+body {
+  margin: 0;
+  font-family: var(--mat-sys-body-large-font), sans-serif;
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background);
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+a:visited {
+  color: var(--mat-sys-tertiary);
+}
