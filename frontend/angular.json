@@ -75,7 +75,7 @@
           "configurations": {
             "ci": {
               "coverage": true,
-              "coverageExclude": ["src/main.ts"],
+              "coverageExclude": ["src/main.ts", "src/app/api/generated/**"],
               "coverageThresholds": {
                 "statements": 100,
                 "branches": 100,
