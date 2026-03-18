@@ -88,8 +88,8 @@ describe('Layout', () => {
   it('should show page title in toolbar', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    const title = el.querySelector('.toolbar-title');
-    expect(title?.textContent).toContain('Test Page');
+    const toolbar = el.querySelector('mat-sidenav-content mat-toolbar');
+    expect(toolbar?.textContent).toContain('Test Page');
   });
 
   it('should show login button when unauthenticated', () => {
@@ -138,6 +138,15 @@ describe('Layout', () => {
     expect(menuBtn).toBeTruthy();
     // Click the hamburger to toggle sidenav
     menuBtn.click();
+    fixture.detectChanges();
+  });
+
+  it('should show close button in sidenav on handset', () => {
+    const { fixture } = setup({ authenticated: false, handset: true });
+    const el: HTMLElement = fixture.nativeElement;
+    const closeBtn = el.querySelector('button[aria-label="Close navigation"]') as HTMLButtonElement;
+    expect(closeBtn).toBeTruthy();
+    closeBtn.click();
     fixture.detectChanges();
   });
 

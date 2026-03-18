@@ -31,16 +31,21 @@ import { PageTitleService } from '../page-title.service';
   templateUrl: './layout.component.html',
   styles: `
     :host {
-      display: flex;
-      flex-direction: column;
+      display: block;
       height: 100vh;
+    }
+
+    .sidenav-container {
+      height: 100%;
     }
 
     .app-toolbar {
       gap: 12px;
       min-height: 56px;
       padding-inline: 16px;
-      z-index: 2;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     .toolbar-title {
@@ -49,6 +54,23 @@ import { PageTitleService } from '../page-title.service';
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .sidenav {
+      width: 240px;
+    }
+
+    .sidenav-mobile {
+      width: 100vw;
+    }
+
+    .sidenav-brand-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      padding: 20px 16px 12px;
+      position: relative;
     }
 
     .sidenav-brand {
@@ -63,6 +85,13 @@ import { PageTitleService } from '../page-title.service';
 
     .sidenav-brand:visited {
       color: inherit;
+    }
+
+    .sidenav-close {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     .brand-learn {
@@ -90,20 +119,6 @@ import { PageTitleService } from '../page-title.service';
       font-size: 1.14rem;
       font-weight: 800;
       letter-spacing: 0.14em;
-    }
-
-    .sidenav-container {
-      flex: 1;
-    }
-
-    .sidenav {
-      width: 240px;
-    }
-
-    .sidenav-brand-wrap {
-      display: flex;
-      justify-content: center;
-      padding: 24px 16px 12px;
     }
 
     .spacer {

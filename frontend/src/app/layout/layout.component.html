@@ -1,32 +1,10 @@
-<mat-toolbar color="primary" class="app-toolbar">
-  @if (isHandset()) {
-    <button mat-icon-button aria-label="Toggle navigation" (click)="toggleDrawer()">
-      <mat-icon>menu</mat-icon>
-    </button>
-  }
-  <span class="toolbar-title">{{ pageTitle.title() }}</span>
-  <span class="spacer"></span>
-  <button
-    mat-icon-button
-    [attr.aria-label]="themeTooltip()"
-    [matTooltip]="themeTooltip()"
-    (click)="theme.toggle()"
-  >
-    <mat-icon>{{ themeIcon() }}</mat-icon>
-  </button>
-  @if (auth.isAuthenticated()) {
-    <button mat-button (click)="auth.logout()">Logout</button>
-  } @else {
-    <button mat-button (click)="auth.login()">Login</button>
-  }
-</mat-toolbar>
-
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav
     #drawer
     [mode]="sidenavMode()"
     [opened]="sidenavOpened()"
     [attr.role]="'navigation'"
+    [class.sidenav-mobile]="isHandset()"
     class="sidenav"
   >
     <div class="sidenav-brand-wrap">
@@ -37,6 +15,16 @@
           <span class="brand-ai">AI</span>
         </span>
       </a>
+      @if (isHandset()) {
+        <button
+          mat-icon-button
+          class="sidenav-close"
+          aria-label="Close navigation"
+          (click)="toggleDrawer()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </div>
     <mat-nav-list>
       <a
@@ -52,6 +40,28 @@
   </mat-sidenav>
 
   <mat-sidenav-content>
+    <mat-toolbar color="primary" class="app-toolbar">
+      @if (isHandset()) {
+        <button mat-icon-button aria-label="Toggle navigation" (click)="toggleDrawer()">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="toolbar-title">{{ pageTitle.title() }}</span>
+      <span class="spacer"></span>
+      <button
+        mat-icon-button
+        [attr.aria-label]="themeTooltip()"
+        [matTooltip]="themeTooltip()"
+        (click)="theme.toggle()"
+      >
+        <mat-icon>{{ themeIcon() }}</mat-icon>
+      </button>
+      @if (auth.isAuthenticated()) {
+        <button mat-button (click)="auth.logout()">Logout</button>
+      } @else {
+        <button mat-button (click)="auth.login()">Login</button>
+      }
+    </mat-toolbar>
     <main class="content">
       <router-outlet />
     </main>
