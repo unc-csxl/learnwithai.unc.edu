@@ -15,6 +15,7 @@ frontend/
 |     |- app.routes.ts         Top-level lazy routes
 |     |- auth.service.ts       Client-side auth integration
 |     |- api/generated/        Auto-generated HTTP client and models
+|     |- api/models.ts         Domain-friendly type aliases (Course, User, etc.)
 |     |- home/                 Home route feature
 |     `- jwt/                  JWT callback route feature
 |- openapi.json                Exported OpenAPI spec (generated, do not edit)
@@ -78,12 +79,15 @@ After regenerating, update any frontend services or components that reference ch
 - The API produces an OpenAPI 3.1 spec with clean operation IDs (e.g. `create_course`, not `create_course_api_courses_post`).
 - `scripts/export_openapi.py` imports the FastAPI app and writes its spec to `frontend/openapi.json` without running the server.
 - ng-openapi-gen reads `openapi.json` and writes type-safe Angular services and interfaces to `src/app/api/generated/`.
-- Frontend services import generated models (e.g. `CourseResponse`, `UserProfile`) instead of hand-written interfaces.
+- Frontend services use the generated `Api` service's `invoke(fn, params)` method, which accepts generated endpoint functions (e.g. `listMyCourses`, `createCourse`) and returns `Promise<T>`.
 
 ### Conventions
 
-- Import generated models from `api/generated/models/` using relative paths.
+- **Domain types:** Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), not from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated names (`CourseResponse`, `UserProfile`) to clean domain names.
+- **Service methods:** Use `this.api.invoke(generatedFn, params)` instead of manual `HttpClient` calls. This ensures URL paths, parameter shapes, and body types stay in sync with the backend spec.
+- **Promises, not Observables:** `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `.then()` or `await`.
 - Do not add or modify files inside `src/app/api/generated/`. They are overwritten on every regeneration.
+- When new models are generated, add domain aliases to `src/app/api/models.ts`.
 - Generated files are excluded from Prettier, ESLint, and coverage reporting.
 
 ## Frontend QA Commands

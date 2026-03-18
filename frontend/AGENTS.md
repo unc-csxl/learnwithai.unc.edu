@@ -13,9 +13,12 @@ Read the repository root `AGENTS.md` first. This file adds frontend-specific gui
 Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI spec using ng-openapi-gen. The generated code lives in `src/app/api/generated/`.
 
 - Do **not** edit files inside `src/app/api/generated/`. They are overwritten on every regeneration.
-- Import generated models (e.g. `CourseResponse`, `UserProfile`) from `api/generated/models/` using relative paths.
-- When backend routes or response shapes change, run `pnpm api:sync` to regenerate, then update affected services and components.
-- Do **not** create hand-written model interfaces for API shapes. Use the generated models instead.
+- Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), **not** from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated wire-format names to clean domain names.
+- When new models are generated, add domain aliases to `src/app/api/models.ts`.
+- Use the generated `Api` service's `invoke(fn, params)` method with generated endpoint functions (e.g. `listMyCourses`, `createCourse`). Do **not** use `HttpClient` directly in services.
+- `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `.then()` or `await`.
+- When backend routes or response shapes change, run `pnpm api:sync` to regenerate, then update affected services, the domain barrel, and components.
+- Do **not** create hand-written model interfaces for API shapes. Use the generated models via the domain barrel instead.
 
 ## Framework Guidance
 
