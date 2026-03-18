@@ -68,12 +68,9 @@ CSXLAuthServiceDI: TypeAlias = Annotated[
 ]
 
 
-_bearer_scheme = HTTPBearer()
-
-
 def get_authenticated_user(
     csxl_auth_svc: CSXLAuthServiceDI,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())],
 ) -> User:
     """Authenticates the current request from a bearer token.
 
