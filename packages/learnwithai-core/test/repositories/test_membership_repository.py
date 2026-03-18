@@ -169,3 +169,93 @@ def test_delete_removes_membership(session: Session) -> None:
 
     # Assert
     assert repo.get_by_user_and_course(123456789, course.id) is None  # type: ignore[arg-type]
+
+
+# --- get_active_by_user ---
+
+
+@pytest.mark.integration
+def test_get_active_by_user_returns_non_dropped(session: Session) -> None:
+    # Arrange
+    c1 = _seed_course(session)
+    c2 = Course(name="Algorithms", term="Spring 2027", section="002")
+    session.add(c2)
+    session.flush()
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=123456789,
+            course_id=c1.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    repo.create(
+        Membership(
+            user_pid=123456789,
+            course_id=c2.id,  # type: ignore[arg-type]
+            type=MembershipType.TA,
+            state=MembershipState.DROPPED,
+        )
+    )
+
+    # Act
+    result = repo.get_active_by_user(123456789)
+
+    # Assert
+    assert len(result) == 1
+    assert result[0].course_id == c1.id
+
+
+@pytest.mark.integration
+def test_get_active_by_user_includes_pending(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=123456789,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.PENDING,
+        )
+    )
+
+    # Act
+    result = repo.get_active_by_user(123456789)
+
+    # Assert
+    assert len(result) == 1
+    assert result[0].state == MembershipState.PENDING
+
+
+# --- get_all_by_course ---
+
+
+@pytest.mark.integration
+def test_get_all_by_course_returns_all_memberships(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=111111111,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.INSTRUCTOR,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    repo.create(
+        Membership(
+            user_pid=222222222,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+
+    # Act
+    result = repo.get_all_by_course(course.id)  # type: ignore[arg-type]
+
+    # Assert
+    assert len(result) == 2

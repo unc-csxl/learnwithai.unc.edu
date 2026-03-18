@@ -1,7 +1,9 @@
 """Persistence helpers for membership (user-course join) records."""
 
+from sqlmodel import col, select
+
 from ..db import Session
-from ..tables.membership import Membership
+from ..tables.membership import Membership, MembershipState
 
 
 class MembershipRepository:
@@ -65,3 +67,32 @@ class MembershipRepository:
         """
         self._session.delete(membership)
         self._session.flush()
+
+    def get_active_by_user(self, user_pid: int) -> list[Membership]:
+        """Returns all non-dropped memberships for a user.
+
+        Args:
+            user_pid: UNC person identifier.
+
+        Returns:
+            List of active memberships.
+        """
+        query = select(Membership).where(
+            col(Membership.user_pid) == user_pid,
+            col(Membership.state) != MembershipState.DROPPED,
+        )
+        return list(self._session.exec(query).all())
+
+    def get_all_by_course(self, course_id: int) -> list[Membership]:
+        """Returns all memberships for a course.
+
+        Args:
+            course_id: Course identifier.
+
+        Returns:
+            List of all memberships in the course.
+        """
+        query = select(Membership).where(
+            col(Membership.course_id) == course_id,
+        )
+        return list(self._session.exec(query).all())
