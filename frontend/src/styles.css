@@ -1,3 +1,43 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* High-visibility focus for accessibility (WCAG AA) */
+*:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+/* Application-wide base styles */
+body {
+  margin: 0;
+  font-family: var(--mat-sys-body-large-font), sans-serif;
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background);
+}
+
+a {
+  color: var(--app-link-color);
+}
+
+a:visited {
+  color: var(--app-link-color);
+}
+
+a:hover {
+  color: var(--app-link-hover);
+}
+
+.mat-mdc-card {
+  border: 1px solid var(--app-shell-edge);
+  box-shadow: var(--app-card-shadow);
+}
+
+.mat-drawer {
+  border-right: 1px solid var(--app-shell-edge);
+}
+
+.mat-mdc-tab-link.mdc-tab--active,
+.mat-mdc-tab-link.mat-mdc-tab-link-active {
+  color: var(--mat-sys-primary);
+}

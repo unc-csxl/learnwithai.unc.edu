@@ -1,0 +1,24 @@
+<header class="flex items-center justify-end mb-4">
+  <a mat-flat-button routerLink="/courses/create">
+    <mat-icon>add</mat-icon>
+    Create Course
+  </a>
+</header>
+@if (courses().length > 0) {
+  <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    @for (course of courses(); track course.id) {
+      <a [routerLink]="['/courses', course.id]" class="no-underline">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>{{ course.name }}</mat-card-title>
+            <mat-card-subtitle
+              >{{ course.term }} &mdash; Section {{ course.section }}</mat-card-subtitle
+            >
+          </mat-card-header>
+        </mat-card>
+      </a>
+    }
+  </div>
+} @else if (loaded()) {
+  <p>You are not enrolled in any courses.</p>
+}

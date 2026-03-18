@@ -1,0 +1,15 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 max-w-md">
+  <mat-form-field>
+    <mat-label>Course Name</mat-label>
+    <input matInput formControlName="name" type="text" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Term</mat-label>
+    <input matInput formControlName="term" type="text" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Section</mat-label>
+    <input matInput formControlName="section" type="text" />
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="form.invalid">Create</button>
+</form>

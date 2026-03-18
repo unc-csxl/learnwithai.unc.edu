@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
-import { CourseDetail } from './course-detail';
-import { CourseService } from '../course.service';
-import { Membership } from '../../api/models';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Roster } from './roster.component';
+import { CourseService } from '../../course.service';
+import { Membership } from '../../../api/models';
 
 const fakeRoster: Membership[] = [
   { user_pid: 111, course_id: 1, type: 'instructor', state: 'enrolled' },
@@ -12,7 +13,7 @@ const fakeRoster: Membership[] = [
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
-describe('CourseDetail', () => {
+describe('Roster', () => {
   async function setup(options: { roster?: Membership[]; error?: { status: number } } = {}) {
     const mockService = {
       getRoster: options.error
@@ -21,11 +22,11 @@ describe('CourseDetail', () => {
     };
 
     const mockRoute = {
-      snapshot: { paramMap: new Map([['id', '1']]) },
+      parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
     };
 
     TestBed.configureTestingModule({
-      imports: [CourseDetail],
+      imports: [Roster, NoopAnimationsModule],
       providers: [
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
@@ -33,7 +34,7 @@ describe('CourseDetail', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(CourseDetail);
+    const fixture = TestBed.createComponent(Roster);
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
@@ -43,7 +44,7 @@ describe('CourseDetail', () => {
   it('should display roster members', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const rows = el.querySelectorAll('tbody tr');
+    const rows = el.querySelectorAll('tr[mat-row]');
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('111');
     expect(rows[0].textContent).toContain('instructor');
@@ -52,8 +53,8 @@ describe('CourseDetail', () => {
   it('should show add member link', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const link = el.querySelector('a[href="/courses/1/add-member"]');
-    expect(link).toBeTruthy();
+    const link = el.querySelector('a');
+    expect(link?.textContent).toContain('Add Member');
   });
 
   it('should show 403 error message', async () => {

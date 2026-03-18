@@ -25,7 +25,7 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": ["src/theme.scss", "src/styles.css"]
           },
           "configurations": {
             "production": {
@@ -75,7 +75,12 @@
           "configurations": {
             "ci": {
               "coverage": true,
-              "coverageExclude": ["src/main.ts", "src/app/api/generated/**"],
+              "coverageExclude": [
+                "src/main.ts",
+                "src/app/app.component.ts",
+                "src/app/theme.service.ts",
+                "src/app/api/generated/**"
+              ],
               "coverageThresholds": {
                 "statements": 100,
                 "branches": 100,

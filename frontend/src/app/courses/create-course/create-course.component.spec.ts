@@ -1,37 +1,25 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router, ActivatedRoute } from '@angular/router';
-import { AddMember } from './add-member';
+import { provideRouter, Router } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { CreateCourse } from './create-course.component';
 import { CourseService } from '../course.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
-describe('AddMember', () => {
+describe('CreateCourse', () => {
   function setup() {
     const mockService = {
-      addMember: vi.fn(() =>
-        Promise.resolve({
-          user_pid: 999,
-          course_id: 1,
-          type: 'student' as const,
-          state: 'pending' as const,
-        }),
+      createCourse: vi.fn(() =>
+        Promise.resolve({ id: 5, name: 'Algo', term: 'Fall 2026', section: '001' }),
       ),
     };
 
-    const mockRoute = {
-      snapshot: { paramMap: new Map([['id', '1']]) },
-    };
-
     TestBed.configureTestingModule({
-      imports: [AddMember],
-      providers: [
-        provideRouter([]),
-        { provide: CourseService, useValue: mockService },
-        { provide: ActivatedRoute, useValue: mockRoute },
-      ],
+      imports: [CreateCourse, NoopAnimationsModule],
+      providers: [provideRouter([]), { provide: CourseService, useValue: mockService }],
     });
 
-    const fixture = TestBed.createComponent(AddMember);
+    const fixture = TestBed.createComponent(CreateCourse);
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -41,11 +29,12 @@ describe('AddMember', () => {
   it('should render the form', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('input#pid')).toBeTruthy();
-    expect(el.querySelector('select#type')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="name"]')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="term"]')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="section"]')).toBeTruthy();
   });
 
-  it('should disable submit when pid is invalid', () => {
+  it('should disable submit when form is empty', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
     const button = el.querySelector('button[type="submit"]') as HTMLButtonElement;
@@ -55,27 +44,33 @@ describe('AddMember', () => {
   it('should submit the form and navigate on success', async () => {
     const { fixture, mockService, router } = setup();
     const component = fixture.componentInstance;
-    component['form'].setValue({ pid: 999, type: 'student' });
+    component['form'].setValue({
+      name: 'Algo',
+      term: 'Fall 2026',
+      section: '001',
+    });
     fixture.detectChanges();
 
-    fixture.detectChanges();
     const button = fixture.nativeElement.querySelector(
       'button[type="submit"]',
     ) as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+
     button.click();
     await flush();
 
-    expect(mockService.addMember).toHaveBeenCalledWith(1, {
-      pid: 999,
-      type: 'student',
+    expect(mockService.createCourse).toHaveBeenCalledWith({
+      name: 'Algo',
+      term: 'Fall 2026',
+      section: '001',
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/courses', 1]);
+    expect(router.navigate).toHaveBeenCalledWith(['/courses', 5]);
   });
 
   it('should not submit when form is invalid', () => {
     const { fixture, mockService } = setup();
     const component = fixture.componentInstance;
     component['onSubmit']();
-    expect(mockService.addMember).not.toHaveBeenCalled();
+    expect(mockService.createCourse).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,14 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 max-w-md">
+  <mat-form-field>
+    <mat-label>PID</mat-label>
+    <input matInput formControlName="pid" type="number" inputmode="numeric" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Role</mat-label>
+    <mat-select formControlName="type">
+      <mat-option value="student">Student</mat-option>
+      <mat-option value="ta">TA</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="form.invalid">Add</button>
+</form>

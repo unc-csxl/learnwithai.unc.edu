@@ -1,0 +1,110 @@
+@use '@angular/material' as mat;
+
+@mixin unc-light-theme-tokens {
+  --app-link-color: #007fae;
+  --app-link-hover: #13294b;
+  --app-shell-edge: rgba(19, 41, 75, 0.12);
+  --app-card-shadow: 0 18px 36px -28px rgba(19, 41, 75, 0.4);
+
+  --mat-sys-primary: #13294b;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #d9e8f5;
+  --mat-sys-on-primary-container: #13294b;
+  --mat-sys-secondary: #4b9cd3;
+  --mat-sys-on-secondary: #13294b;
+  --mat-sys-secondary-container: #d9edf9;
+  --mat-sys-on-secondary-container: #13294b;
+  --mat-sys-tertiary: #007fae;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #d2ecf7;
+  --mat-sys-on-tertiary-container: #13294b;
+  --mat-sys-background: #f6f9fc;
+  --mat-sys-on-background: #151515;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-on-surface: #151515;
+  --mat-sys-surface-container-low: #fcfdff;
+  --mat-sys-surface-container: #edf3f8;
+  --mat-sys-surface-container-high: #e2ebf3;
+  --mat-sys-outline: #8a99ab;
+  --mat-sys-outline-variant: #c9d5e2;
+}
+
+@mixin unc-dark-theme-tokens {
+  --app-link-color: #4b9cd3;
+  --app-link-hover: #8dc3e6;
+  --app-shell-edge: rgba(75, 156, 211, 0.18);
+  --app-card-shadow: 0 20px 40px -30px rgba(0, 0, 0, 0.75);
+
+  --mat-sys-primary: #4b9cd3;
+  --mat-sys-on-primary: #13294b;
+  --mat-sys-primary-container: #1d4b73;
+  --mat-sys-on-primary-container: #eff7fc;
+  --mat-sys-secondary: #007fae;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #17405a;
+  --mat-sys-on-secondary-container: #d7f1fb;
+  --mat-sys-tertiary: #4b9cd3;
+  --mat-sys-on-tertiary: #13294b;
+  --mat-sys-tertiary-container: #2f6189;
+  --mat-sys-on-tertiary-container: #eff7fc;
+  --mat-sys-background: #151515;
+  --mat-sys-on-background: #ffffff;
+  --mat-sys-surface: #13294b;
+  --mat-sys-on-surface: #ffffff;
+  --mat-sys-surface-container-low: #10233f;
+  --mat-sys-surface-container: #173255;
+  --mat-sys-surface-container-high: #1f4067;
+  --mat-sys-outline: #7890ad;
+  --mat-sys-outline-variant: #315173;
+}
+
+// Light theme (default)
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$violet-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  @include unc-light-theme-tokens;
+}
+
+// Dark theme via class or system preference
+html.dark {
+  color-scheme: dark;
+  @include mat.theme(
+    (
+      color: (
+        theme-type: dark,
+        primary: mat.$azure-palette,
+        tertiary: mat.$violet-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  @include unc-dark-theme-tokens;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    color-scheme: dark;
+    @include mat.theme(
+      (
+        color: (
+          theme-type: dark,
+          primary: mat.$azure-palette,
+          tertiary: mat.$violet-palette,
+        ),
+        typography: Roboto,
+        density: 0,
+      )
+    );
+    @include unc-dark-theme-tokens;
+  }
+}
