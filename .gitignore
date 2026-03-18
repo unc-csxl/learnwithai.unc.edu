@@ -90,4 +90,5 @@ coverage/
 .env.local
 .env.development.local
 .env.test.local
-.env.production.localSCRATCH_PLAN.md
+.env.production.local
+SCRATCH_PLAN.md

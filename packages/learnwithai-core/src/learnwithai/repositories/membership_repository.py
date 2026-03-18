@@ -2,7 +2,6 @@
 
 from ..db import Session
 from ..tables.membership import Membership
-from sqlmodel import select, col
 
 
 class MembershipRepository:
@@ -30,22 +29,10 @@ class MembershipRepository:
         self._session.refresh(membership)
         return membership
 
-    def get_by_id(self, membership_id: int) -> Membership | None:
-        """Looks up a membership by primary key.
-
-        Args:
-            membership_id: Membership identifier.
-
-        Returns:
-            The matching membership when found; otherwise, ``None``.
-        """
-        query = select(Membership).where(col(Membership.id) == membership_id)
-        return self._session.exec(query).one_or_none()
-
     def get_by_user_and_course(
         self, user_pid: int, course_id: int
     ) -> Membership | None:
-        """Looks up a membership by user PID and course ID.
+        """Looks up a membership by its composite primary key.
 
         Args:
             user_pid: UNC person identifier.
@@ -54,11 +41,7 @@ class MembershipRepository:
         Returns:
             The matching membership when found; otherwise, ``None``.
         """
-        query = select(Membership).where(
-            col(Membership.user_pid) == user_pid,
-            col(Membership.course_id) == course_id,
-        )
-        return self._session.exec(query).one_or_none()
+        return self._session.get(Membership, (user_pid, course_id))
 
     def update(self, membership: Membership) -> Membership:
         """Merges changes to an existing membership and refreshes state.
@@ -74,13 +57,11 @@ class MembershipRepository:
         self._session.refresh(merged)
         return merged
 
-    def delete(self, membership_id: int) -> None:
-        """Deletes a membership by primary key.
+    def delete(self, membership: Membership) -> None:
+        """Deletes a membership.
 
         Args:
-            membership_id: Identifier of the membership to remove.
+            membership: Membership instance to remove.
         """
-        membership = self.get_by_id(membership_id)
-        if membership is not None:
-            self._session.delete(membership)
-            self._session.flush()
+        self._session.delete(membership)
+        self._session.flush()

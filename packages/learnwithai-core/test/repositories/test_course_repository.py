@@ -1,27 +1,10 @@
 from __future__ import annotations
 
-import os
-
 import pytest
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session
 
 from learnwithai.tables.course import Course
 from learnwithai.repositories.course_repository import CourseRepository
-
-DEFAULT_TEST_DB_URL = (
-    "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-)
-TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
-
-
-@pytest.fixture()
-def session():
-    """Provide a transactional session that rolls back after each test."""
-    engine = create_engine(TEST_DB_URL)
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-        session.rollback()
 
 
 # --- create ---
@@ -105,16 +88,7 @@ def test_delete_removes_course(session: Session) -> None:
     course_id = course.id
 
     # Act
-    repo.delete(course_id)  # type: ignore[arg-type]
+    repo.delete(course)
 
     # Assert
     assert repo.get_by_id(course_id) is None  # type: ignore[arg-type]
-
-
-@pytest.mark.integration
-def test_delete_does_nothing_when_not_found(session: Session) -> None:
-    # Arrange
-    repo = CourseRepository(session)
-
-    # Act / Assert — should not raise
-    repo.delete(999999)

@@ -2,7 +2,6 @@
 
 from ..db import Session
 from ..tables.course import Course
-from sqlmodel import select, col
 
 
 class CourseRepository:
@@ -39,8 +38,7 @@ class CourseRepository:
         Returns:
             The matching course when found; otherwise, ``None``.
         """
-        query = select(Course).where(col(Course.id) == course_id)
-        return self._session.exec(query).one_or_none()
+        return self._session.get(Course, course_id)
 
     def update(self, course: Course) -> Course:
         """Merges changes to an existing course and refreshes state.
@@ -56,13 +54,11 @@ class CourseRepository:
         self._session.refresh(merged)
         return merged
 
-    def delete(self, course_id: int) -> None:
-        """Deletes a course by primary key.
+    def delete(self, course: Course) -> None:
+        """Deletes a course.
 
         Args:
-            course_id: Identifier of the course to remove.
+            course: Course instance to remove.
         """
-        course = self.get_by_id(course_id)
-        if course is not None:
-            self._session.delete(course)
-            self._session.flush()
+        self._session.delete(course)
+        self._session.flush()

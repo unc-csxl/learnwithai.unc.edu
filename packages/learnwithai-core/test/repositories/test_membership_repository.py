@@ -1,36 +1,11 @@
 from __future__ import annotations
 
-import os
-
 import pytest
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session
 
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
-from learnwithai.tables.user import User
 from learnwithai.repositories.membership_repository import MembershipRepository
-
-DEFAULT_TEST_DB_URL = (
-    "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-)
-TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
-
-
-@pytest.fixture()
-def session():
-    """Provide a transactional session that rolls back after each test."""
-    engine = create_engine(TEST_DB_URL)
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-        session.rollback()
-
-
-def _seed_user(session: Session, pid: int = 123456789) -> User:
-    user = User(pid=pid, name="Test User", onyen="testuser")
-    session.add(user)
-    session.flush()
-    return user
 
 
 def _seed_course(session: Session) -> Course:
@@ -46,11 +21,10 @@ def _seed_course(session: Session) -> Course:
 @pytest.mark.integration
 def test_create_persists_and_returns_membership(session: Session) -> None:
     # Arrange
-    user = _seed_user(session)
     course = _seed_course(session)
     repo = MembershipRepository(session)
     membership = Membership(
-        user_pid=user.pid,
+        user_pid=123456789,
         course_id=course.id,  # type: ignore[arg-type]
         type=MembershipType.STUDENT,
         state=MembershipState.ENROLLED,
@@ -60,49 +34,10 @@ def test_create_persists_and_returns_membership(session: Session) -> None:
     result = repo.create(membership)
 
     # Assert
-    assert result.id is not None
-    assert result.user_pid == user.pid
+    assert result.user_pid == 123456789
     assert result.course_id == course.id
     assert result.type == MembershipType.STUDENT
     assert result.state == MembershipState.ENROLLED
-
-
-# --- get_by_id ---
-
-
-@pytest.mark.integration
-def test_get_by_id_returns_membership_when_exists(session: Session) -> None:
-    # Arrange
-    user = _seed_user(session)
-    course = _seed_course(session)
-    repo = MembershipRepository(session)
-    created = repo.create(
-        Membership(
-            user_pid=user.pid,
-            course_id=course.id,  # type: ignore[arg-type]
-            type=MembershipType.INSTRUCTOR,
-            state=MembershipState.ENROLLED,
-        )
-    )
-
-    # Act
-    result = repo.get_by_id(created.id)  # type: ignore[arg-type]
-
-    # Assert
-    assert result is not None
-    assert result.type == MembershipType.INSTRUCTOR
-
-
-@pytest.mark.integration
-def test_get_by_id_returns_none_when_not_found(session: Session) -> None:
-    # Arrange
-    repo = MembershipRepository(session)
-
-    # Act
-    result = repo.get_by_id(999999)
-
-    # Assert
-    assert result is None
 
 
 # --- get_by_user_and_course ---
@@ -111,12 +46,11 @@ def test_get_by_id_returns_none_when_not_found(session: Session) -> None:
 @pytest.mark.integration
 def test_get_by_user_and_course_returns_membership(session: Session) -> None:
     # Arrange
-    user = _seed_user(session)
     course = _seed_course(session)
     repo = MembershipRepository(session)
     repo.create(
         Membership(
-            user_pid=user.pid,
+            user_pid=123456789,
             course_id=course.id,  # type: ignore[arg-type]
             type=MembershipType.TA,
             state=MembershipState.ENROLLED,
@@ -124,7 +58,7 @@ def test_get_by_user_and_course_returns_membership(session: Session) -> None:
     )
 
     # Act
-    result = repo.get_by_user_and_course(user.pid, course.id)  # type: ignore[arg-type]
+    result = repo.get_by_user_and_course(123456789, course.id)  # type: ignore[arg-type]
 
     # Assert
     assert result is not None
@@ -145,18 +79,60 @@ def test_get_by_user_and_course_returns_none_when_not_found(
     assert result is None
 
 
+# --- create with pending default ---
+
+
+@pytest.mark.integration
+def test_create_defaults_to_pending_state(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+    membership = Membership(
+        user_pid=111222333,
+        course_id=course.id,  # type: ignore[arg-type]
+        type=MembershipType.STUDENT,
+    )
+
+    # Act
+    result = repo.create(membership)
+
+    # Assert
+    assert result.state == MembershipState.PENDING
+
+
+# --- create without corresponding user (orphan allowed) ---
+
+
+@pytest.mark.integration
+def test_create_allows_orphaned_user_pid(session: Session) -> None:
+    # Arrange — no user with pid 999888777 exists
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+    membership = Membership(
+        user_pid=999888777,
+        course_id=course.id,  # type: ignore[arg-type]
+        type=MembershipType.STUDENT,
+        state=MembershipState.PENDING,
+    )
+
+    # Act
+    result = repo.create(membership)
+
+    # Assert
+    assert result.user_pid == 999888777
+
+
 # --- update ---
 
 
 @pytest.mark.integration
 def test_update_changes_membership_state(session: Session) -> None:
     # Arrange
-    user = _seed_user(session)
     course = _seed_course(session)
     repo = MembershipRepository(session)
     membership = repo.create(
         Membership(
-            user_pid=user.pid,
+            user_pid=123456789,
             course_id=course.id,  # type: ignore[arg-type]
             type=MembershipType.STUDENT,
             state=MembershipState.ENROLLED,
@@ -177,30 +153,19 @@ def test_update_changes_membership_state(session: Session) -> None:
 @pytest.mark.integration
 def test_delete_removes_membership(session: Session) -> None:
     # Arrange
-    user = _seed_user(session)
     course = _seed_course(session)
     repo = MembershipRepository(session)
     membership = repo.create(
         Membership(
-            user_pid=user.pid,
+            user_pid=123456789,
             course_id=course.id,  # type: ignore[arg-type]
             type=MembershipType.STUDENT,
             state=MembershipState.ENROLLED,
         )
     )
-    membership_id = membership.id
 
     # Act
-    repo.delete(membership_id)  # type: ignore[arg-type]
+    repo.delete(membership)
 
     # Assert
-    assert repo.get_by_id(membership_id) is None  # type: ignore[arg-type]
-
-
-@pytest.mark.integration
-def test_delete_does_nothing_when_not_found(session: Session) -> None:
-    # Arrange
-    repo = MembershipRepository(session)
-
-    # Act / Assert — should not raise
-    repo.delete(999999)
+    assert repo.get_by_user_and_course(123456789, course.id) is None  # type: ignore[arg-type]

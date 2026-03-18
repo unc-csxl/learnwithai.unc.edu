@@ -2,7 +2,6 @@
 
 from ..db import Session
 from ..tables.user import User
-from sqlmodel import select, col
 
 
 class UserRepository:
@@ -25,8 +24,7 @@ class UserRepository:
         Returns:
             The matching user when found; otherwise, ``None``.
         """
-        query = select(User).where(col(User.pid) == pid)
-        return self._session.exec(query).one_or_none()
+        return self._session.get(User, pid)
 
     def register_user(self, new_user: User) -> User:
         """Persists a new user record and reloads database defaults.

@@ -18,6 +18,7 @@ class MembershipType(str, enum.Enum):
 class MembershipState(str, enum.Enum):
     """Lifecycle state of a course membership."""
 
+    PENDING = "pending"
     ENROLLED = "enrolled"
     DROPPED = "dropped"
 
@@ -25,15 +26,13 @@ class MembershipState(str, enum.Enum):
 class Membership(SQLModel, table=True):
     """Join table linking users to courses with role and state."""
 
-    id: int | None = Field(
-        default=None,
-        sa_column=Column(Integer, primary_key=True, autoincrement=True),
-    )
     user_pid: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.pid"), nullable=False),
+        sa_column=Column(Integer, primary_key=True, nullable=False),
     )
     course_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("course.id"), nullable=False),
+        sa_column=Column(
+            Integer, ForeignKey("course.id"), primary_key=True, nullable=False
+        ),
     )
     type: MembershipType = Field(
         sa_column=Column(
@@ -48,7 +47,7 @@ class Membership(SQLModel, table=True):
                 values_callable=lambda e: [m.value for m in e],
             ),
             nullable=False,
-            server_default=MembershipState.ENROLLED.value,
+            server_default=MembershipState.PENDING.value,
         ),
     )
     created_at: datetime = Field(
