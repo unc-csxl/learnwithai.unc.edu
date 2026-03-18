@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { CourseService } from './course.service';
-import { Course, Membership } from './course.model';
+import { CourseResponse } from '../api/generated/models/course-response';
+import { MembershipResponse } from '../api/generated/models/membership-response';
 
 describe('CourseService', () => {
   let service: CourseService;
@@ -19,7 +20,9 @@ describe('CourseService', () => {
   afterEach(() => httpTesting.verify());
 
   it('fetches courses from GET /api/courses', () => {
-    const mockCourses: Course[] = [{ id: 1, name: 'Intro', term: 'Fall 2026', section: '001' }];
+    const mockCourses: CourseResponse[] = [
+      { id: 1, name: 'Intro', term: 'Fall 2026', section: '001' },
+    ];
     service.getMyCourses().subscribe((courses) => {
       expect(courses).toEqual(mockCourses);
     });
@@ -29,7 +32,7 @@ describe('CourseService', () => {
   });
 
   it('creates a course via POST /api/courses', () => {
-    const created: Course = {
+    const created: CourseResponse = {
       id: 2,
       name: 'Algo',
       term: 'Spring 2027',
@@ -51,7 +54,7 @@ describe('CourseService', () => {
   });
 
   it('fetches roster via GET /api/courses/:id/roster', () => {
-    const members: Membership[] = [
+    const members: MembershipResponse[] = [
       {
         user_pid: 123,
         course_id: 1,
@@ -68,7 +71,7 @@ describe('CourseService', () => {
   });
 
   it('adds a member via POST /api/courses/:id/members', () => {
-    const member: Membership = {
+    const member: MembershipResponse = {
       user_pid: 999,
       course_id: 1,
       type: 'student',
@@ -82,7 +85,7 @@ describe('CourseService', () => {
   });
 
   it('drops a member via DELETE /api/courses/:id/members/:pid', () => {
-    const member: Membership = {
+    const member: MembershipResponse = {
       user_pid: 999,
       course_id: 1,
       type: 'student',

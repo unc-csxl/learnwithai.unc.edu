@@ -3,18 +3,19 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Home } from './home';
 import { AuthService } from '../auth.service';
-import { User } from '../user.model';
+import { UserProfile } from '../api/generated/models/user-profile';
 
-const fakeUser: User = {
+const fakeUser: UserProfile = {
   pid: 999999999,
   name: 'Test User',
-  onyen: 'testuser',
+  given_name: 'Test',
+  family_name: 'User',
   email: 'test@example.com',
 };
 
 describe('Home', () => {
   function setup(options: { authenticated: boolean }) {
-    const userSignal = signal<User | null>(options.authenticated ? fakeUser : null);
+    const userSignal = signal<UserProfile | null>(options.authenticated ? fakeUser : null);
     const mockAuth = {
       user: userSignal.asReadonly(),
       isAuthenticated: signal(options.authenticated).asReadonly(),

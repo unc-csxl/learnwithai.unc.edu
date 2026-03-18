@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CourseService } from '../course.service';
-import { Membership } from '../course.model';
+import { MembershipResponse } from '../../api/generated/models/membership-response';
 
 /** Displays the roster for a course. Instructors see all members. */
 @Component({
@@ -62,7 +62,7 @@ export class CourseDetail {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
 
-  protected readonly roster = signal<Membership[]>([]);
+  protected readonly roster = signal<MembershipResponse[]>([]);
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly courseId: number;

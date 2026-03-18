@@ -4,15 +4,15 @@ import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { CourseDetail } from './course-detail';
 import { CourseService } from '../course.service';
-import { Membership } from '../course.model';
+import { MembershipResponse } from '../../api/generated/models/membership-response';
 
-const fakeRoster: Membership[] = [
+const fakeRoster: MembershipResponse[] = [
   { user_pid: 111, course_id: 1, type: 'instructor', state: 'enrolled' },
   { user_pid: 222, course_id: 1, type: 'student', state: 'enrolled' },
 ];
 
 describe('CourseDetail', () => {
-  function setup(options: { roster?: Membership[]; error?: { status: number } } = {}) {
+  function setup(options: { roster?: MembershipResponse[]; error?: { status: number } } = {}) {
     const mockService = {
       getRoster: options.error
         ? vi.fn(() => throwError(() => options.error))

@@ -3,15 +3,15 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { CourseList } from './course-list';
 import { CourseService } from '../course.service';
-import { Course } from '../course.model';
+import { CourseResponse } from '../../api/generated/models/course-response';
 
-const fakeCourses: Course[] = [
+const fakeCourses: CourseResponse[] = [
   { id: 1, name: 'Intro to CS', term: 'Fall 2026', section: '001' },
   { id: 2, name: 'Data Structures', term: 'Spring 2027', section: '001' },
 ];
 
 describe('CourseList', () => {
-  function setup(options: { courses?: Course[]; error?: boolean } = {}) {
+  function setup(options: { courses?: CourseResponse[]; error?: boolean } = {}) {
     const mockService = {
       getMyCourses: options.error
         ? vi.fn(() => throwError(() => new Error('fail')))

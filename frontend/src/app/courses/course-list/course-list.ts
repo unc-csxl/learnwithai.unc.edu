@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CourseService } from '../course.service';
-import { Course } from '../course.model';
+import { CourseResponse } from '../../api/generated/models/course-response';
 
 /** Displays a list of courses the current user is enrolled in. */
 @Component({
@@ -33,7 +33,7 @@ import { Course } from '../course.model';
 export class CourseList {
   private courseService = inject(CourseService);
 
-  protected readonly courses = signal<Course[]>([]);
+  protected readonly courses = signal<CourseResponse[]>([]);
   protected readonly loaded = signal(false);
 
   constructor() {

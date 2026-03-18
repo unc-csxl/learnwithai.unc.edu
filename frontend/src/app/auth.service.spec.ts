@@ -2,14 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
-import { User } from './user.model';
+import { UserProfile } from './api/generated/models/user-profile';
 import { authTokenInterceptor } from './auth-token.interceptor';
 import { AUTH_TOKEN_KEY } from './auth-token.service';
 
-const fakeUser: User = {
+const fakeUser: UserProfile = {
   pid: 999999999,
   name: 'Test User',
-  onyen: 'testuser',
+  given_name: 'Test',
+  family_name: 'User',
   email: 'test@example.com',
 };
 

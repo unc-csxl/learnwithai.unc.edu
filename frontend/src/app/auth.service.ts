@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { User } from './user.model';
+import { UserProfile } from './api/generated/models/user-profile';
 import { AuthTokenService } from './auth-token.service';
 
 /** Manages login state and the current authenticated user profile. */
@@ -8,7 +8,7 @@ import { AuthTokenService } from './auth-token.service';
 export class AuthService {
   private http = inject(HttpClient);
   private tokenService = inject(AuthTokenService);
-  private _user = signal<User | null>(null);
+  private _user = signal<UserProfile | null>(null);
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
@@ -42,7 +42,7 @@ export class AuthService {
     if (!this.tokenService.hasToken()) {
       return;
     }
-    this.http.get<User>('/api/me').subscribe({
+    this.http.get<UserProfile>('/api/me').subscribe({
       next: (user) => this._user.set(user),
       error: () => {
         this.tokenService.clearToken();

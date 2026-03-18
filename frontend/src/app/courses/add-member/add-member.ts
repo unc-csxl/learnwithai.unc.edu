@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CourseService } from '../course.service';
-import { MembershipType } from '../course.model';
+import { MembershipType } from '../../api/generated/models/membership-type';
 
 /** Form for adding a member to a course by PID and role. */
 @Component({
