@@ -36,12 +36,20 @@ def test_app_registers_expected_routes() -> None:
     has_queue_route = "/api/queue" in route_paths
     has_auth_route = "/api/auth" in route_paths
     has_auth_me_route = "/api/me" in route_paths
+    has_courses_route = "/api/courses" in route_paths
+    has_roster_route = "/api/courses/{course_id}/roster" in route_paths
+    has_members_route = "/api/courses/{course_id}/members" in route_paths
+    has_drop_route = "/api/courses/{course_id}/members/{pid}" in route_paths
 
     # Assert
     assert has_health_route is True
     assert has_queue_route is True
     assert has_auth_route is True
     assert has_auth_me_route is True
+    assert has_courses_route is True
+    assert has_roster_route is True
+    assert has_members_route is True
+    assert has_drop_route is True
 
 
 def test_app_exposes_expected_openapi_tags() -> None:
@@ -64,12 +72,26 @@ def test_app_assigns_tags_to_current_routes() -> None:
     queue_tags = openapi["paths"]["/api/queue"]["post"]["tags"]
     auth_tags = openapi["paths"]["/api/auth"]["get"]["tags"]
     profile_tags = openapi["paths"]["/api/me"]["get"]["tags"]
+    courses_list_tags = openapi["paths"]["/api/courses"]["get"]["tags"]
+    courses_create_tags = openapi["paths"]["/api/courses"]["post"]["tags"]
+    roster_tags = openapi["paths"]["/api/courses/{course_id}/roster"]["get"]["tags"]
+    add_member_tags = openapi["paths"]["/api/courses/{course_id}/members"]["post"][
+        "tags"
+    ]
+    drop_member_tags = openapi["paths"]["/api/courses/{course_id}/members/{pid}"][
+        "delete"
+    ]["tags"]
 
     # Assert
     assert health_tags == ["Operations"]
     assert queue_tags == ["Operations"]
     assert auth_tags == ["Authentication"]
     assert profile_tags == ["Authentication"]
+    assert courses_list_tags == ["Courses"]
+    assert courses_create_tags == ["Courses"]
+    assert roster_tags == ["Courses"]
+    assert add_member_tags == ["Courses"]
+    assert drop_member_tags == ["Courses"]
 
 
 # ---- DI factories ----
