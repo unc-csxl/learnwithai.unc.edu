@@ -6,7 +6,8 @@ import pytest
 
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
-from learnwithai.services.course_service import AuthorizationError, CourseService
+from learnwithai.errors import AuthorizationError
+from learnwithai.services.course_service import CourseService
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 from learnwithai.tables.user import User

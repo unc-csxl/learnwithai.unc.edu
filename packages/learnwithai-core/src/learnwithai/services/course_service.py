@@ -1,14 +1,11 @@
 """Business logic for course and membership management."""
 
+from ..errors import AuthorizationError
 from ..repositories.course_repository import CourseRepository
 from ..repositories.membership_repository import MembershipRepository
 from ..tables.course import Course
 from ..tables.membership import Membership, MembershipState, MembershipType
 from ..tables.user import User
-
-
-class AuthorizationError(Exception):
-    """Raised when a user lacks permission for the requested operation."""
 
 
 class CourseService:
@@ -125,14 +122,14 @@ class CourseService:
             subject, course
         )
         self._require_membership(requester_membership, {MembershipType.INSTRUCTOR})
-        course_id = course.id
-        if course_id is None:
+
+        if course.id is None:
             raise ValueError("Course must be persisted before adding members")
 
         return self._membership_repo.create(
             Membership(
                 user_pid=target_user.pid,
-                course_id=course_id,
+                course_id=course.id,
                 type=membership_type,
                 state=MembershipState.PENDING,
             )

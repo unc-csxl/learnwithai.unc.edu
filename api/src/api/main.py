@@ -8,7 +8,7 @@ from api.routes import API_ROUTERS
 from api.spa import configure_spa
 
 from learnwithai.config import Settings
-from learnwithai.services.course_service import AuthorizationError
+from learnwithai.errors import AuthorizationError
 
 
 def create_app(settings: Settings) -> FastAPI:

@@ -25,7 +25,7 @@ from api.routes.courses import (
     get_course_roster,
     list_my_courses,
 )
-from learnwithai.services.course_service import AuthorizationError
+from learnwithai.errors import AuthorizationError
 from learnwithai.tables.membership import MembershipState, MembershipType
 
 
