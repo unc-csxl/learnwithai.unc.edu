@@ -45,8 +45,8 @@ def create_course(
     Returns:
         The newly created course.
     """
-    with session.begin():
-        course = course_svc.create_course(user, body.name, body.term, body.section)
+    course = course_svc.create_course(user, body.name, body.term, body.section)
+    session.commit()
     return CourseResponse.model_validate(course)
 
 
@@ -141,13 +141,13 @@ def add_member(
     Returns:
         The newly created membership.
     """
-    with session.begin():
-        membership = course_svc.add_member(
-            course,
-            user,
-            target_user,
-            body.type,
-        )
+    membership = course_svc.add_member(
+        course,
+        user,
+        target_user,
+        body.type,
+    )
+    session.commit()
     return MembershipResponse.model_validate(membership)
 
 
@@ -183,6 +183,6 @@ def drop_member(
     Returns:
         The updated membership.
     """
-    with session.begin():
-        membership = course_svc.drop_member(user, course, target_user)
+    membership = course_svc.drop_member(user, course, target_user)
+    session.commit()
     return MembershipResponse.model_validate(membership)

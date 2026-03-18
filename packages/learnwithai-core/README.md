@@ -56,6 +56,18 @@ test/
 - Raw scalar identifiers belong in explicit lookup methods such as `get_by_id()` and `get_by_pid()`.
 - Services should operate on loaded domain models for non-lookup behavior. If an HTTP route receives raw ids, resolve them in the API layer first so the route can return the right `404` before calling the service.
 
+## Database Scripts
+
+- `scripts/create_database.py` creates the configured development database tables.
+- `scripts/reset_database.py` fully resets the configured development database by dropping and recreating it before rebuilding the tables.
+
+Run them from `packages/learnwithai-core/` with:
+
+```bash
+uv run python scripts/create_database.py
+uv run python scripts/reset_database.py
+```
+
 Run tests from the repository root with:
 
 ```bash

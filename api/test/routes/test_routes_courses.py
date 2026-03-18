@@ -82,8 +82,6 @@ def test_create_course_returns_course_response() -> None:
     # Arrange
     user = _stub_user()
     session = MagicMock()
-    session.begin.return_value.__enter__ = lambda s: s
-    session.begin.return_value.__exit__ = lambda s, *a: None
     course = _stub_course()
     course_svc = MagicMock()
     course_svc.create_course.return_value = course
@@ -98,6 +96,9 @@ def test_create_course_returns_course_response() -> None:
     course_svc.create_course.assert_called_once_with(
         user, "Intro to CS", "Fall 2026", "001"
     )
+    session.commit.assert_called_once_with()
+    session.rollback.assert_not_called()
+    session.begin.assert_not_called()
 
 
 # ---- list_my_courses ----
@@ -157,8 +158,6 @@ def test_add_member_returns_membership_response() -> None:
     # Arrange
     user = _stub_user()
     session = MagicMock()
-    session.begin.return_value.__enter__ = lambda s: s
-    session.begin.return_value.__exit__ = lambda s, *a: None
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     membership = _stub_membership(state=MembershipState.PENDING)
@@ -185,6 +184,9 @@ def test_add_member_returns_membership_response() -> None:
         target_user,
         MembershipType.STUDENT,
     )
+    session.commit.assert_called_once_with()
+    session.rollback.assert_not_called()
+    session.begin.assert_not_called()
 
 
 # ---- drop_member ----
@@ -194,8 +196,6 @@ def test_drop_member_returns_membership_response() -> None:
     # Arrange
     user = _stub_user()
     session = MagicMock()
-    session.begin.return_value.__enter__ = lambda s: s
-    session.begin.return_value.__exit__ = lambda s, *a: None
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     membership = _stub_membership(state=MembershipState.DROPPED)
@@ -215,6 +215,9 @@ def test_drop_member_returns_membership_response() -> None:
     assert isinstance(result, MembershipResponse)
     assert result.state == MembershipState.DROPPED
     course_svc.drop_member.assert_called_once_with(user, course, target_user)
+    session.commit.assert_called_once_with()
+    session.rollback.assert_not_called()
+    session.begin.assert_not_called()
 
 
 # ---- integration tests via TestClient ----
