@@ -17,6 +17,7 @@ api/
 |     |- courses.py            Course management endpoints
 |     `- health.py             Health and queue demo endpoints
 |- test/                       Pytest suite for the API adapter
+|  `- routes/                  Route handler tests grouped by router
 |- pyproject.toml              Package metadata and dependencies
 ```
 
@@ -60,10 +61,10 @@ Before finishing broader backend work, run the repository QA check:
 Use this mental model:
 
 1. Put the route in `src/api/routes/`.
-2. Keep the route focused on HTTP details, including loading domain models from route params and returning `404` responses for invalid identifiers.
+2. Keep the route focused on HTTP details. Load domain models and translate missing identifiers into `404` responses through typed helpers in `src/api/dependency_injection.py` instead of route-local repository lookups.
 3. Use dependency injection for settings, sessions, current user resolution, and shared services.
 4. Move reusable logic into `learnwithai-core`.
-5. Add or update tests in `api/test/`.
+5. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
 
 ## Good First Files To Read
 
@@ -72,6 +73,6 @@ Use this mental model:
 - `src/api/routes/auth.py`
 - `src/api/dependency_injection.py`
 - `test/test_main.py`
-- `test/test_routes_auth.py`
+- `test/routes/test_routes_auth.py`
 
 Read those before making large API changes.

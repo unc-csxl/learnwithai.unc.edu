@@ -74,7 +74,6 @@ def list_my_courses(
     return [CourseResponse.model_validate(c) for c in courses]
 
 
-
 @router.get(
     "/{course_id}/roster",
     response_model=list[MembershipResponse],
