@@ -10,11 +10,14 @@
       "url": "http://localhost:4200/"
     },
     {
-      "name": "Frontend: test",
-      "type": "chrome",
+      "name": "Frontend: test (Vitest)",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "test",
-      "url": "http://localhost:9876/debug.html"
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

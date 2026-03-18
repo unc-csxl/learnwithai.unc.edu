@@ -1,5 +1,6 @@
-import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Home } from './home';
 import { AuthService } from '../auth.service';
 import { User } from '../user.model';
@@ -23,7 +24,7 @@ describe('Home', () => {
 
     TestBed.configureTestingModule({
       imports: [Home],
-      providers: [{ provide: AuthService, useValue: mockAuth }],
+      providers: [provideRouter([]), { provide: AuthService, useValue: mockAuth }],
     });
 
     const fixture = TestBed.createComponent(Home);
@@ -49,6 +50,14 @@ describe('Home', () => {
     const { fixture } = setup({ authenticated: true });
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('h1')?.textContent).toContain('Hello, Test User');
+  });
+
+  it('should show course navigation when authenticated', () => {
+    const { fixture } = setup({ authenticated: true });
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('a[href="/courses"]')?.textContent).toContain('View courses');
+    expect(el.querySelector('a[href="/courses/create"]')?.textContent).toContain('Create course');
   });
 
   it('should call logout on button click when authenticated', () => {
