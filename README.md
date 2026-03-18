@@ -167,6 +167,7 @@ Good first searches when you are exploring:
 
 - Start in `api/src/api/` or `packages/learnwithai-core/src/learnwithai/`
 - Run the API task, and the worker if your change touches background jobs
+- In FastAPI routes, reserve dependency injection for shared services and path-derived resources; keep request body parsing and any body-driven lookups explicit in the route.
 - Validate with targeted pytest runs, then `./scripts/qa.sh --check`
 
 ### Queue-related work

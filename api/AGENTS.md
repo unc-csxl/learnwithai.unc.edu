@@ -12,6 +12,8 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 - Put reusable business logic in `packages/learnwithai-core/`.
 - Use dependency injection for sessions, settings, auth helpers, and shared services.
 - Define DI types and factories in `src/api/dependency_injection.py`.
+- Keep request body models explicit in route signatures with `Annotated[..., Body()]` when you need body metadata or want to signal API-layer ownership clearly.
+- Do not add DI aliases or helper dependencies that derive values from request bodies. If a body field requires a database lookup, perform that lookup in the route logic and translate missing resources into the appropriate HTTP response there.
 - Add Google-style docstrings to maintained Python modules and public functions.
 - Keep type annotations explicit on public APIs.
 

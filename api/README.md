@@ -61,10 +61,12 @@ Before finishing broader backend work, run the repository QA check:
 Use this mental model:
 
 1. Put the route in `src/api/routes/`.
-2. Keep the route focused on HTTP details. Load domain models and translate missing identifiers into `404` responses through typed helpers in `src/api/dependency_injection.py` instead of route-local repository lookups.
-3. Use dependency injection for settings, sessions, current user resolution, and shared services.
-4. Move reusable logic into `learnwithai-core`.
-5. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
+2. Keep the route focused on HTTP details. Use typed helpers in `src/api/dependency_injection.py` for shared request-scoped services and path-derived resource loading.
+3. Declare request body models directly in the route signature. Prefer `Annotated[..., Body()]` when you want the body contract to be explicit at the API layer.
+4. If a request body contains an identifier that requires a database lookup, do that lookup in the route logic and translate missing resources into the appropriate `404` response there instead of creating a body-driven DI helper.
+5. Use dependency injection for settings, sessions, current user resolution, and shared services.
+6. Move reusable logic into `learnwithai-core`.
+7. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
 
 ## Good First Files To Read
 

@@ -4,7 +4,6 @@ from typing import Annotated, TypeAlias
 
 from fastapi import Depends, Header, HTTPException, Path
 
-from .models import AddMemberRequest
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import (
     CSXLAuthService,
@@ -220,23 +219,3 @@ def get_user_by_path_pid(
 
 
 UserByPIDPathDI: TypeAlias = Annotated[User, Depends(get_user_by_path_pid)]
-
-
-def get_user_by_add_member_request_pid(
-    body: AddMemberRequest, user_repo: UserRepositoryDI
-) -> User:
-    """Loads the user referenced by an add-member request payload.
-
-    Args:
-        body: Request payload containing the target pid.
-        user_repo: Repository used to load users.
-
-    Returns:
-        The matching user.
-    """
-    return get_user_by_pid(body.pid, user_repo)
-
-
-UserByAddMemberRequestPIDDI: TypeAlias = Annotated[
-    User, Depends(get_user_by_add_member_request_pid)
-]

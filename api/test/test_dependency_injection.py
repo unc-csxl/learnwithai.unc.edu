@@ -7,11 +7,8 @@ from fastapi import HTTPException
 
 from api.dependency_injection import (
     get_course_by_path_id,
-    get_user_by_add_member_request_pid,
     get_user_by_pid,
 )
-from api.models import AddMemberRequest
-from learnwithai.tables.membership import MembershipType
 
 
 def test_get_course_by_path_id_returns_course() -> None:
@@ -66,18 +63,3 @@ def test_get_user_by_pid_raises_for_missing_user() -> None:
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "User not found."
-
-
-def test_get_user_by_add_member_request_pid_returns_user() -> None:
-    # Arrange
-    user = MagicMock()
-    user_repo = MagicMock()
-    user_repo.get_by_pid.return_value = user
-    body = AddMemberRequest(pid=123, type=MembershipType.STUDENT)
-
-    # Act
-    result = get_user_by_add_member_request_pid(body, user_repo)
-
-    # Assert
-    assert result is user
-    user_repo.get_by_pid.assert_called_once_with(123)

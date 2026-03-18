@@ -1,13 +1,15 @@
 """Course management routes for the public API."""
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Body, HTTPException
 
 from ..dependency_injection import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
     AuthenticatedUserDI,
     SessionDI,
-    UserByAddMemberRequestPIDDI,
+    UserRepositoryDI,
     UserByPIDPathDI,
 )
 from ..models import (
@@ -29,7 +31,7 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
     responses={401: {"description": "Not authenticated."}},
 )
 def create_course(
-    body: CreateCourseRequest,
+    body: Annotated[CreateCourseRequest, Body()],
     session: SessionDI,
     subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
@@ -120,11 +122,11 @@ def get_course_roster(
 )
 def add_member(
     course: CourseByCourseIDPathDI,
-    body: AddMemberRequest,
+    add_member_request: Annotated[AddMemberRequest, Body()],
     session: SessionDI,
     subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
-    target_user: UserByAddMemberRequestPIDDI,
+    user_repo: UserRepositoryDI,
 ) -> MembershipResponse:
     """Adds a member to a course.
 
@@ -136,16 +138,20 @@ def add_member(
         session: Database session scoped to the request.
         subject: Authenticated subject.
         course_svc: Service used to manage memberships.
-        target_user: User loaded from the request payload pid.
+        user_repo: Repository used to load the target user from the request body.
 
     Returns:
         The newly created membership.
     """
+    target_user = user_repo.get_by_pid(add_member_request.pid)
+    if target_user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+
     membership = course_svc.add_member(
         course,
         subject,
         target_user,
-        body.type,
+        add_member_request.type,
     )
     session.commit()
     return MembershipResponse.model_validate(membership)

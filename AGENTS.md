@@ -17,6 +17,7 @@ If guidance conflicts, the more local `AGENTS.md` wins.
 - Keep architecture boundaries clear.
 - Put shared business logic in `packages/learnwithai-core/`.
 - Keep API route handlers thin and focused on HTTP concerns.
+- In the API layer, use dependency injection for shared request-scoped services and path-derived resource loading, not for values derived from request bodies.
 - Keep queue wiring in `packages/learnwithai-jobqueue/`.
 - Keep frontend components focused on UI concerns.
 - Update documentation when behavior, architecture, commands, or workflows change.
