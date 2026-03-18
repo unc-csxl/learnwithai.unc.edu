@@ -28,11 +28,13 @@ class CourseService:
         self._course_repo = course_repo
         self._membership_repo = membership_repo
 
-    def create_course(self, user: User, name: str, term: str, section: str) -> Course:
+    def create_course(
+        self, subject: User, name: str, term: str, section: str
+    ) -> Course:
         """Creates a course and enrolls the creator as instructor.
 
         Args:
-            user: Authenticated user creating the course.
+            subject: Authenticated subject creating the course.
             name: Course name.
             term: Academic term (e.g. "Fall 2026").
             section: Section identifier (e.g. "001").
@@ -43,7 +45,7 @@ class CourseService:
         course = self._course_repo.create(Course(name=name, term=term, section=section))
         self._membership_repo.create(
             Membership(
-                user_pid=user.pid,
+                user_pid=subject.pid,
                 course_id=course.id,  # type: ignore[arg-type]
                 type=MembershipType.INSTRUCTOR,
                 state=MembershipState.ENROLLED,
@@ -51,16 +53,16 @@ class CourseService:
         )
         return course
 
-    def get_my_courses(self, user: User) -> list[Course]:
-        """Returns courses where the user has an active membership.
+    def get_my_courses(self, subject: User) -> list[Course]:
+        """Returns courses where the subject has an active membership.
 
         Args:
-            user: Authenticated user.
+            subject: Authenticated subject.
 
         Returns:
-            List of courses where the user is enrolled.
+            List of courses where the subject is enrolled.
         """
-        memberships = self._membership_repo.get_active_by_user(user)
+        memberships = self._membership_repo.get_active_by_user(subject)
         courses: list[Course] = []
         for m in memberships:
             course = self._course_repo.get_by_id(m.course_id)
@@ -71,7 +73,7 @@ class CourseService:
     def get_course_roster(
         self,
         course: Course,
-        requesting_user: User,
+        subject: User,
     ) -> list[Membership]:
         """Returns the full roster for a course.
 
@@ -79,7 +81,7 @@ class CourseService:
 
         Args:
             course: Course whose roster should be returned.
-            requesting_user: Authenticated user requesting the roster.
+            subject: Authenticated subject requesting the roster.
 
         Returns:
             List of all memberships for the course.
@@ -88,7 +90,7 @@ class CourseService:
             AuthorizationError: If the user is not an instructor or TA.
         """
         requester_membership = self._membership_repo.get_by_user_and_course(
-            requesting_user, course
+            subject, course
         )
         self._require_membership(
             requester_membership,
@@ -99,7 +101,7 @@ class CourseService:
     def add_member(
         self,
         course: Course,
-        requesting_user: User,
+        subject: User,
         target_user: User,
         membership_type: MembershipType,
     ) -> Membership:
@@ -109,7 +111,7 @@ class CourseService:
 
         Args:
             course: Course to add the member to.
-            requesting_user: Authenticated user performing the action.
+            subject: Authenticated subject performing the action.
             target_user: User to enroll.
             membership_type: Role to assign.
 
@@ -120,7 +122,7 @@ class CourseService:
             AuthorizationError: If the requesting user is not an instructor.
         """
         requester_membership = self._membership_repo.get_by_user_and_course(
-            requesting_user, course
+            subject, course
         )
         self._require_membership(requester_membership, {MembershipType.INSTRUCTOR})
         course_id = course.id
@@ -138,7 +140,7 @@ class CourseService:
 
     def drop_member(
         self,
-        requesting_user: User,
+        subject: User,
         course: Course,
         target_user: User,
     ) -> Membership:
@@ -147,7 +149,7 @@ class CourseService:
         Instructors can drop anyone. Students and TAs can drop themselves.
 
         Args:
-            requesting_user: Authenticated user performing the action.
+            subject: Authenticated subject performing the action.
             course: Course from which the user should be dropped.
             target_user: User whose membership should be dropped.
 
@@ -159,7 +161,7 @@ class CourseService:
             ValueError: If the target membership does not exist.
         """
         requester_membership = self._membership_repo.get_by_user_and_course(
-            requesting_user, course
+            subject, course
         )
         caller = self._require_membership(
             requester_membership,
@@ -177,7 +179,7 @@ class CourseService:
             course_id = course.id if course.id is not None else "unknown"
             raise ValueError(f"Target membership does not exist for course {course_id}")
 
-        is_self = requesting_user.pid == target_membership.user_pid
+        is_self = subject.pid == target_membership.user_pid
         if not is_self and caller.type != MembershipType.INSTRUCTOR:
             raise AuthorizationError("Only instructors can drop other members")
 

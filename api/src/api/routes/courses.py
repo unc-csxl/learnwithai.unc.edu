@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from ..dependency_injection import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
-    CurrentUserDI,
+    CurrentSubjectDI,
     SessionDI,
     UserByAddMemberRequestPIDDI,
     UserByPIDPathDI,
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
 def create_course(
     body: CreateCourseRequest,
     session: SessionDI,
-    user: CurrentUserDI,
+    subject: CurrentSubjectDI,
     course_svc: CourseServiceDI,
 ) -> CourseResponse:
     """Creates a new course and enrolls the caller as instructor.
@@ -39,13 +39,13 @@ def create_course(
     Args:
         body: Course creation payload.
         session: Database session scoped to the request.
-        user: Authenticated user.
+        subject: Authenticated subject.
         course_svc: Service used to create the course.
 
     Returns:
         The newly created course.
     """
-    course = course_svc.create_course(user, body.name, body.term, body.section)
+    course = course_svc.create_course(subject, body.name, body.term, body.section)
     session.commit()
     return CourseResponse.model_validate(course)
 
@@ -58,19 +58,19 @@ def create_course(
     responses={401: {"description": "Not authenticated."}},
 )
 def list_my_courses(
-    user: CurrentUserDI,
+    subject: CurrentSubjectDI,
     course_svc: CourseServiceDI,
 ) -> list[CourseResponse]:
-    """Returns courses the authenticated user is enrolled in.
+    """Returns courses the authenticated subject is enrolled in.
 
     Args:
-        user: Authenticated user.
+        subject: Authenticated subject.
         course_svc: Service used to query courses.
 
     Returns:
         List of courses with active membership.
     """
-    courses = course_svc.get_my_courses(user)
+    courses = course_svc.get_my_courses(subject)
     return [CourseResponse.model_validate(c) for c in courses]
 
 
@@ -87,7 +87,7 @@ def list_my_courses(
 )
 def get_course_roster(
     course: CourseByCourseIDPathDI,
-    user: CurrentUserDI,
+    subject: CurrentSubjectDI,
     course_svc: CourseServiceDI,
 ) -> list[MembershipResponse]:
     """Returns the full roster for a course.
@@ -96,13 +96,13 @@ def get_course_roster(
 
     Args:
         course: Course loaded via DI and course_id Path param.
-        user: Authenticated user.
+        subject: Authenticated subject.
         course_svc: Service used to query the roster.
 
     Returns:
         List of memberships for the course.
     """
-    memberships = course_svc.get_course_roster(course, user)
+    memberships = course_svc.get_course_roster(course, subject)
     return [MembershipResponse.model_validate(m) for m in memberships]
 
 
@@ -122,7 +122,7 @@ def add_member(
     course: CourseByCourseIDPathDI,
     body: AddMemberRequest,
     session: SessionDI,
-    user: CurrentUserDI,
+    subject: CurrentSubjectDI,
     course_svc: CourseServiceDI,
     target_user: UserByAddMemberRequestPIDDI,
 ) -> MembershipResponse:
@@ -134,7 +134,7 @@ def add_member(
         course: Course loaded via DI and course_id path param.
         body: Member addition payload.
         session: Database session scoped to the request.
-        user: Authenticated user.
+        subject: Authenticated subject.
         course_svc: Service used to manage memberships.
         target_user: User loaded from the request payload pid.
 
@@ -143,7 +143,7 @@ def add_member(
     """
     membership = course_svc.add_member(
         course,
-        user,
+        subject,
         target_user,
         body.type,
     )
@@ -166,7 +166,7 @@ def drop_member(
     course: CourseByCourseIDPathDI,
     target_user: UserByPIDPathDI,
     session: SessionDI,
-    user: CurrentUserDI,
+    subject: CurrentSubjectDI,
     course_svc: CourseServiceDI,
 ) -> MembershipResponse:
     """Drops a member from a course.
@@ -177,12 +177,12 @@ def drop_member(
         course: Course loaded via DI and course_id path param.
         target_user: User loaded via DI and pid path param.
         session: Database session scoped to the request.
-        user: Authenticated user.
+        subject: Authenticated subject.
         course_svc: Service used to manage memberships.
 
     Returns:
         The updated membership.
     """
-    membership = course_svc.drop_member(user, course, target_user)
+    membership = course_svc.drop_member(subject, course, target_user)
     session.commit()
     return MembershipResponse.model_validate(membership)

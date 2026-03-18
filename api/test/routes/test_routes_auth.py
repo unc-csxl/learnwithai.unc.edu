@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from api.dependency_injection import (
     settings_factory,
     csxl_auth_service_factory,
-    get_current_user,
+    get_current_subject,
 )
 from api.main import app
 from api.routes.auth import (
@@ -138,44 +138,44 @@ def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
     csxl_auth_svc.issue_jwt_token.assert_called_once_with(user)
 
 
-# ---- get_current_user dependency ----
+# ---- get_current_subject dependency ----
 
 
-def test_get_current_user_raises_401_when_no_authorization_header() -> None:
+def test_get_current_subject_raises_401_when_no_authorization_header() -> None:
     # Arrange
     csxl_auth_svc = MagicMock()
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_user(csxl_auth_svc, authorization=None)
+        get_current_subject(csxl_auth_svc, authorization=None)
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
 
-def test_get_current_user_raises_401_for_non_bearer_header() -> None:
+def test_get_current_subject_raises_401_for_non_bearer_header() -> None:
     # Arrange
     csxl_auth_svc = MagicMock()
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_user(csxl_auth_svc, authorization="Basic abc")
+        get_current_subject(csxl_auth_svc, authorization="Basic abc")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
 
-def test_get_current_user_raises_401_for_invalid_jwt() -> None:
+def test_get_current_subject_raises_401_for_invalid_jwt() -> None:
     # Arrange
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.verify_jwt.side_effect = AuthenticationException()
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_user(csxl_auth_svc, authorization="Bearer bad-token")
+        get_current_subject(csxl_auth_svc, authorization="Bearer bad-token")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
 
-def test_get_current_user_raises_401_when_user_not_found() -> None:
+def test_get_current_subject_raises_401_when_user_not_found() -> None:
     # Arrange
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.verify_jwt.return_value = 999999999
@@ -183,12 +183,12 @@ def test_get_current_user_raises_401_when_user_not_found() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_user(csxl_auth_svc, authorization="Bearer valid-token")
+        get_current_subject(csxl_auth_svc, authorization="Bearer valid-token")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
 
-def test_get_current_user_returns_user_for_valid_token() -> None:
+def test_get_current_subject_returns_user_for_valid_token() -> None:
     # Arrange
     pid = 123456789
     user = _stub_user(pid=pid)
@@ -197,7 +197,7 @@ def test_get_current_user_returns_user_for_valid_token() -> None:
     csxl_auth_svc.get_user_by_pid.return_value = user
 
     # Act
-    result = get_current_user(csxl_auth_svc, authorization="Bearer valid-token")
+    result = get_current_subject(csxl_auth_svc, authorization="Bearer valid-token")
 
     # Assert
     assert result is user

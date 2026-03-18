@@ -68,18 +68,18 @@ CSXLAuthServiceDI: TypeAlias = Annotated[
 ]
 
 
-def get_current_user(
+def get_current_subject(
     csxl_auth_svc: CSXLAuthServiceDI,
     authorization: Annotated[str | None, Header()] = None,
 ) -> User:
     """Authenticates the current request from a bearer token.
 
     Args:
-        csxl_auth_svc: Service used to validate and resolve user identity.
+        csxl_auth_svc: Service used to validate and resolve subject identity.
         authorization: Raw Authorization header supplied by the client.
 
     Returns:
-        The authenticated user.
+        The authenticated subject.
 
     Raises:
         HTTPException: If the token is missing, invalid, expired, or unknown.
@@ -91,13 +91,13 @@ def get_current_user(
         pid = csxl_auth_svc.verify_jwt(token)
     except AuthenticationException:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
-    user = csxl_auth_svc.get_user_by_pid(pid)
-    if user is None:
+    subject = csxl_auth_svc.get_user_by_pid(pid)
+    if subject is None:
         raise HTTPException(status_code=401, detail="User not found.")
-    return user
+    return subject
 
 
-CurrentUserDI: TypeAlias = Annotated[User, Depends(get_current_user)]
+CurrentSubjectDI: TypeAlias = Annotated[User, Depends(get_current_subject)]
 
 
 def job_queue_factory() -> JobQueue:

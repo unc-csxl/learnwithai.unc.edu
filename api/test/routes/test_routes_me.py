@@ -4,10 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from api.dependency_injection import get_current_user
+from api.dependency_injection import get_current_subject
 from api.main import app
 from api.models import UserProfile
-from api.routes.me import get_current_user_profile
+from api.routes.me import get_current_subject_profile
 from learnwithai.tables.user import User
 
 
@@ -32,12 +32,12 @@ def _stub_user(
     )
 
 
-def test_get_current_user_profile_returns_user_profile() -> None:
+def test_get_current_subject_profile_returns_user_profile() -> None:
     # Arrange
     user = _stub_user(email="test@example.com")
 
     # Act
-    result = get_current_user_profile(user)
+    result = get_current_subject_profile(user)
 
     # Assert
     assert result == UserProfile(
@@ -49,7 +49,7 @@ def test_get_current_user_profile_returns_user_profile() -> None:
     )
 
 
-def test_get_current_user_profile_raises_validation_error_when_email_is_missing() -> (
+def test_get_current_subject_profile_raises_validation_error_when_email_is_missing() -> (
     None
 ):
     # Arrange
@@ -57,14 +57,14 @@ def test_get_current_user_profile_raises_validation_error_when_email_is_missing(
 
     # Act / Assert
     with pytest.raises(ValidationError):
-        get_current_user_profile(user)
+        get_current_subject_profile(user)
 
 
 @pytest.mark.integration
 def test_auth_me_returns_user_profile(client: TestClient) -> None:
     # Arrange
     user = _stub_user(email="test@example.com")
-    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[get_current_subject] = lambda: user
 
     # Act
     response = client.get("/api/me")
@@ -80,7 +80,7 @@ def test_auth_me_returns_user_profile(client: TestClient) -> None:
 
 @pytest.mark.integration
 def test_auth_me_returns_401_without_token(client: TestClient) -> None:
-    # Arrange (no overrides — real get_current_user will reject)
+    # Arrange (no overrides — real get_current_subject will reject)
 
     # Act
     response = client.get("/api/me")

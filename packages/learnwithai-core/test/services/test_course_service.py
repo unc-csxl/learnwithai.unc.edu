@@ -63,17 +63,17 @@ def test_create_course_creates_and_enrolls_instructor() -> None:
     course = _make_course()
     course_repo.create.return_value = course
     svc = _build_service(course_repo, membership_repo)
-    user = _make_user()
+    subject = _make_user()
 
     # Act
-    result = svc.create_course(user, "Intro to CS", "Fall 2026", "001")
+    result = svc.create_course(subject, "Intro to CS", "Fall 2026", "001")
 
     # Assert
     assert result is course
     course_repo.create.assert_called_once()
     membership_repo.create.assert_called_once()
     created_membership = membership_repo.create.call_args.args[0]
-    assert created_membership.user_pid == user.pid
+    assert created_membership.user_pid == subject.pid
     assert created_membership.type == MembershipType.INSTRUCTOR
     assert created_membership.state == MembershipState.ENROLLED
 
@@ -92,14 +92,14 @@ def test_get_my_courses_returns_courses_for_active_memberships() -> None:
     c2 = _make_course(2)
     course_repo.get_by_id.side_effect = lambda cid: {1: c1, 2: c2}.get(cid)
     svc = _build_service(course_repo, membership_repo)
-    user = _make_user()
+    subject = _make_user()
 
     # Act
-    result = svc.get_my_courses(user)
+    result = svc.get_my_courses(subject)
 
     # Assert
     assert result == [c1, c2]
-    membership_repo.get_active_by_user.assert_called_once_with(user)
+    membership_repo.get_active_by_user.assert_called_once_with(subject)
 
 
 def test_get_my_courses_returns_empty_list_when_no_memberships() -> None:
