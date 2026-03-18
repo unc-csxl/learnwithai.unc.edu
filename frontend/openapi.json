@@ -1,0 +1,673 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "learnwithai",
+    "description": "HTTP API for LearnWithAI, including operational endpoints, UNC authentication flows, and authenticated user profile access.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Get service health",
+        "description": "Returns the current service health payload.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Current health details for the API service.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/queue": {
+      "post": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Enqueue a sample background job",
+        "description": "Enqueues a sample background job.\n\nArgs:\n    job_queue: Queue implementation used to submit background work.\n\nReturns:\n    A simple acknowledgement when the job has been enqueued.",
+        "operationId": "queue",
+        "responses": {
+          "200": {
+            "description": "Acknowledgement that the demo job was submitted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Queue"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/onyen": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Start UNC authentication",
+        "description": "Redirects the client to the UNC authentication flow.\n\nArgs:\n    settings: Application settings used to build the callback URL.\n\nReturns:\n    A redirect response to the upstream authentication service.",
+        "operationId": "onyen_login_redirect",
+        "responses": {
+          "307": {
+            "description": "Temporary redirect to UNC authentication.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Complete UNC authentication callback",
+        "description": "Completes the CSXL callback flow and issues a local JWT.\n\nArgs:\n    csxl_auth_svc: Service used to validate CSXL tokens and manage users.\n    token: Token returned by the upstream CSXL authentication flow.\n\nReturns:\n    A redirect to the frontend with a local JWT when authentication succeeds.\n\nRaises:\n    HTTPException: If authentication fails or user registration cannot complete.",
+        "operationId": "authenticate_with_csxl_callback",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Token returned by the upstream CSXL authentication flow.",
+              "title": "Token"
+            },
+            "description": "Token returned by the upstream CSXL authentication flow."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Redirect to the frontend after authentication completes.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect to the frontend after authentication."
+          },
+          "401": {
+            "description": "The provided upstream authentication token is invalid."
+          },
+          "500": {
+            "description": "The user could not be registered locally."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get the authenticated user profile",
+        "description": "Returns the authenticated subject's profile payload.\n\nArgs:\n    subject: Authenticated subject resolved from the bearer token.\n\nReturns:\n    A UserProfile model for the API.",
+        "operationId": "get_current_subject_profile",
+        "responses": {
+          "200": {
+            "description": "Profile details for the authenticated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token is missing, invalid, or expired."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "List my courses",
+        "description": "Returns courses the authenticated subject is enrolled in.\n\nArgs:\n    subject: Authenticated subject.\n    course_svc: Service used to query courses.\n\nReturns:\n    List of courses with active membership.",
+        "operationId": "list_my_courses",
+        "responses": {
+          "200": {
+            "description": "Courses where the current user has active membership.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List My Courses"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Create a course",
+        "description": "Creates a new course and enrolls the caller as instructor.\n\nArgs:\n    subject: Authenticated subject.\n    body: Course creation payload.\n    course_svc: Service used to create the course.\n\nReturns:\n    The newly created course.",
+        "operationId": "create_course",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCourseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The newly created course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/courses/{course_id}/roster": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Get course roster",
+        "description": "Returns the full roster for a course.\n\nOnly instructors and TAs may view the roster.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id Path param.\n    course_svc: Service used to query the roster.\n\nReturns:\n    List of memberships for the course.",
+        "operationId": "get_course_roster",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All memberships for the course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MembershipResponse"
+                  },
+                  "title": "Response Get Course Roster"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/members": {
+      "post": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Add a member to a course",
+        "description": "Adds a member to a course.\n\nOnly the instructor of the course may add members.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id path param.\n    add_member_request: Member addition payload.\n    course_svc: Service used to manage memberships.\n    user_repo: Repository used to load the target user from the request body.\n\nReturns:\n    The newly created membership.",
+        "operationId": "add_member",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The newly created membership.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Only instructors can add members."
+          },
+          "404": {
+            "description": "Course or user not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/members/{pid}": {
+      "delete": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Drop a member from a course",
+        "description": "Drops a member from a course.\n\nInstructors can drop anyone. Students and TAs can drop themselves.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id path param.\n    target_user: User loaded via DI and pid path param.\n    course_svc: Service used to manage memberships.\n\nReturns:\n    The updated membership.",
+        "operationId": "drop_member",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The updated membership with dropped state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions to drop this member."
+          },
+          "404": {
+            "description": "Course or user not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddMemberRequest": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MembershipType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid",
+          "type"
+        ],
+        "title": "AddMemberRequest",
+        "description": "Payload for adding a member to a course."
+      },
+      "CourseResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "term": {
+            "type": "string",
+            "title": "Term"
+          },
+          "section": {
+            "type": "string",
+            "title": "Section"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "term",
+          "section"
+        ],
+        "title": "CourseResponse",
+        "description": "Represents a course returned by the API."
+      },
+      "CreateCourseRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "term": {
+            "type": "string",
+            "title": "Term"
+          },
+          "section": {
+            "type": "string",
+            "title": "Section"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "term",
+          "section"
+        ],
+        "title": "CreateCourseRequest",
+        "description": "Payload for creating a new course."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MembershipResponse": {
+        "properties": {
+          "user_pid": {
+            "type": "integer",
+            "title": "User Pid"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MembershipType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MembershipState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_pid",
+          "course_id",
+          "type",
+          "state"
+        ],
+        "title": "MembershipResponse",
+        "description": "Represents a membership returned by the API."
+      },
+      "MembershipState": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "enrolled",
+          "dropped"
+        ],
+        "title": "MembershipState",
+        "description": "Lifecycle state of a course membership."
+      },
+      "MembershipType": {
+        "type": "string",
+        "enum": [
+          "instructor",
+          "ta",
+          "student"
+        ],
+        "title": "MembershipType",
+        "description": "Role a user holds within a course."
+      },
+      "UserProfile": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "given_name": {
+            "type": "string",
+            "title": "Given Name"
+          },
+          "family_name": {
+            "type": "string",
+            "title": "Family Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid",
+          "name",
+          "given_name",
+          "family_name",
+          "email"
+        ],
+        "title": "UserProfile",
+        "description": "Represents the authenticated user profile returned by the API."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Operations",
+      "description": "Health checks and operational endpoints for the service."
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication redirects, callback handling, and authenticated identity endpoints."
+    },
+    {
+      "name": "Courses",
+      "description": "Course management, enrollment, and roster endpoints."
+    }
+  ]
+}

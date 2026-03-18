@@ -1,14 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
 import { AddMember } from './add-member';
 import { CourseService } from '../course.service';
+
+const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('AddMember', () => {
   function setup() {
     const mockService = {
       addMember: vi.fn(() =>
-        of({
+        Promise.resolve({
           user_pid: 999,
           course_id: 1,
           type: 'student' as const,
@@ -51,7 +52,7 @@ describe('AddMember', () => {
     expect(button.disabled).toBe(true);
   });
 
-  it('should submit the form and navigate on success', () => {
+  it('should submit the form and navigate on success', async () => {
     const { fixture, mockService, router } = setup();
     const component = fixture.componentInstance;
     component['form'].setValue({ pid: 999, type: 'student' });
@@ -62,6 +63,7 @@ describe('AddMember', () => {
       'button[type="submit"]',
     ) as HTMLButtonElement;
     button.click();
+    await flush();
 
     expect(mockService.addMember).toHaveBeenCalledWith(1, {
       pid: 999,

@@ -14,8 +14,12 @@ frontend/
 |     |- app.ts                Root shell component
 |     |- app.routes.ts         Top-level lazy routes
 |     |- auth.service.ts       Client-side auth integration
+|     |- api/generated/        Auto-generated HTTP client and models
+|     |- api/models.ts         Domain-friendly type aliases (Course, User, etc.)
 |     |- home/                 Home route feature
 |     `- jwt/                  JWT callback route feature
+|- openapi.json                Exported OpenAPI spec (generated, do not edit)
+|- ng-openapi-gen.json         Code generation configuration
 |- public/                     Static public assets
 |- .vscode/                    Frontend-specific tasks and launch configs
 |- package.json                Frontend scripts and dependencies
@@ -50,6 +54,41 @@ pnpm start
 Or in VS Code, run the `start` task from the `frontend` workspace.
 
 Then open `http://localhost:4200`.
+
+## API Client Code Generation
+
+Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI specification using [ng-openapi-gen](https://github.com/cyclosproject/ng-openapi-gen). The generated code lives in `src/app/api/generated/` and should never be edited by hand.
+
+### Regenerating the client
+
+When the backend API changes (new routes, modified request/response models), regenerate the frontend client:
+
+```bash
+pnpm api:sync
+```
+
+This runs two steps:
+
+1. `pnpm api:export` — exports the OpenAPI spec from the FastAPI app to `openapi.json`
+2. `pnpm api:gen` — runs ng-openapi-gen to produce TypeScript models and service functions
+
+After regenerating, update any frontend services or components that reference changed models and run the existing QA checks.
+
+### How it works
+
+- The API produces an OpenAPI 3.1 spec with clean operation IDs (e.g. `create_course`, not `create_course_api_courses_post`).
+- `scripts/export_openapi.py` imports the FastAPI app and writes its spec to `frontend/openapi.json` without running the server.
+- ng-openapi-gen reads `openapi.json` and writes type-safe Angular services and interfaces to `src/app/api/generated/`.
+- Frontend services use the generated `Api` service's `invoke(fn, params)` method, which accepts generated endpoint functions (e.g. `listMyCourses`, `createCourse`) and returns `Promise<T>`.
+
+### Conventions
+
+- **Domain types:** Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), not from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated names (`CourseResponse`, `UserProfile`) to clean domain names.
+- **Service methods:** Use `this.api.invoke(generatedFn, params)` instead of manual `HttpClient` calls. This ensures URL paths, parameter shapes, and body types stay in sync with the backend spec.
+- **Promises, not Observables:** `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `async`/`await`. The `promises` option in ng-openapi-gen (default `true`) controls this; individual generated endpoint functions still use Observables internally, but `Api.invoke` converts via `firstValueFrom`.
+- Do not add or modify files inside `src/app/api/generated/`. They are overwritten on every regeneration.
+- When new models are generated, add domain aliases to `src/app/api/models.ts`.
+- Generated files are excluded from Prettier, ESLint, and coverage reporting.
 
 ## Frontend QA Commands
 

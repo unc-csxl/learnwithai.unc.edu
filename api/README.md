@@ -67,6 +67,19 @@ Use this mental model:
 5. Use dependency injection for settings, current user resolution, and shared services. Do **not** inject the session into a route handler directly — the session is managed automatically by `get_session` in `learnwithai-core` and reaches repositories through their own factories.
 6. Move reusable logic into `learnwithai-core`.
 7. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
+8. After changing routes or response models, regenerate the frontend client with `pnpm api:sync` from the `frontend/` directory.
+
+## OpenAPI Specification
+
+The API uses a custom `generate_unique_id_function` so that every operation ID matches the Python function name (e.g. `create_course`, not `create_course_api_courses_post`). This keeps the generated frontend client readable.
+
+To export the current OpenAPI spec without running the server:
+
+```bash
+uv run python scripts/export_openapi.py
+```
+
+This writes `frontend/openapi.json`, which is consumed by ng-openapi-gen to produce TypeScript models and client functions.
 
 ## Transaction Boundaries
 

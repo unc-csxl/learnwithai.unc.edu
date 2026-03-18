@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+from fastapi.security import HTTPAuthorizationCredentials
+
 from api.dependency_injection import (
     settings_factory,
     csxl_auth_service_factory,
@@ -131,26 +133,9 @@ def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
 # ---- get_current_subject dependency ----
 
 
-def test_get_current_subject_raises_401_when_no_authorization_header() -> None:
-    # Arrange
-    csxl_auth_svc = MagicMock()
-
-    # Act / Assert
-    with pytest.raises(Exception) as exc_info:
-        get_authenticated_user(csxl_auth_svc, authorization=None)
-
-    assert exc_info.value.status_code == 401  # type: ignore[union-attr]
-
-
-def test_get_current_subject_raises_401_for_non_bearer_header() -> None:
-    # Arrange
-    csxl_auth_svc = MagicMock()
-
-    # Act / Assert
-    with pytest.raises(Exception) as exc_info:
-        get_authenticated_user(csxl_auth_svc, authorization="Basic abc")
-
-    assert exc_info.value.status_code == 401  # type: ignore[union-attr]
+def _bearer_credentials(token: str) -> HTTPAuthorizationCredentials:
+    """Build an ``HTTPAuthorizationCredentials`` stub for unit tests."""
+    return HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
 
 def test_get_current_subject_raises_401_for_invalid_jwt() -> None:
@@ -160,7 +145,7 @@ def test_get_current_subject_raises_401_for_invalid_jwt() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_authenticated_user(csxl_auth_svc, authorization="Bearer bad-token")
+        get_authenticated_user(csxl_auth_svc, _bearer_credentials("bad-token"))
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -173,7 +158,7 @@ def test_get_current_subject_raises_401_when_user_not_found() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_authenticated_user(csxl_auth_svc, authorization="Bearer valid-token")
+        get_authenticated_user(csxl_auth_svc, _bearer_credentials("valid-token"))
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -187,7 +172,7 @@ def test_get_current_subject_returns_user_for_valid_token() -> None:
     csxl_auth_svc.get_user_by_pid.return_value = user
 
     # Act
-    result = get_authenticated_user(csxl_auth_svc, authorization="Bearer valid-token")
+    result = get_authenticated_user(csxl_auth_svc, _bearer_credentials("valid-token"))
 
     # Assert
     assert result is user

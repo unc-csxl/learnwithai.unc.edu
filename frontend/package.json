@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "api:export": "cd .. && uv run python scripts/export_openapi.py",
+    "api:gen": "ng-openapi-gen",
+    "api:sync": "pnpm api:export && pnpm api:gen"
   },
   "private": true,
   "packageManager": "pnpm@10.32.1",
@@ -36,6 +39,7 @@
     "angular-eslint": "^21.3.0",
     "eslint": "^10.0.3",
     "jsdom": "^28.0.0",
+    "ng-openapi-gen": "^1.0.5",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.12",

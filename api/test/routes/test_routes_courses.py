@@ -429,7 +429,7 @@ def test_add_member_returns_404_when_target_user_is_missing(client: TestClient) 
 
 @pytest.mark.integration
 def test_courses_returns_401_without_token(client: TestClient) -> None:
-    # Arrange (no overrides — real get_current_subject will reject)
+    # Arrange (no overrides — HTTPBearer rejects missing credentials)
 
     # Act
     response = client.get("/api/courses")

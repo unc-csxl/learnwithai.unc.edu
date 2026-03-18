@@ -2,16 +2,19 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
-import { User } from './user.model';
+import { User } from './api/models';
 import { authTokenInterceptor } from './auth-token.interceptor';
 import { AUTH_TOKEN_KEY } from './auth-token.service';
 
 const fakeUser: User = {
   pid: 999999999,
   name: 'Test User',
-  onyen: 'testuser',
+  given_name: 'Test',
+  family_name: 'User',
   email: 'test@example.com',
 };
+
+const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -61,24 +64,26 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(false);
   });
 
-  it('handleToken should store token and fetch profile', () => {
+  it('handleToken should store token and fetch profile', async () => {
     service.handleToken('my-jwt-token');
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBe('my-jwt-token');
 
     const req = httpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer my-jwt-token');
     req.flush(fakeUser);
+    await flush();
 
     expect(service.user()).toEqual(fakeUser);
     expect(service.isAuthenticated()).toBe(true);
   });
 
-  it('fetchProfile should clear token on error', () => {
+  it('fetchProfile should clear token on error', async () => {
     localStorage.setItem(AUTH_TOKEN_KEY, 'bad-token');
     service.fetchProfile();
 
     const req = httpTesting.expectOne('/api/me');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+    await flush();
 
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
     expect(service.user()).toBeNull();
@@ -89,7 +94,7 @@ describe('AuthService', () => {
     httpTesting.expectNone('/api/me');
   });
 
-  it('should fetch profile on construction when token exists', () => {
+  it('should fetch profile on construction when token exists', async () => {
     localStorage.setItem(AUTH_TOKEN_KEY, 'existing-token');
 
     // Recreate the injector so the constructor observes the persisted token.
@@ -106,6 +111,7 @@ describe('AuthService', () => {
     const req = newHttpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer existing-token');
     req.flush(fakeUser);
+    await flush();
 
     expect(newService.user()).toEqual(fakeUser);
     newHttpTesting.verify();

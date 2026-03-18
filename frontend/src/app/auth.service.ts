@@ -1,12 +1,13 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { User } from './user.model';
+import { Api } from './api/generated/api';
+import { getCurrentSubjectProfile } from './api/generated/fn/authentication/get-current-subject-profile';
+import { User } from './api/models';
 import { AuthTokenService } from './auth-token.service';
 
 /** Manages login state and the current authenticated user profile. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private http = inject(HttpClient);
+  private api = inject(Api);
   private tokenService = inject(AuthTokenService);
   private _user = signal<User | null>(null);
 
@@ -38,16 +39,16 @@ export class AuthService {
   }
 
   /** Loads the current user profile for the persisted authentication token. */
-  fetchProfile(): void {
+  async fetchProfile(): Promise<void> {
     if (!this.tokenService.hasToken()) {
       return;
     }
-    this.http.get<User>('/api/me').subscribe({
-      next: (user) => this._user.set(user),
-      error: () => {
-        this.tokenService.clearToken();
-        this._user.set(null);
-      },
-    });
+    try {
+      const user = await this.api.invoke(getCurrentSubjectProfile);
+      this._user.set(user);
+    } catch {
+      this.tokenService.clearToken();
+      this._user.set(null);
+    }
   }
 }

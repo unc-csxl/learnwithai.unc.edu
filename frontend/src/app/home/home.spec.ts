@@ -3,12 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Home } from './home';
 import { AuthService } from '../auth.service';
-import { User } from '../user.model';
+import { User } from '../api/models';
 
 const fakeUser: User = {
   pid: 999999999,
   name: 'Test User',
-  onyen: 'testuser',
+  given_name: 'Test',
+  family_name: 'User',
   email: 'test@example.com',
 };
 

@@ -94,6 +94,29 @@ def test_app_assigns_tags_to_current_routes() -> None:
     assert drop_member_tags == ["Courses"]
 
 
+def test_operation_ids_use_function_names() -> None:
+    """Operation IDs should be the Python function name, not the ugly default
+    that includes the full URL path."""
+    # Arrange
+    openapi = app.openapi()
+    operation_ids: list[str] = []
+    for _path, methods in openapi["paths"].items():
+        for _method, details in methods.items():
+            if "operationId" in details:
+                operation_ids.append(details["operationId"])
+
+    # Assert — every ID should be a simple snake_case name without path fragments
+    for op_id in operation_ids:
+        assert "/api" not in op_id, f"operationId contains URL path: {op_id}"
+        assert "__" not in op_id, f"operationId contains ugly separators: {op_id}"
+
+    # Spot-check a few expected IDs
+    assert "health" in operation_ids
+    assert "create_course" in operation_ids
+    assert "list_my_courses" in operation_ids
+    assert "get_course_roster" in operation_ids
+
+
 # ---- DI factories ----
 
 

@@ -1,13 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
 import { CreateCourse } from './create-course';
 import { CourseService } from '../course.service';
+
+const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('CreateCourse', () => {
   function setup() {
     const mockService = {
-      createCourse: vi.fn(() => of({ id: 5, name: 'Algo', term: 'Fall 2026', section: '001' })),
+      createCourse: vi.fn(() =>
+        Promise.resolve({ id: 5, name: 'Algo', term: 'Fall 2026', section: '001' }),
+      ),
     };
 
     TestBed.configureTestingModule({
@@ -37,7 +40,7 @@ describe('CreateCourse', () => {
     expect(button.disabled).toBe(true);
   });
 
-  it('should submit the form and navigate on success', () => {
+  it('should submit the form and navigate on success', async () => {
     const { fixture, mockService, router } = setup();
     const component = fixture.componentInstance;
     component['form'].setValue({
@@ -53,6 +56,7 @@ describe('CreateCourse', () => {
     expect(button.disabled).toBe(false);
 
     button.click();
+    await flush();
 
     expect(mockService.createCourse).toHaveBeenCalledWith({
       name: 'Algo',
