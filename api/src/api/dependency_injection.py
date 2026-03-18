@@ -1,7 +1,10 @@
 """Dependency factories shared across FastAPI route handlers."""
 
-from typing import TypeAlias, Annotated
-from fastapi import Depends, Header, HTTPException
+from typing import Annotated, TypeAlias
+
+from fastapi import Depends, Header, HTTPException, Path
+
+from .models import AddMemberRequest
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import (
     CSXLAuthService,
@@ -11,6 +14,7 @@ from learnwithai.services.course_service import CourseService
 from learnwithai.db import get_session, Session
 from learnwithai.interfaces import JobQueue
 from learnwithai.tables.user import User
+from learnwithai.tables.course import Course
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
@@ -155,3 +159,84 @@ def course_service_factory(
 
 
 CourseServiceDI: TypeAlias = Annotated[CourseService, Depends(course_service_factory)]
+
+
+def get_course_by_path_id(
+    course_id: Annotated[int, Path()], course_repo: CourseRepositoryDI
+) -> Course:
+    """Loads a course from the course_id path parameter.
+
+    Args:
+        course_id: Course identifier from the request path.
+        course_repo: Repository used to load courses.
+
+    Returns:
+        The matching course.
+
+    Raises:
+        HTTPException: If the course does not exist.
+    """
+    course = course_repo.get_by_id(course_id)
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found.")
+    return course
+
+
+CourseByCourseIDPathDI: TypeAlias = Annotated[Course, Depends(get_course_by_path_id)]
+
+
+def get_user_by_pid(pid: int, user_repo: UserRepositoryDI) -> User:
+    """Loads a user by pid or raises an HTTP 404.
+
+    Args:
+        pid: UNC person identifier.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+
+    Raises:
+        HTTPException: If the user does not exist.
+    """
+    user = user_repo.get_by_pid(pid)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return user
+
+
+def get_user_by_path_pid(
+    pid: Annotated[int, Path()], user_repo: UserRepositoryDI
+) -> User:
+    """Loads a user from the pid path parameter.
+
+    Args:
+        pid: User identifier from the request path.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+    """
+    return get_user_by_pid(pid, user_repo)
+
+
+UserByPIDPathDI: TypeAlias = Annotated[User, Depends(get_user_by_path_pid)]
+
+
+def get_user_by_add_member_request_pid(
+    body: AddMemberRequest, user_repo: UserRepositoryDI
+) -> User:
+    """Loads the user referenced by an add-member request payload.
+
+    Args:
+        body: Request payload containing the target pid.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+    """
+    return get_user_by_pid(body.pid, user_repo)
+
+
+UserByAddMemberRequestPIDDI: TypeAlias = Annotated[
+    User, Depends(get_user_by_add_member_request_pid)
+]

@@ -1,14 +1,14 @@
 """Course management routes for the public API."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from ..dependency_injection import (
-    CourseRepositoryDI,
+    CourseByCourseIDPathDI,
     CourseServiceDI,
     CurrentUserDI,
-    MembershipRepositoryDI,
     SessionDI,
-    UserRepositoryDI,
+    UserByAddMemberRequestPIDDI,
+    UserByPIDPathDI,
 )
 from ..models import (
     AddMemberRequest,
@@ -16,26 +16,8 @@ from ..models import (
     CreateCourseRequest,
     MembershipResponse,
 )
-from learnwithai.tables.course import Course
-from learnwithai.tables.user import User
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
-
-
-def _get_course_or_404(course_repo: CourseRepositoryDI, course_id: int) -> Course:
-    """Loads a course by id or raises an HTTP 404."""
-    course = course_repo.get_by_id(course_id)
-    if course is None:
-        raise HTTPException(status_code=404, detail="Course not found.")
-    return course
-
-
-def _get_user_or_404(user_repo: UserRepositoryDI, pid: int) -> User:
-    """Loads a user by pid or raises an HTTP 404."""
-    user = user_repo.get_by_pid(pid)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found.")
-    return user
 
 
 @router.post(
@@ -92,6 +74,7 @@ def list_my_courses(
     return [CourseResponse.model_validate(c) for c in courses]
 
 
+
 @router.get(
     "/{course_id}/roster",
     response_model=list[MembershipResponse],
@@ -100,30 +83,27 @@ def list_my_courses(
     responses={
         401: {"description": "Not authenticated."},
         403: {"description": "Insufficient permissions."},
+        404: {"description": "Course not found."},
     },
 )
 def get_course_roster(
-    course_id: int,
+    course: CourseByCourseIDPathDI,
     user: CurrentUserDI,
     course_svc: CourseServiceDI,
-    course_repo: CourseRepositoryDI,
-    membership_repo: MembershipRepositoryDI,
 ) -> list[MembershipResponse]:
     """Returns the full roster for a course.
 
     Only instructors and TAs may view the roster.
 
     Args:
-        course_id: Course to query.
+        course: Course loaded via DI and course_id Path param.
         user: Authenticated user.
         course_svc: Service used to query the roster.
 
     Returns:
         List of memberships for the course.
     """
-    course = _get_course_or_404(course_repo, course_id)
-    requester_membership = membership_repo.get_by_user_and_course(user, course)
-    memberships = course_svc.get_course_roster(course, requester_membership)
+    memberships = course_svc.get_course_roster(course, user)
     return [MembershipResponse.model_validate(m) for m in memberships]
 
 
@@ -136,40 +116,36 @@ def get_course_roster(
     responses={
         401: {"description": "Not authenticated."},
         403: {"description": "Only instructors can add members."},
+        404: {"description": "Course or user not found."},
     },
 )
 def add_member(
-    course_id: int,
+    course: CourseByCourseIDPathDI,
     body: AddMemberRequest,
     session: SessionDI,
     user: CurrentUserDI,
     course_svc: CourseServiceDI,
-    course_repo: CourseRepositoryDI,
-    membership_repo: MembershipRepositoryDI,
-    user_repo: UserRepositoryDI,
+    target_user: UserByAddMemberRequestPIDDI,
 ) -> MembershipResponse:
     """Adds a member to a course.
 
     Only the instructor of the course may add members.
 
     Args:
-        course_id: Course to add the member to.
+        course: Course loaded via DI and course_id path param.
         body: Member addition payload.
         session: Database session scoped to the request.
         user: Authenticated user.
         course_svc: Service used to manage memberships.
+        target_user: User loaded from the request payload pid.
 
     Returns:
         The newly created membership.
     """
-    course = _get_course_or_404(course_repo, course_id)
-    requester_membership = membership_repo.get_by_user_and_course(user, course)
-    target_user = _get_user_or_404(user_repo, body.pid)
-
     with session.begin():
         membership = course_svc.add_member(
             course,
-            requester_membership,
+            user,
             target_user,
             body.type,
         )
@@ -184,25 +160,23 @@ def add_member(
     responses={
         401: {"description": "Not authenticated."},
         403: {"description": "Insufficient permissions to drop this member."},
+        404: {"description": "Course or user not found."},
     },
 )
 def drop_member(
-    course_id: int,
-    pid: int,
+    course: CourseByCourseIDPathDI,
+    target_user: UserByPIDPathDI,
     session: SessionDI,
     user: CurrentUserDI,
     course_svc: CourseServiceDI,
-    course_repo: CourseRepositoryDI,
-    membership_repo: MembershipRepositoryDI,
-    user_repo: UserRepositoryDI,
 ) -> MembershipResponse:
     """Drops a member from a course.
 
     Instructors can drop anyone. Students and TAs can drop themselves.
 
     Args:
-        course_id: Course to drop the member from.
-        pid: PID of the member to drop.
+        course: Course loaded via DI and course_id path param.
+        target_user: User loaded via DI and pid path param.
         session: Database session scoped to the request.
         user: Authenticated user.
         course_svc: Service used to manage memberships.
@@ -210,16 +184,6 @@ def drop_member(
     Returns:
         The updated membership.
     """
-    course = _get_course_or_404(course_repo, course_id)
-    requester_membership = membership_repo.get_by_user_and_course(user, course)
-    target_user = _get_user_or_404(user_repo, pid)
-    target_membership = membership_repo.get_by_user_and_course(target_user, course)
-
     with session.begin():
-        membership = course_svc.drop_member(
-            user,
-            course,
-            requester_membership,
-            target_membership,
-        )
+        membership = course_svc.drop_member(user, course, target_user)
     return MembershipResponse.model_validate(membership)

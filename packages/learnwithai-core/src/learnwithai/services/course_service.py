@@ -71,7 +71,7 @@ class CourseService:
     def get_course_roster(
         self,
         course: Course,
-        requester_membership: Membership | None,
+        requesting_user: User,
     ) -> list[Membership]:
         """Returns the full roster for a course.
 
@@ -79,7 +79,7 @@ class CourseService:
 
         Args:
             course: Course whose roster should be returned.
-            requester_membership: Membership for the requesting user in the course.
+            requesting_user: Authenticated user requesting the roster.
 
         Returns:
             List of all memberships for the course.
@@ -87,6 +87,9 @@ class CourseService:
         Raises:
             AuthorizationError: If the user is not an instructor or TA.
         """
+        requester_membership = self._membership_repo.get_by_user_and_course(
+            requesting_user, course
+        )
         self._require_membership(
             requester_membership,
             {MembershipType.INSTRUCTOR, MembershipType.TA},
@@ -96,7 +99,7 @@ class CourseService:
     def add_member(
         self,
         course: Course,
-        requester_membership: Membership | None,
+        requesting_user: User,
         target_user: User,
         membership_type: MembershipType,
     ) -> Membership:
@@ -106,7 +109,7 @@ class CourseService:
 
         Args:
             course: Course to add the member to.
-            requester_membership: Membership for the requesting user in the course.
+            requesting_user: Authenticated user performing the action.
             target_user: User to enroll.
             membership_type: Role to assign.
 
@@ -116,6 +119,9 @@ class CourseService:
         Raises:
             AuthorizationError: If the requesting user is not an instructor.
         """
+        requester_membership = self._membership_repo.get_by_user_and_course(
+            requesting_user, course
+        )
         self._require_membership(requester_membership, {MembershipType.INSTRUCTOR})
         course_id = course.id
         if course_id is None:
@@ -134,8 +140,7 @@ class CourseService:
         self,
         requesting_user: User,
         course: Course,
-        requester_membership: Membership | None,
-        target_membership: Membership | None,
+        target_user: User,
     ) -> Membership:
         """Drops a member from a course.
 
@@ -144,8 +149,7 @@ class CourseService:
         Args:
             requesting_user: Authenticated user performing the action.
             course: Course from which the user should be dropped.
-            requester_membership: Membership for the requesting user in the course.
-            target_membership: Membership to drop.
+            target_user: User whose membership should be dropped.
 
         Returns:
             The updated membership with dropped state.
@@ -154,6 +158,9 @@ class CourseService:
             AuthorizationError: If the user lacks permission.
             ValueError: If the target membership does not exist.
         """
+        requester_membership = self._membership_repo.get_by_user_and_course(
+            requesting_user, course
+        )
         caller = self._require_membership(
             requester_membership,
             {
@@ -161,6 +168,9 @@ class CourseService:
                 MembershipType.TA,
                 MembershipType.STUDENT,
             },
+        )
+        target_membership = self._membership_repo.get_by_user_and_course(
+            target_user, course
         )
 
         if target_membership is None:
