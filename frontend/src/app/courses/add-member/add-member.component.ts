@@ -17,7 +17,7 @@ export class AddMember {
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
-  private readonly courseId = Number(this.route.snapshot.paramMap.get('id'));
+  private readonly courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
 
   protected readonly form = this.fb.nonNullable.group({
     pid: [0, [Validators.required, Validators.min(1)]],
@@ -30,6 +30,6 @@ export class AddMember {
     }
     const { pid, type } = this.form.getRawValue();
     await this.courseService.addMember(this.courseId, { pid, type });
-    await this.router.navigate(['/courses', this.courseId]);
+    await this.router.navigate(['../roster'], { relativeTo: this.route });
   }
 }

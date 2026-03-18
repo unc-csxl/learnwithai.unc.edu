@@ -1,23 +1,25 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CourseDetail } from './course-detail.component';
 import { CourseService } from '../course.service';
-import { Membership } from '../../api/models';
+import { Course } from '../../api/models';
 
-const fakeRoster: Membership[] = [
-  { user_pid: 111, course_id: 1, type: 'instructor', state: 'enrolled' },
-  { user_pid: 222, course_id: 1, type: 'student', state: 'enrolled' },
-];
+@Component({ template: '' })
+class DummyComponent {}
 
+const fakeCourse: Course = { id: 1, name: 'Intro CS', term: 'Fall 2026', section: '001' };
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('CourseDetail', () => {
-  async function setup(options: { roster?: Membership[]; error?: { status: number } } = {}) {
+  async function setup(options: { courses?: Course[]; error?: boolean } = {}) {
+    const courses = options.courses ?? [fakeCourse];
     const mockService = {
-      getRoster: options.error
-        ? vi.fn(() => Promise.reject(options.error))
-        : vi.fn(() => Promise.resolve(options.roster ?? fakeRoster)),
+      getMyCourses: options.error
+        ? vi.fn(() => Promise.reject(new Error('fail')))
+        : vi.fn(() => Promise.resolve(courses)),
     };
 
     const mockRoute = {
@@ -25,9 +27,13 @@ describe('CourseDetail', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [CourseDetail],
+      imports: [CourseDetail, NoopAnimationsModule],
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: 'roster', component: DummyComponent },
+          { path: 'activities', component: DummyComponent },
+          { path: 'tools', component: DummyComponent },
+        ]),
         { provide: CourseService, useValue: mockService },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
@@ -40,37 +46,38 @@ describe('CourseDetail', () => {
     return { fixture, mockService };
   }
 
-  it('should display roster members', async () => {
+  it('should display course name and term', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const rows = el.querySelectorAll('tbody tr');
-    expect(rows.length).toBe(2);
-    expect(rows[0].textContent).toContain('111');
-    expect(rows[0].textContent).toContain('instructor');
+    expect(el.textContent).toContain('Intro CS');
+    expect(el.textContent).toContain('Fall 2026');
   });
 
-  it('should show add member link', async () => {
+  it('should show nav tabs for roster, activities, and tools', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const link = el.querySelector('a[href="/courses/1/add-member"]');
-    expect(link).toBeTruthy();
+    const links = el.querySelectorAll('[mat-tab-link]');
+    expect(links.length).toBe(3);
+    expect(links[0].textContent).toContain('Roster');
+    expect(links[1].textContent).toContain('Activities');
+    expect(links[2].textContent).toContain('Tools');
   });
 
-  it('should show 403 error message', async () => {
-    const { fixture } = await setup({ error: { status: 403 } });
+  it('should show error message on load failure', async () => {
+    const { fixture } = await setup({ error: true });
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('do not have permission');
+    expect(el.textContent).toContain('Failed to load course details');
   });
 
-  it('should show generic error message', async () => {
-    const { fixture } = await setup({ error: { status: 500 } });
+  it('should show error when course not found', async () => {
+    const { fixture } = await setup({ courses: [] });
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('Failed to load roster');
+    expect(el.textContent).toContain('Course not found');
   });
 
-  it('should show empty message when roster is empty', async () => {
-    const { fixture } = await setup({ roster: [] });
+  it('should have a router outlet for child views', async () => {
+    const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('No members found');
+    expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 });

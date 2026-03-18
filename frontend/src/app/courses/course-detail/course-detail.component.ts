@@ -1,54 +1,40 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
 import { CourseService } from '../course.service';
-import { Membership } from '../../api/models';
+import { Course } from '../../api/models';
 
-/** Displays the roster for a course. Instructors see all members. */
+/** Course detail shell with sub-navigation for instructor/student views. */
 @Component({
   selector: 'app-course-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatTabsModule],
   templateUrl: './course-detail.component.html',
-  styles: `
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-  `,
 })
 export class CourseDetail {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
 
-  protected readonly roster = signal<Membership[]>([]);
-  protected readonly loaded = signal(false);
+  protected readonly course = signal<Course | null>(null);
   protected readonly errorMessage = signal('');
   protected readonly courseId: number;
 
   constructor() {
     this.courseId = Number(this.route.snapshot.paramMap.get('id'));
-    this.loadRoster();
+    this.loadCourse();
   }
 
-  private async loadRoster(): Promise<void> {
+  private async loadCourse(): Promise<void> {
     try {
-      const roster = await this.courseService.getRoster(this.courseId);
-      this.roster.set(roster);
-    } catch (err: unknown) {
-      if (err != null && typeof err === 'object' && 'status' in err && err.status === 403) {
-        this.errorMessage.set('You do not have permission to view this roster.');
+      const courses = await this.courseService.getMyCourses();
+      const course = courses.find((c) => c.id === this.courseId);
+      if (course) {
+        this.course.set(course);
       } else {
-        this.errorMessage.set('Failed to load roster.');
+        this.errorMessage.set('Course not found.');
       }
-    } finally {
-      this.loaded.set(true);
+    } catch {
+      this.errorMessage.set('Failed to load course details.');
     }
   }
 }

@@ -19,7 +19,7 @@ describe('AddMember', () => {
     };
 
     const mockRoute = {
-      snapshot: { paramMap: new Map([['id', '1']]) },
+      parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
     };
 
     TestBed.configureTestingModule({
@@ -69,7 +69,7 @@ describe('AddMember', () => {
       pid: 999,
       type: 'student',
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/courses', 1]);
+    expect(router.navigate).toHaveBeenCalledWith(['../roster'], { relativeTo: expect.anything() });
   });
 
   it('should not submit when form is invalid', () => {

@@ -1,0 +1,30 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+} @else if (roster().length > 0) {
+  <div class="roster-actions">
+    <a [routerLink]="['add-member']" role="button">Add Member</a>
+  </div>
+  <table>
+    <caption class="sr-only">
+      Members of this course
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">PID</th>
+        <th scope="col">Role</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (member of roster(); track member.user_pid) {
+        <tr>
+          <td>{{ member.user_pid }}</td>
+          <td>{{ member.type }}</td>
+          <td>{{ member.state }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else if (loaded()) {
+  <p>No members found for this course.</p>
+}
