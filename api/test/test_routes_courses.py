@@ -5,7 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import course_service_factory, get_current_user
+from api.dependency_injection import (
+    course_repository_factory,
+    course_service_factory,
+    get_current_user,
+    membership_repository_factory,
+    user_repository_factory,
+)
 from api.main import app
 from api.models import (
     AddMemberRequest,
@@ -131,16 +137,22 @@ def test_list_my_courses_returns_empty_list() -> None:
 def test_get_course_roster_returns_membership_list() -> None:
     # Arrange
     user = _stub_user()
+    course = _stub_course()
     m = _stub_membership(type=MembershipType.INSTRUCTOR)
     course_svc = MagicMock()
     course_svc.get_course_roster.return_value = [m]
+    course_repo = MagicMock()
+    course_repo.get_by_id.return_value = course
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.return_value = m
 
     # Act
-    result = get_course_roster(1, user, course_svc)
+    result = get_course_roster(1, user, course_svc, course_repo, membership_repo)
 
     # Assert
     assert len(result) == 1
     assert isinstance(result[0], MembershipResponse)
+    course_svc.get_course_roster.assert_called_once_with(course, m)
 
 
 # ---- add_member ----
@@ -152,18 +164,41 @@ def test_add_member_returns_membership_response() -> None:
     session = MagicMock()
     session.begin.return_value.__enter__ = lambda s: s
     session.begin.return_value.__exit__ = lambda s, *a: None
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    requester_membership = _stub_membership(type=MembershipType.INSTRUCTOR)
     membership = _stub_membership(state=MembershipState.PENDING)
     course_svc = MagicMock()
     course_svc.add_member.return_value = membership
+    course_repo = MagicMock()
+    course_repo.get_by_id.return_value = course
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.return_value = requester_membership
+    user_repo = MagicMock()
+    user_repo.get_by_pid.return_value = target_user
     body = AddMemberRequest(pid=999, type=MembershipType.STUDENT)
 
     # Act
-    result = add_member(1, body, session, user, course_svc)
+    result = add_member(
+        1,
+        body,
+        session,
+        user,
+        course_svc,
+        course_repo,
+        membership_repo,
+        user_repo,
+    )
 
     # Assert
     assert isinstance(result, MembershipResponse)
     assert result.state == MembershipState.PENDING
-    course_svc.add_member.assert_called_once_with(user, 1, 999, MembershipType.STUDENT)
+    course_svc.add_member.assert_called_once_with(
+        course,
+        requester_membership,
+        target_user,
+        MembershipType.STUDENT,
+    )
 
 
 # ---- drop_member ----
@@ -175,17 +210,45 @@ def test_drop_member_returns_membership_response() -> None:
     session = MagicMock()
     session.begin.return_value.__enter__ = lambda s: s
     session.begin.return_value.__exit__ = lambda s, *a: None
+    course = _stub_course()
+    requester_membership = _stub_membership(
+        user_pid=user.pid, type=MembershipType.INSTRUCTOR
+    )
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     membership = _stub_membership(state=MembershipState.DROPPED)
     course_svc = MagicMock()
     course_svc.drop_member.return_value = membership
+    course_repo = MagicMock()
+    course_repo.get_by_id.return_value = course
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.side_effect = [
+        requester_membership,
+        membership,
+    ]
+    user_repo = MagicMock()
+    user_repo.get_by_pid.return_value = target_user
 
     # Act
-    result = drop_member(1, 999, session, user, course_svc)
+    result = drop_member(
+        1,
+        999,
+        session,
+        user,
+        course_svc,
+        course_repo,
+        membership_repo,
+        user_repo,
+    )
 
     # Assert
     assert isinstance(result, MembershipResponse)
     assert result.state == MembershipState.DROPPED
-    course_svc.drop_member.assert_called_once_with(user, 1, 999)
+    course_svc.drop_member.assert_called_once_with(
+        user,
+        course,
+        requester_membership,
+        membership,
+    )
 
 
 # ---- integration tests via TestClient ----
@@ -237,11 +300,23 @@ def test_get_roster_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
     app.dependency_overrides[get_current_user] = lambda: user
+    course = _stub_course()
+    requester_membership = _stub_membership(
+        user_pid=user.pid, type=MembershipType.INSTRUCTOR
+    )
     mock_svc = MagicMock()
     mock_svc.get_course_roster.return_value = [
         _stub_membership(type=MembershipType.INSTRUCTOR)
     ]
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_membership_repo = MagicMock()
+    mock_membership_repo.get_by_user_and_course.return_value = requester_membership
+    app.dependency_overrides[membership_repository_factory] = (
+        lambda: mock_membership_repo
+    )
 
     # Act
     response = client.get("/api/courses/1/roster")
@@ -258,11 +333,23 @@ def test_get_roster_returns_403_for_student(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
     app.dependency_overrides[get_current_user] = lambda: user
+    course = _stub_course()
     mock_svc = MagicMock()
     mock_svc.get_course_roster.side_effect = AuthorizationError(
         "Insufficient permissions"
     )
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_membership_repo = MagicMock()
+    mock_membership_repo.get_by_user_and_course.return_value = _stub_membership(
+        user_pid=user.pid,
+        type=MembershipType.STUDENT,
+    )
+    app.dependency_overrides[membership_repository_factory] = (
+        lambda: mock_membership_repo
+    )
 
     # Act
     response = client.get("/api/courses/1/roster")
@@ -277,11 +364,27 @@ def test_add_member_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
     app.dependency_overrides[get_current_user] = lambda: user
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     mock_svc = MagicMock()
     mock_svc.add_member.return_value = _stub_membership(
         user_pid=999, state=MembershipState.PENDING
     )
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_membership_repo = MagicMock()
+    mock_membership_repo.get_by_user_and_course.return_value = _stub_membership(
+        user_pid=user.pid,
+        type=MembershipType.INSTRUCTOR,
+    )
+    app.dependency_overrides[membership_repository_factory] = (
+        lambda: mock_membership_repo
+    )
+    mock_user_repo = MagicMock()
+    mock_user_repo.get_by_pid.return_value = target_user
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
 
     # Act
     response = client.post(
@@ -301,11 +404,30 @@ def test_drop_member_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
     app.dependency_overrides[get_current_user] = lambda: user
-    mock_svc = MagicMock()
-    mock_svc.drop_member.return_value = _stub_membership(
-        user_pid=999, state=MembershipState.DROPPED
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    requester_membership = _stub_membership(
+        user_pid=user.pid,
+        type=MembershipType.INSTRUCTOR,
     )
+    target_membership = _stub_membership(user_pid=999, state=MembershipState.DROPPED)
+    mock_svc = MagicMock()
+    mock_svc.drop_member.return_value = target_membership
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_membership_repo = MagicMock()
+    mock_membership_repo.get_by_user_and_course.side_effect = [
+        requester_membership,
+        target_membership,
+    ]
+    app.dependency_overrides[membership_repository_factory] = (
+        lambda: mock_membership_repo
+    )
+    mock_user_repo = MagicMock()
+    mock_user_repo.get_by_pid.return_value = target_user
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
 
     # Act
     response = client.delete("/api/courses/1/members/999")
@@ -314,6 +436,54 @@ def test_drop_member_endpoint(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["state"] == "dropped"
+
+
+@pytest.mark.integration
+def test_get_roster_returns_404_when_course_is_missing(client: TestClient) -> None:
+    # Arrange
+    user = _stub_user()
+    app.dependency_overrides[get_current_user] = lambda: user
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = None
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+
+    # Act
+    response = client.get("/api/courses/999/roster")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Course not found."}
+
+
+@pytest.mark.integration
+def test_add_member_returns_404_when_target_user_is_missing(client: TestClient) -> None:
+    # Arrange
+    user = _stub_user()
+    app.dependency_overrides[get_current_user] = lambda: user
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = _stub_course()
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_membership_repo = MagicMock()
+    mock_membership_repo.get_by_user_and_course.return_value = _stub_membership(
+        user_pid=user.pid,
+        type=MembershipType.INSTRUCTOR,
+    )
+    app.dependency_overrides[membership_repository_factory] = (
+        lambda: mock_membership_repo
+    )
+    mock_user_repo = MagicMock()
+    mock_user_repo.get_by_pid.return_value = None
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
+
+    # Act
+    response = client.post(
+        "/api/courses/1/members",
+        json={"pid": 999, "type": "student"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found."}
 
 
 @pytest.mark.integration

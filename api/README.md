@@ -14,6 +14,7 @@ api/
 |  |- dependency_injection.py  Shared DI definitions for routes
 |  `- routes/
 |     |- auth.py               Authentication endpoints
+|     |- courses.py            Course management endpoints
 |     `- health.py             Health and queue demo endpoints
 |- test/                       Pytest suite for the API adapter
 |- pyproject.toml              Package metadata and dependencies
@@ -24,6 +25,7 @@ api/
 - `src/api/main.py` creates the `FastAPI` app and registers routers.
 - `src/api/routes/health.py` exposes `/health` and `/queue`.
 - `src/api/routes/auth.py` exposes the authentication flow under `/auth`.
+- `src/api/routes/courses.py` exposes course creation, roster, and membership management.
 
 ## How To Run The API
 
@@ -37,7 +39,7 @@ Equivalent terminal command from the repository root:
 uv run --package learnwithai-api uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Once it is running, check `http://localhost:8000/health`.
+Once it is running, check `http://localhost:8000/api/health`.
 
 ## How To Test The API
 
@@ -58,7 +60,7 @@ Before finishing broader backend work, run the repository QA check:
 Use this mental model:
 
 1. Put the route in `src/api/routes/`.
-2. Keep the route focused on HTTP details.
+2. Keep the route focused on HTTP details, including loading domain models from route params and returning `404` responses for invalid identifiers.
 3. Use dependency injection for settings, sessions, current user resolution, and shared services.
 4. Move reusable logic into `learnwithai-core`.
 5. Add or update tests in `api/test/`.

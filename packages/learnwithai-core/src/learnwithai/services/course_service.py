@@ -60,7 +60,7 @@ class CourseService:
         Returns:
             List of courses where the user is enrolled.
         """
-        memberships = self._membership_repo.get_active_by_user(user.pid)
+        memberships = self._membership_repo.get_active_by_user(user)
         courses: list[Course] = []
         for m in memberships:
             course = self._course_repo.get_by_id(m.course_id)
@@ -68,14 +68,18 @@ class CourseService:
                 courses.append(course)
         return courses
 
-    def get_course_roster(self, user: User, course_id: int) -> list[Membership]:
+    def get_course_roster(
+        self,
+        course: Course,
+        requester_membership: Membership | None,
+    ) -> list[Membership]:
         """Returns the full roster for a course.
 
         Only instructors and TAs may view the roster.
 
         Args:
-            user: Authenticated user requesting the roster.
-            course_id: Course to query.
+            course: Course whose roster should be returned.
+            requester_membership: Membership for the requesting user in the course.
 
         Returns:
             List of all memberships for the course.
@@ -84,17 +88,16 @@ class CourseService:
             AuthorizationError: If the user is not an instructor or TA.
         """
         self._require_membership(
-            user.pid,
-            course_id,
+            requester_membership,
             {MembershipType.INSTRUCTOR, MembershipType.TA},
         )
-        return self._membership_repo.get_all_by_course(course_id)
+        return self._membership_repo.get_all_by_course(course)
 
     def add_member(
         self,
-        user: User,
-        course_id: int,
-        target_pid: int,
+        course: Course,
+        requester_membership: Membership | None,
+        target_user: User,
         membership_type: MembershipType,
     ) -> Membership:
         """Adds a member to a course.
@@ -102,9 +105,9 @@ class CourseService:
         Only an instructor of the course may add members.
 
         Args:
-            user: Authenticated user performing the action.
-            course_id: Course to add the member to.
-            target_pid: PID of the user to enroll.
+            course: Course to add the member to.
+            requester_membership: Membership for the requesting user in the course.
+            target_user: User to enroll.
             membership_type: Role to assign.
 
         Returns:
@@ -113,25 +116,36 @@ class CourseService:
         Raises:
             AuthorizationError: If the requesting user is not an instructor.
         """
-        self._require_membership(user.pid, course_id, {MembershipType.INSTRUCTOR})
+        self._require_membership(requester_membership, {MembershipType.INSTRUCTOR})
+        course_id = course.id
+        if course_id is None:
+            raise ValueError("Course must be persisted before adding members")
+
         return self._membership_repo.create(
             Membership(
-                user_pid=target_pid,
+                user_pid=target_user.pid,
                 course_id=course_id,
                 type=membership_type,
                 state=MembershipState.PENDING,
             )
         )
 
-    def drop_member(self, user: User, course_id: int, target_pid: int) -> Membership:
+    def drop_member(
+        self,
+        requesting_user: User,
+        course: Course,
+        requester_membership: Membership | None,
+        target_membership: Membership | None,
+    ) -> Membership:
         """Drops a member from a course.
 
         Instructors can drop anyone. Students and TAs can drop themselves.
 
         Args:
-            user: Authenticated user performing the action.
-            course_id: Course to drop the member from.
-            target_pid: PID of the user to drop.
+            requesting_user: Authenticated user performing the action.
+            course: Course from which the user should be dropped.
+            requester_membership: Membership for the requesting user in the course.
+            target_membership: Membership to drop.
 
         Returns:
             The updated membership with dropped state.
@@ -140,31 +154,35 @@ class CourseService:
             AuthorizationError: If the user lacks permission.
             ValueError: If the target membership does not exist.
         """
-        caller = self._membership_repo.get_by_user_and_course(user.pid, course_id)
-        if caller is None or caller.state == MembershipState.DROPPED:
-            raise AuthorizationError("Not a member of this course")
+        caller = self._require_membership(
+            requester_membership,
+            {
+                MembershipType.INSTRUCTOR,
+                MembershipType.TA,
+                MembershipType.STUDENT,
+            },
+        )
 
-        is_self = user.pid == target_pid
+        if target_membership is None:
+            course_id = course.id if course.id is not None else "unknown"
+            raise ValueError(f"Target membership does not exist for course {course_id}")
+
+        is_self = requesting_user.pid == target_membership.user_pid
         if not is_self and caller.type != MembershipType.INSTRUCTOR:
             raise AuthorizationError("Only instructors can drop other members")
 
-        target = self._membership_repo.get_by_user_and_course(target_pid, course_id)
-        if target is None:
-            raise ValueError("Target membership does not exist")
-        target.state = MembershipState.DROPPED
-        return self._membership_repo.update(target)
+        target_membership.state = MembershipState.DROPPED
+        return self._membership_repo.update(target_membership)
 
     def _require_membership(
         self,
-        user_pid: int,
-        course_id: int,
+        membership: Membership | None,
         allowed_types: set[MembershipType],
     ) -> Membership:
         """Verifies the user holds an active membership with an allowed role.
 
         Args:
-            user_pid: PID to check.
-            course_id: Course to check.
+            membership: Membership to validate.
             allowed_types: Set of roles that satisfy the requirement.
 
         Returns:
@@ -173,7 +191,6 @@ class CourseService:
         Raises:
             AuthorizationError: If the check fails.
         """
-        membership = self._membership_repo.get_by_user_and_course(user_pid, course_id)
         if membership is None or membership.state == MembershipState.DROPPED:
             raise AuthorizationError("Not a member of this course")
         if membership.type not in allowed_types:

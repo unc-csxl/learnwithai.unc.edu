@@ -52,7 +52,9 @@ test/
 - Keep this package framework-light and reusable.
 - Prefer pure or narrowly scoped logic where possible.
 - If a service is useful to both the API and the worker, it almost certainly belongs here.
-- Repositories accept and return domain objects. Use `session.get()` for primary key lookups.
+- Repositories accept and return domain objects for non-lookup operations and for relationship-scoped queries.
+- Raw scalar identifiers belong in explicit lookup methods such as `get_by_id()` and `get_by_pid()`.
+- Services should operate on loaded domain models for non-lookup behavior. If an HTTP route receives raw ids, resolve them in the API layer first so the route can return the right `404` before calling the service.
 
 Run tests from the repository root with:
 

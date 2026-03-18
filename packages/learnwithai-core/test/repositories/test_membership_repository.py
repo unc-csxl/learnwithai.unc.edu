@@ -3,8 +3,9 @@ from __future__ import annotations
 import pytest
 from sqlmodel import Session
 
-from learnwithai.tables.course import Course
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
+from learnwithai.tables.course import Course
+from learnwithai.tables.user import User
 from learnwithai.repositories.membership_repository import MembershipRepository
 
 
@@ -13,6 +14,15 @@ def _seed_course(session: Session) -> Course:
     session.add(course)
     session.flush()
     return course
+
+
+def _make_user(pid: int) -> User:
+    return User.model_construct(
+        _fields_set=None,
+        pid=pid,
+        name="Test User",
+        onyen=f"user{pid}",
+    )
 
 
 # --- create ---
@@ -58,7 +68,7 @@ def test_get_by_user_and_course_returns_membership(session: Session) -> None:
     )
 
     # Act
-    result = repo.get_by_user_and_course(123456789, course.id)  # type: ignore[arg-type]
+    result = repo.get_by_user_and_course(_make_user(123456789), course)
 
     # Assert
     assert result is not None
@@ -73,10 +83,28 @@ def test_get_by_user_and_course_returns_none_when_not_found(
     repo = MembershipRepository(session)
 
     # Act
-    result = repo.get_by_user_and_course(999999999, 999999)
+    missing_course = Course.model_construct(
+        _fields_set=None,
+        id=999999,
+        name="Missing",
+        term="Fall 2026",
+        section="999",
+    )
+    result = repo.get_by_user_and_course(_make_user(999999999), missing_course)
 
     # Assert
     assert result is None
+
+
+@pytest.mark.integration
+def test_get_by_user_and_course_raises_for_unpersisted_course(session: Session) -> None:
+    # Arrange
+    repo = MembershipRepository(session)
+    missing_id_course = Course(name="Draft", term="Fall 2026", section="001")
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Course must be persisted"):
+        repo.get_by_user_and_course(_make_user(123456789), missing_id_course)
 
 
 # --- create with pending default ---
@@ -168,7 +196,7 @@ def test_delete_removes_membership(session: Session) -> None:
     repo.delete(membership)
 
     # Assert
-    assert repo.get_by_user_and_course(123456789, course.id) is None  # type: ignore[arg-type]
+    assert repo.get_by_user_and_course(_make_user(123456789), course) is None
 
 
 # --- get_active_by_user ---
@@ -200,7 +228,7 @@ def test_get_active_by_user_returns_non_dropped(session: Session) -> None:
     )
 
     # Act
-    result = repo.get_active_by_user(123456789)
+    result = repo.get_active_by_user(_make_user(123456789))
 
     # Assert
     assert len(result) == 1
@@ -222,7 +250,7 @@ def test_get_active_by_user_includes_pending(session: Session) -> None:
     )
 
     # Act
-    result = repo.get_active_by_user(123456789)
+    result = repo.get_active_by_user(_make_user(123456789))
 
     # Assert
     assert len(result) == 1
@@ -255,7 +283,18 @@ def test_get_all_by_course_returns_all_memberships(session: Session) -> None:
     )
 
     # Act
-    result = repo.get_all_by_course(course.id)  # type: ignore[arg-type]
+    result = repo.get_all_by_course(course)
 
     # Assert
     assert len(result) == 2
+
+
+@pytest.mark.integration
+def test_get_all_by_course_raises_for_unpersisted_course(session: Session) -> None:
+    # Arrange
+    repo = MembershipRepository(session)
+    missing_id_course = Course(name="Draft", term="Fall 2026", section="001")
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Course must be persisted"):
+        repo.get_all_by_course(missing_id_course)

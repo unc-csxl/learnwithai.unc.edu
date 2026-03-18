@@ -3,7 +3,9 @@
 from sqlmodel import col, select
 
 from ..db import Session
+from ..tables.course import Course
 from ..tables.membership import Membership, MembershipState
+from ..tables.user import User
 
 
 class MembershipRepository:
@@ -31,19 +33,20 @@ class MembershipRepository:
         self._session.refresh(membership)
         return membership
 
-    def get_by_user_and_course(
-        self, user_pid: int, course_id: int
-    ) -> Membership | None:
-        """Looks up a membership by its composite primary key.
+    def get_by_user_and_course(self, user: User, course: Course) -> Membership | None:
+        """Looks up a membership by user and course.
 
         Args:
-            user_pid: UNC person identifier.
-            course_id: Course identifier.
+            user: User whose membership should be loaded.
+            course: Course whose membership should be loaded.
 
         Returns:
             The matching membership when found; otherwise, ``None``.
         """
-        return self._session.get(Membership, (user_pid, course_id))
+        if course.id is None:
+            raise ValueError("Course must be persisted before membership lookup")
+
+        return self._session.get(Membership, (user.pid, course.id))
 
     def update(self, membership: Membership) -> Membership:
         """Merges changes to an existing membership and refreshes state.
@@ -68,31 +71,34 @@ class MembershipRepository:
         self._session.delete(membership)
         self._session.flush()
 
-    def get_active_by_user(self, user_pid: int) -> list[Membership]:
+    def get_active_by_user(self, user: User) -> list[Membership]:
         """Returns all non-dropped memberships for a user.
 
         Args:
-            user_pid: UNC person identifier.
+            user: User whose active memberships should be loaded.
 
         Returns:
             List of active memberships.
         """
         query = select(Membership).where(
-            col(Membership.user_pid) == user_pid,
+            col(Membership.user_pid) == user.pid,
             col(Membership.state) != MembershipState.DROPPED,
         )
         return list(self._session.exec(query).all())
 
-    def get_all_by_course(self, course_id: int) -> list[Membership]:
+    def get_all_by_course(self, course: Course) -> list[Membership]:
         """Returns all memberships for a course.
 
         Args:
-            course_id: Course identifier.
+            course: Course whose memberships should be loaded.
 
         Returns:
             List of all memberships in the course.
         """
+        if course.id is None:
+            raise ValueError("Course must be persisted before membership lookup")
+
         query = select(Membership).where(
-            col(Membership.course_id) == course_id,
+            col(Membership.course_id) == course.id,
         )
         return list(self._session.exec(query).all())

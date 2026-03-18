@@ -99,7 +99,7 @@ def test_get_my_courses_returns_courses_for_active_memberships() -> None:
 
     # Assert
     assert result == [c1, c2]
-    membership_repo.get_active_by_user.assert_called_once_with(user.pid)
+    membership_repo.get_active_by_user.assert_called_once_with(user)
 
 
 def test_get_my_courses_returns_empty_list_when_no_memberships() -> None:
@@ -138,29 +138,30 @@ def test_get_course_roster_returns_roster_for_instructor() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
-    membership_repo.get_by_user_and_course.return_value = instructor_m
+    course = _make_course()
     roster = [instructor_m, _make_membership(user_pid=999)]
     membership_repo.get_all_by_course.return_value = roster
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.get_course_roster(_make_user(), 1)
+    result = svc.get_course_roster(course, instructor_m)
 
     # Assert
     assert result == roster
+    membership_repo.get_all_by_course.assert_called_once_with(course)
 
 
 def test_get_course_roster_returns_roster_for_ta() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     ta_m = _make_membership(type=MembershipType.TA)
-    membership_repo.get_by_user_and_course.return_value = ta_m
+    course = _make_course()
     roster = [ta_m]
     membership_repo.get_all_by_course.return_value = roster
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.get_course_roster(_make_user(), 1)
+    result = svc.get_course_roster(course, ta_m)
 
     # Assert
     assert result == roster
@@ -170,23 +171,21 @@ def test_get_course_roster_raises_for_student() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     student_m = _make_membership(type=MembershipType.STUDENT)
-    membership_repo.get_by_user_and_course.return_value = student_m
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.get_course_roster(_make_user(), 1)
+        svc.get_course_roster(_make_course(), student_m)
 
 
 def test_get_course_roster_raises_for_non_member() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
-    membership_repo.get_by_user_and_course.return_value = None
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.get_course_roster(_make_user(), 1)
+        svc.get_course_roster(_make_course(), None)
 
 
 # --- add_member ---
@@ -196,17 +195,20 @@ def test_add_member_creates_pending_membership() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
-    membership_repo.get_by_user_and_course.return_value = instructor_m
+    course = _make_course()
+    target_user = _make_user(999)
     new_m = _make_membership(user_pid=999, state=MembershipState.PENDING)
     membership_repo.create.return_value = new_m
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.add_member(_make_user(), 1, 999, MembershipType.STUDENT)
+    result = svc.add_member(course, instructor_m, target_user, MembershipType.STUDENT)
 
     # Assert
     assert result is new_m
     created = membership_repo.create.call_args.args[0]
+    assert created.user_pid == target_user.pid
+    assert created.course_id == course.id
     assert created.state == MembershipState.PENDING
 
 
@@ -214,12 +216,33 @@ def test_add_member_raises_for_non_instructor() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     student_m = _make_membership(type=MembershipType.STUDENT)
-    membership_repo.get_by_user_and_course.return_value = student_m
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.add_member(_make_user(), 1, 999, MembershipType.STUDENT)
+        svc.add_member(
+            _make_course(),
+            student_m,
+            _make_user(999),
+            MembershipType.STUDENT,
+        )
+
+
+def test_add_member_raises_for_unpersisted_course() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
+    draft_course = Course(name="Draft", term="Fall 2026", section="001")
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Course must be persisted"):
+        svc.add_member(
+            draft_course,
+            instructor_m,
+            _make_user(999),
+            MembershipType.STUDENT,
+        )
 
 
 # --- drop_member ---
@@ -230,16 +253,12 @@ def test_drop_member_instructor_drops_student() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(user_pid=100, type=MembershipType.INSTRUCTOR)
     student_m = _make_membership(user_pid=200, type=MembershipType.STUDENT)
-    membership_repo.get_by_user_and_course.side_effect = lambda pid, cid: {
-        100: instructor_m,
-        200: student_m,
-    }.get(pid)
-    dropped_m = _make_membership(user_pid=200, state=MembershipState.DROPPED)
-    membership_repo.update.return_value = dropped_m
+    course = _make_course()
+    membership_repo.update.side_effect = lambda membership: membership
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.drop_member(_make_user(pid=100), 1, 200)
+    result = svc.drop_member(_make_user(pid=100), course, instructor_m, student_m)
 
     # Assert
     assert result.state == MembershipState.DROPPED
@@ -249,13 +268,12 @@ def test_drop_member_student_drops_self() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     student_m = _make_membership(user_pid=200, type=MembershipType.STUDENT)
-    membership_repo.get_by_user_and_course.return_value = student_m
-    dropped_m = _make_membership(user_pid=200, state=MembershipState.DROPPED)
-    membership_repo.update.return_value = dropped_m
+    course = _make_course()
+    membership_repo.update.side_effect = lambda membership: membership
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
-    result = svc.drop_member(_make_user(pid=200), 1, 200)
+    result = svc.drop_member(_make_user(pid=200), course, student_m, student_m)
 
     # Assert
     assert result.state == MembershipState.DROPPED
@@ -265,34 +283,36 @@ def test_drop_member_student_cannot_drop_other() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     student_m = _make_membership(user_pid=200, type=MembershipType.STUDENT)
-    membership_repo.get_by_user_and_course.return_value = student_m
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.drop_member(_make_user(pid=200), 1, 300)
+        svc.drop_member(
+            _make_user(pid=200),
+            _make_course(),
+            student_m,
+            _make_membership(user_pid=300, type=MembershipType.STUDENT),
+        )
 
 
 def test_drop_member_raises_when_not_member() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
-    membership_repo.get_by_user_and_course.return_value = None
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.drop_member(_make_user(), 1, 200)
+        svc.drop_member(
+            _make_user(), _make_course(), None, _make_membership(user_pid=200)
+        )
 
 
 def test_drop_member_raises_when_target_not_found() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(user_pid=100, type=MembershipType.INSTRUCTOR)
-    membership_repo.get_by_user_and_course.side_effect = lambda pid, cid: {
-        100: instructor_m
-    }.get(pid)
     svc = _build_service(membership_repo=membership_repo)
 
     # Act / Assert
     with pytest.raises(ValueError, match="Target membership does not exist"):
-        svc.drop_member(_make_user(pid=100), 1, 200)
+        svc.drop_member(_make_user(pid=100), _make_course(), instructor_m, None)
