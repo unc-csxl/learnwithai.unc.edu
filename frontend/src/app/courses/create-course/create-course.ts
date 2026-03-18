@@ -8,26 +8,7 @@ import { CourseService } from '../course.service';
   selector: 'app-create-course',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <main>
-      <h1>Create Course</h1>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div>
-          <label for="name">Course Name</label>
-          <input id="name" formControlName="name" type="text" />
-        </div>
-        <div>
-          <label for="term">Term</label>
-          <input id="term" formControlName="term" type="text" />
-        </div>
-        <div>
-          <label for="section">Section</label>
-          <input id="section" formControlName="section" type="text" />
-        </div>
-        <button type="submit" [disabled]="form.invalid">Create</button>
-      </form>
-    </main>
-  `,
+  templateUrl: './create-course.html',
 })
 export class CreateCourse {
   private courseService = inject(CourseService);

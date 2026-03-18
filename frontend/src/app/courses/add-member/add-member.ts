@@ -9,25 +9,7 @@ import { MembershipType } from '../../api/models';
   selector: 'app-add-member',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <main>
-      <h1>Add Member</h1>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div>
-          <label for="pid">PID</label>
-          <input id="pid" formControlName="pid" type="number" inputmode="numeric" />
-        </div>
-        <div>
-          <label for="type">Role</label>
-          <select id="type" formControlName="type">
-            <option value="student">Student</option>
-            <option value="ta">TA</option>
-          </select>
-        </div>
-        <button type="submit" [disabled]="form.invalid">Add</button>
-      </form>
-    </main>
-  `,
+  templateUrl: './add-member.html',
 })
 export class AddMember {
   private courseService = inject(CourseService);
