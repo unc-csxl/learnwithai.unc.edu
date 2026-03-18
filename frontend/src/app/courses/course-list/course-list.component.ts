@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 
 /** Displays a list of courses the current user is enrolled in. */
 @Component({
@@ -15,11 +16,13 @@ import { Course } from '../../api/models';
 })
 export class CourseList {
   private courseService = inject(CourseService);
+  private titleService = inject(PageTitleService);
 
   protected readonly courses = signal<Course[]>([]);
   protected readonly loaded = signal(false);
 
   constructor() {
+    this.titleService.setTitle('My Courses');
     this.loadCourses();
   }
 

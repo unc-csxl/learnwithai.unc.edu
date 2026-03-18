@@ -8,6 +8,7 @@ import { Subject } from 'rxjs';
 import { Layout } from './layout.component';
 import { AuthService } from '../auth.service';
 import { ThemeService } from '../theme.service';
+import { PageTitleService } from '../page-title.service';
 import { User } from '../api/models';
 
 @Component({ template: '' })
@@ -39,6 +40,11 @@ describe('Layout', () => {
       toggle: vi.fn(),
     };
 
+    const mockPageTitle = {
+      title: signal('Test Page'),
+      setTitle: vi.fn(),
+    };
+
     const breakpoint$ = new Subject<BreakpointState>();
     const mockBreakpointObserver = {
       observe: () => breakpoint$,
@@ -50,6 +56,7 @@ describe('Layout', () => {
         provideRouter([{ path: 'courses', component: DummyComponent }]),
         { provide: AuthService, useValue: mockAuth },
         { provide: ThemeService, useValue: mockTheme },
+        { provide: PageTitleService, useValue: mockPageTitle },
         { provide: BreakpointObserver, useValue: mockBreakpointObserver },
       ],
     });
@@ -61,7 +68,7 @@ describe('Layout', () => {
       breakpoints: {},
     });
     fixture.detectChanges();
-    return { fixture, mockAuth, mockTheme, breakpoint$ };
+    return { fixture, mockAuth, mockTheme, mockPageTitle, breakpoint$ };
   }
 
   it('should create', () => {
@@ -78,12 +85,11 @@ describe('Layout', () => {
     expect(brand?.textContent).toContain('AI');
   });
 
-  it('should show app title in toolbar on handset', () => {
-    const { fixture } = setup({ authenticated: false, handset: true });
+  it('should show page title in toolbar', () => {
+    const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    const brand = el.querySelector('.toolbar-brand');
-    expect(brand?.textContent).toContain('LEARN');
-    expect(brand?.textContent).toContain('AI');
+    const title = el.querySelector('.toolbar-title');
+    expect(title?.textContent).toContain('Test Page');
   });
 
   it('should show login button when unauthenticated', () => {

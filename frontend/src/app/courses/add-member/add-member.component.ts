@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { CourseService } from '../course.service';
 import { MembershipType } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 
 /** Form for adding a member to a course by PID and role. */
 @Component({
@@ -26,8 +27,13 @@ export class AddMember {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private titleService = inject(PageTitleService);
 
   private readonly courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
+
+  constructor() {
+    this.titleService.setTitle('Add Member');
+  }
 
   protected readonly form = this.fb.nonNullable.group({
     pid: [0, [Validators.required, Validators.min(1)]],

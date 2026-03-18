@@ -11,6 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { ThemeService, ThemeMode } from '../theme.service';
+import { PageTitleService } from '../page-title.service';
 
 /** App shell with a responsive toolbar and sidenav. */
 @Component({
@@ -37,25 +38,29 @@ import { ThemeService, ThemeMode } from '../theme.service';
 
     .app-toolbar {
       gap: 12px;
-      min-height: 72px;
+      min-height: 56px;
       padding-inline: 16px;
+      z-index: 2;
     }
 
-    .toolbar-brand {
-      margin-left: 4px;
+    .toolbar-title {
+      font-size: 1.15rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .brand,
     .sidenav-brand {
-      align-items: flex-start;
+      align-items: center;
       color: inherit;
       display: inline-flex;
       flex-direction: column;
       line-height: 1;
+      text-align: center;
       text-decoration: none;
     }
 
-    .brand:visited,
     .sidenav-brand:visited {
       color: inherit;
     }
@@ -101,11 +106,6 @@ import { ThemeService, ThemeMode } from '../theme.service';
       padding: 24px 16px 12px;
     }
 
-    .sidenav-brand {
-      align-items: center;
-      text-align: center;
-    }
-
     .spacer {
       flex: 1;
     }
@@ -119,6 +119,7 @@ export class Layout {
   private breakpointObserver = inject(BreakpointObserver);
   protected auth = inject(AuthService);
   protected theme = inject(ThemeService);
+  protected pageTitle = inject(PageTitleService);
 
   protected readonly drawerRef = viewChild<MatSidenav>('drawer');
 

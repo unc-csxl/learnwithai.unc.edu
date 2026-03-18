@@ -8,6 +8,14 @@ Read the repository root `AGENTS.md` first. This file adds frontend-specific gui
 - Validate frontend changes with `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
 - The final repository-level validation is `./scripts/qa.sh --check` from the root.
 
+## App Shell and Page Titles
+
+The `Layout` component provides the responsive shell (toolbar + sidenav). Every routed component must call `PageTitleService.setTitle()` to set the toolbar heading and browser tab title. Do not add `<h1>` headings for page titles in component templates — the toolbar displays the title centrally.
+
+## Theming
+
+The light and dark themes use the UNC Chapel Hill brand palette defined in `src/theme.scss`. Use the `ThemeService` to read or toggle the current mode. Custom properties from the theme are available globally. Do not hard-code brand colours — reference theme tokens instead.
+
 ## Generated API Client
 
 Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI spec using ng-openapi-gen. The generated code lives in `src/app/api/generated/`.

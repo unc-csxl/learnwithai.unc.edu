@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CourseDetail } from './course-detail.component';
 import { CourseService } from '../course.service';
+import { PageTitleService } from '../../page-title.service';
 import { Course } from '../../api/models';
 
 @Component({ template: '' })
@@ -22,6 +23,11 @@ describe('CourseDetail', () => {
         : vi.fn(() => Promise.resolve(courses)),
     };
 
+    const mockPageTitle = {
+      title: vi.fn(),
+      setTitle: vi.fn(),
+    };
+
     const mockRoute = {
       snapshot: { paramMap: new Map([['id', '1']]) },
     };
@@ -35,6 +41,7 @@ describe('CourseDetail', () => {
           { path: 'tools', component: DummyComponent },
         ]),
         { provide: CourseService, useValue: mockService },
+        { provide: PageTitleService, useValue: mockPageTitle },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
     });
@@ -43,13 +50,13 @@ describe('CourseDetail', () => {
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
-    return { fixture, mockService };
+    return { fixture, mockService, mockPageTitle };
   }
 
-  it('should display course name and term', async () => {
-    const { fixture } = await setup();
+  it('should set page title to course name and show term', async () => {
+    const { fixture, mockPageTitle } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('Intro CS');
+    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Intro CS');
     expect(el.textContent).toContain('Fall 2026');
   });
 

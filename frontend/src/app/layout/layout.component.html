@@ -3,14 +3,8 @@
     <button mat-icon-button aria-label="Toggle navigation" (click)="toggleDrawer()">
       <mat-icon>menu</mat-icon>
     </button>
-    <a class="brand toolbar-brand" routerLink="/courses" aria-label="Learn with AI home">
-      <span class="brand-learn">LEARN</span>
-      <span class="brand-line-two">
-        <span class="brand-with">with</span>
-        <span class="brand-ai">AI</span>
-      </span>
-    </a>
   }
+  <span class="toolbar-title">{{ pageTitle.title() }}</span>
   <span class="spacer"></span>
   <button
     mat-icon-button

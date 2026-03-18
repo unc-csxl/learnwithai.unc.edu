@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterOutlet, RouterLink, RouterLinkActive } from '@ang
 import { MatTabsModule } from '@angular/material/tabs';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 
 /** Course detail shell with sub-navigation for instructor/student views. */
 @Component({
@@ -14,6 +15,7 @@ import { Course } from '../../api/models';
 export class CourseDetail {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
+  private titleService = inject(PageTitleService);
 
   protected readonly course = signal<Course | null>(null);
   protected readonly errorMessage = signal('');
@@ -30,6 +32,7 @@ export class CourseDetail {
       const course = courses.find((c) => c.id === this.courseId);
       if (course) {
         this.course.set(course);
+        this.titleService.setTitle(course.name);
       } else {
         this.errorMessage.set('Course not found.');
       }

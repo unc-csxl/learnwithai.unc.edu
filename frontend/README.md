@@ -10,37 +10,57 @@ The frontend should not own backend business rules. It should present data, coll
 frontend/
 |- src/
 |  |- main.ts                  Angular bootstrap entrypoint
+|  |- theme.scss               UNC Chapel Hill Material theme (light + dark)
+|  |- styles.css               Global styles and Tailwind utilities
 |  `- app/
-|     |- app.ts                Root shell component
+|     |- app.component.ts      Root component (<router-outlet>)
 |     |- app.routes.ts         Top-level lazy routes
 |     |- auth.service.ts       Client-side auth integration
+|     |- page-title.service.ts Signal-based toolbar/browser title service
+|     |- theme.service.ts      Light/dark/system theme toggle
+|     |- layout/               App shell (toolbar, sidenav, responsive layout)
+|     |- courses/              Course feature routes (list, detail, create, etc.)
+|     |- jwt/                  JWT callback route feature
 |     |- api/generated/        Auto-generated HTTP client and models
-|     |- api/models.ts         Domain-friendly type aliases (Course, User, etc.)
-|     |- home/                 Home route feature
-|     `- jwt/                  JWT callback route feature
+|     `- api/models.ts         Domain-friendly type aliases (Course, User, etc.)
 |- openapi.json                Exported OpenAPI spec (generated, do not edit)
 |- ng-openapi-gen.json         Code generation configuration
 |- public/                     Static public assets
-|- .vscode/                    Frontend-specific tasks and launch configs
 |- package.json                Frontend scripts and dependencies
 ```
 
 ## Current Application Shape
 
-Today the app is intentionally small so it is easy to understand:
+The frontend uses Angular Material for UI components and Tailwind CSS (v4) for layout utilities. Theming follows the UNC Chapel Hill brand palette.
 
-- The root shell is in `src/app/app.ts`
-- Routes are declared in `src/app/app.routes.ts`
-- The home screen is lazy loaded from `src/app/home/`
-- The authentication callback route is lazy loaded from `src/app/jwt/`
-- Auth-related client behavior lives in `src/app/auth.service.ts`
-- API authentication headers are attached centrally by `src/app/auth-token.interceptor.ts` for requests to `/api/*`
+### App Shell
 
-That makes the frontend a good place to learn three ideas at once:
+The `Layout` component in `src/app/layout/` provides a responsive shell:
 
-- Component-based UI
-- Client-side routing
-- Calling backend services from the browser
+- **Desktop**: A full-width toolbar on top with page title, theme toggle, and auth controls. A 240 px side-nav sits below the toolbar alongside the main content area.
+- **Mobile**: The toolbar shows a hamburger menu, page title, and controls. The side-nav opens as an overlay when toggled.
+
+### Page Titles
+
+`PageTitleService` is a signal-based singleton that components call to set the toolbar heading and browser tab title. Every routed component calls `setTitle()` in its constructor (or after loading data) to keep the toolbar and tab in sync.
+
+### Routes
+
+Routes are declared in `src/app/app.routes.ts`. The default (`/`) redirects to `/courses`. Authenticated routes sit inside the `Layout` shell:
+
+- `/courses` — course list (lazy loaded)
+- `/courses/create` — create a new course
+- `/courses/:id` — course detail with child tabs (roster, activities, tools)
+- `/courses/:id/add-member` — add a member to a course
+- `/jwt` — authentication callback
+
+### Key Services
+
+- `AuthService` — client-side auth integration
+- `ThemeService` — light / dark / system theme toggle
+- `PageTitleService` — reactive toolbar title and browser tab title
+- `CourseService` — course API calls via generated client
+- `AuthTokenInterceptor` — attaches auth headers to `/api/*` requests
 
 ## How To Run The Frontend
 
@@ -117,17 +137,18 @@ The repository-level final check is still run from the root:
 
 If you are tracing a frontend feature:
 
-1. Start in `src/app/app.routes.ts`.
-2. Open the route's component folder.
-3. Check any supporting services such as `auth.service.ts`.
+1. Start in `src/app/app.routes.ts` to find the route.
+2. Open the route's component folder (e.g. `src/app/courses/course-list/`).
+3. Check any supporting services (`course.service.ts`, `page-title.service.ts`).
 4. Follow network calls into the API workspace.
 
 If you are adding a new screen:
 
 1. Create a focused component or feature folder under `src/app/`.
-2. Add a route in `app.routes.ts`.
-3. Add or update tests near the changed code.
-4. Validate with linting and frontend tests.
+2. Add a route in `app.routes.ts` (inside the `Layout` children for authenticated pages).
+3. Call `PageTitleService.setTitle()` from the new component to set the toolbar and tab title.
+4. Add or update tests near the changed code.
+5. Validate with linting and frontend tests.
 
 ## VS Code Support In This Workspace
 

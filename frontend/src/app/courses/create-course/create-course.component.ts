@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CourseService } from '../course.service';
+import { PageTitleService } from '../../page-title.service';
 
 /** Form for creating a new course. */
 @Component({
@@ -17,12 +18,17 @@ export class CreateCourse {
   private courseService = inject(CourseService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private titleService = inject(PageTitleService);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
     term: ['', Validators.required],
     section: ['', Validators.required],
   });
+
+  constructor() {
+    this.titleService.setTitle('Create Course');
+  }
 
   protected async onSubmit(): Promise<void> {
     if (this.form.invalid) {
