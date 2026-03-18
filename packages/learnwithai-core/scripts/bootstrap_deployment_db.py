@@ -5,7 +5,7 @@ database has been recreated. It creates all SQLModel tables and inserts a
 single dummy user for developer testing.
 """
 
-import learnwithai.models  # noqa: F401
+import learnwithai.tables  # noqa: F401
 from learnwithai.db import create_db_and_tables, get_session
 from learnwithai.tables.user import User
 
