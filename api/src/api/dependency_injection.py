@@ -2,7 +2,8 @@
 
 from typing import Annotated, TypeAlias
 
-from fastapi import Depends, Header, HTTPException, Path
+from fastapi import Depends, HTTPException, Path
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import (
@@ -67,27 +68,32 @@ CSXLAuthServiceDI: TypeAlias = Annotated[
 ]
 
 
+_bearer_scheme = HTTPBearer()
+
+
 def get_authenticated_user(
     csxl_auth_svc: CSXLAuthServiceDI,
-    authorization: Annotated[str | None, Header()] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer_scheme)],
 ) -> User:
     """Authenticates the current request from a bearer token.
 
+    The ``HTTPBearer`` security dependency extracts and validates the
+    ``Authorization: Bearer <token>`` header automatically, returning
+    a 403 when the header is absent or malformed.  This function then
+    verifies the JWT and resolves the user.
+
     Args:
         csxl_auth_svc: Service used to validate and resolve subject identity.
-        authorization: Raw Authorization header supplied by the client.
+        credentials: Bearer credentials extracted by FastAPI's HTTPBearer.
 
     Returns:
         The authenticated subject.
 
     Raises:
-        HTTPException: If the token is missing, invalid, expired, or unknown.
+        HTTPException: If the token is invalid, expired, or the user is unknown.
     """
-    if authorization is None or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid token.")
-    token = authorization.removeprefix("Bearer ")
     try:
-        pid = csxl_auth_svc.verify_jwt(token)
+        pid = csxl_auth_svc.verify_jwt(credentials.credentials)
     except AuthenticationException:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
     subject = csxl_auth_svc.get_user_by_pid(pid)

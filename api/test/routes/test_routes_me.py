@@ -80,7 +80,7 @@ def test_auth_me_returns_user_profile(client: TestClient) -> None:
 
 @pytest.mark.integration
 def test_auth_me_returns_401_without_token(client: TestClient) -> None:
-    # Arrange (no overrides — real get_current_subject will reject)
+    # Arrange (no overrides — HTTPBearer rejects missing credentials)
 
     # Act
     response = client.get("/api/me")
