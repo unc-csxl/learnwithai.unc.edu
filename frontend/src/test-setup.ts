@@ -19,12 +19,8 @@ if (!(ANGULAR_TESTBED_SETUP in globalThis)) {
   @NgModule({})
   class TestModule {}
 
-  getTestBed().initTestEnvironment(
-    [BrowserTestingModule, TestModule],
-    platformBrowserTesting(),
-    {
-      errorOnUnknownElements: true,
-      errorOnUnknownProperties: true,
-    },
-  );
+  getTestBed().initTestEnvironment([BrowserTestingModule, TestModule], platformBrowserTesting(), {
+    errorOnUnknownElements: true,
+    errorOnUnknownProperties: true,
+  });
 }

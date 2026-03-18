@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     exclude: ['dist/**', '.angular/**', 'node_modules/**'],
-    include: isDirectVitestRun ? ['src/**/*.spec.ts'] : undefined,
     setupFiles: isDirectVitestRun ? ['src/test-setup.ts'] : [],
+    ...(isDirectVitestRun ? { include: ['src/**/*.spec.ts'] } : {}),
   },
 });
