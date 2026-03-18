@@ -79,7 +79,9 @@ describe('Layout', () => {
     const { fixture, mockAuth } = setup({ authenticated: false });
     const el: HTMLElement = fixture.nativeElement;
     const buttons = el.querySelectorAll('mat-toolbar button');
-    const loginBtn = Array.from(buttons).find((b) => b.textContent?.includes('Login')) as HTMLButtonElement;
+    const loginBtn = Array.from(buttons).find((b) =>
+      b.textContent?.includes('Login'),
+    ) as HTMLButtonElement;
     expect(loginBtn).toBeTruthy();
     loginBtn.click();
     expect(mockAuth.login).toHaveBeenCalled();
@@ -89,7 +91,9 @@ describe('Layout', () => {
     const { fixture, mockAuth } = setup({ authenticated: true });
     const el: HTMLElement = fixture.nativeElement;
     const buttons = el.querySelectorAll('mat-toolbar button');
-    const logoutBtn = Array.from(buttons).find((b) => b.textContent?.includes('Logout')) as HTMLButtonElement;
+    const logoutBtn = Array.from(buttons).find((b) =>
+      b.textContent?.includes('Logout'),
+    ) as HTMLButtonElement;
     expect(logoutBtn).toBeTruthy();
     logoutBtn.click();
     expect(mockAuth.logout).toHaveBeenCalled();

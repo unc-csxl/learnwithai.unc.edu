@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, ActivatedRoute } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AddMember } from './add-member.component';
 import { CourseService } from '../course.service';
 
@@ -23,7 +24,7 @@ describe('AddMember', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [AddMember],
+      imports: [AddMember, NoopAnimationsModule],
       providers: [
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
@@ -41,8 +42,8 @@ describe('AddMember', () => {
   it('should render the form', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('input#pid')).toBeTruthy();
-    expect(el.querySelector('select#type')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="pid"]')).toBeTruthy();
+    expect(el.querySelector('mat-select')).toBeTruthy();
   });
 
   it('should disable submit when pid is invalid', () => {

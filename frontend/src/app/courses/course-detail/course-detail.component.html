@@ -4,13 +4,31 @@
   <h1>{{ c.name }}</h1>
   <p>{{ c.term }} &mdash; Section {{ c.section }}</p>
   <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Course navigation">
-    <a mat-tab-link routerLink="roster" routerLinkActive #rlaRoster="routerLinkActive" [active]="rlaRoster.isActive">
+    <a
+      mat-tab-link
+      routerLink="roster"
+      routerLinkActive
+      #rlaRoster="routerLinkActive"
+      [active]="rlaRoster.isActive"
+    >
       Roster
     </a>
-    <a mat-tab-link routerLink="activities" routerLinkActive #rlaActivities="routerLinkActive" [active]="rlaActivities.isActive">
+    <a
+      mat-tab-link
+      routerLink="activities"
+      routerLinkActive
+      #rlaActivities="routerLinkActive"
+      [active]="rlaActivities.isActive"
+    >
       Activities
     </a>
-    <a mat-tab-link routerLink="tools" routerLinkActive #rlaTools="routerLinkActive" [active]="rlaTools.isActive">
+    <a
+      mat-tab-link
+      routerLink="tools"
+      routerLinkActive
+      #rlaTools="routerLinkActive"
+      [active]="rlaTools.isActive"
+    >
       Tools
     </a>
   </nav>

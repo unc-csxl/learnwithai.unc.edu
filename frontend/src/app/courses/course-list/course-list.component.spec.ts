@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CourseList } from './course-list.component';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
@@ -20,7 +21,7 @@ describe('CourseList', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [CourseList],
+      imports: [CourseList, NoopAnimationsModule],
       providers: [provideRouter([]), { provide: CourseService, useValue: mockService }],
     });
 
@@ -34,9 +35,9 @@ describe('CourseList', () => {
   it('should display courses when available', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const items = el.querySelectorAll('li');
-    expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('Intro to CS');
+    const cards = el.querySelectorAll('mat-card');
+    expect(cards.length).toBe(2);
+    expect(cards[0].textContent).toContain('Intro to CS');
   });
 
   it('should display empty message when no courses', async () => {
@@ -48,8 +49,10 @@ describe('CourseList', () => {
   it('should show create course link', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const createLink = el.querySelector('a[href="/courses/create"]');
-    expect(createLink).toBeTruthy();
+    const createLink =
+      el.querySelector('a[routerLink="/courses/create"]') ??
+      el.querySelector('a[ng-reflect-router-link="/courses/create"]');
+    expect(createLink?.textContent).toContain('Create Course');
   });
 
   it('should load courses from service', async () => {

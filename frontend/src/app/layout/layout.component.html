@@ -30,7 +30,12 @@
     class="sidenav"
   >
     <mat-nav-list>
-      <a mat-list-item routerLink="/courses" routerLinkActive="active-link" (click)="closeMobileSidenav()">
+      <a
+        mat-list-item
+        routerLink="/courses"
+        routerLinkActive="active-link"
+        (click)="closeMobileSidenav()"
+      >
         <mat-icon matListItemIcon>school</mat-icon>
         <span matListItemTitle>Courses</span>
       </a>

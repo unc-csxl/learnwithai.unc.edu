@@ -1,5 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
 
@@ -7,7 +10,7 @@ import { Course } from '../../api/models';
 @Component({
   selector: 'app-course-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './course-list.component.html',
 })
 export class CourseList {

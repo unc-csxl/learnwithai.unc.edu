@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Roster } from './roster.component';
 import { CourseService } from '../../course.service';
 import { Membership } from '../../../api/models';
@@ -25,7 +26,7 @@ describe('Roster', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [Roster],
+      imports: [Roster, NoopAnimationsModule],
       providers: [
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
@@ -43,7 +44,7 @@ describe('Roster', () => {
   it('should display roster members', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const rows = el.querySelectorAll('tbody tr');
+    const rows = el.querySelectorAll('tr[mat-row]');
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('111');
     expect(rows[0].textContent).toContain('instructor');

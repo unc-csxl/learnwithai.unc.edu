@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CreateCourse } from './create-course.component';
 import { CourseService } from '../course.service';
 
@@ -14,7 +15,7 @@ describe('CreateCourse', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [CreateCourse],
+      imports: [CreateCourse, NoopAnimationsModule],
       providers: [provideRouter([]), { provide: CourseService, useValue: mockService }],
     });
 
@@ -28,9 +29,9 @@ describe('CreateCourse', () => {
   it('should render the form', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('input#name')).toBeTruthy();
-    expect(el.querySelector('input#term')).toBeTruthy();
-    expect(el.querySelector('input#section')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="name"]')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="term"]')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="section"]')).toBeTruthy();
   });
 
   it('should disable submit when form is empty', () => {

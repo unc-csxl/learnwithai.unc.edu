@@ -1,5 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { CourseService } from '../../course.service';
 import { Membership } from '../../../api/models';
 
@@ -7,7 +10,7 @@ import { Membership } from '../../../api/models';
 @Component({
   selector: 'app-roster',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, MatTableModule, MatButtonModule, MatIconModule],
   templateUrl: './roster.component.html',
 })
 export class Roster {
@@ -18,6 +21,8 @@ export class Roster {
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly courseId: number;
+  protected readonly displayedColumns = ['user_pid', 'type', 'state'];
+  protected readonly dataSource = computed(() => this.roster());
 
   constructor() {
     this.courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
