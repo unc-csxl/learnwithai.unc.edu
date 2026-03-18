@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str | None = None
-    db_echo: bool = False
+    db_echo: bool = True
 
     # Queue / broker
     rabbitmq_url: str | None = None

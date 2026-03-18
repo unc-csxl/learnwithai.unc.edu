@@ -1,16 +1,23 @@
 """Dependency factories shared across FastAPI route handlers."""
 
-from typing import TypeAlias, Annotated
-from fastapi import Depends, Header, HTTPException
+from typing import Annotated, TypeAlias
+
+from fastapi import Depends, Header, HTTPException, Path
+
+from .models import AddMemberRequest
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import (
     CSXLAuthService,
     AuthenticationException,
 )
+from learnwithai.services.course_service import CourseService
 from learnwithai.db import get_session, Session
 from learnwithai.interfaces import JobQueue
 from learnwithai.tables.user import User
+from learnwithai.tables.course import Course
 from learnwithai.repositories.user_repository import UserRepository
+from learnwithai.repositories.course_repository import CourseRepository
+from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 
 SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
@@ -99,3 +106,137 @@ def job_queue_factory() -> JobQueue:
 
 
 JobQueueDI: TypeAlias = Annotated[JobQueue, Depends(job_queue_factory)]
+
+
+def course_repository_factory(session: SessionDI) -> CourseRepository:
+    """Constructs a course repository bound to the current request session.
+
+    Args:
+        session: Database session scoped to the request.
+
+    Returns:
+        A repository backed by the provided database session.
+    """
+    return CourseRepository(session)
+
+
+CourseRepositoryDI: TypeAlias = Annotated[
+    CourseRepository, Depends(course_repository_factory)
+]
+
+
+def membership_repository_factory(session: SessionDI) -> MembershipRepository:
+    """Constructs a membership repository bound to the current request session.
+
+    Args:
+        session: Database session scoped to the request.
+
+    Returns:
+        A repository backed by the provided database session.
+    """
+    return MembershipRepository(session)
+
+
+MembershipRepositoryDI: TypeAlias = Annotated[
+    MembershipRepository, Depends(membership_repository_factory)
+]
+
+
+def course_service_factory(
+    course_repo: CourseRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> CourseService:
+    """Creates the course service for the current request.
+
+    Args:
+        course_repo: Repository for course persistence.
+        membership_repo: Repository for membership persistence.
+
+    Returns:
+        A configured course service.
+    """
+    return CourseService(course_repo, membership_repo)
+
+
+CourseServiceDI: TypeAlias = Annotated[CourseService, Depends(course_service_factory)]
+
+
+def get_course_by_path_id(
+    course_id: Annotated[int, Path()], course_repo: CourseRepositoryDI
+) -> Course:
+    """Loads a course from the course_id path parameter.
+
+    Args:
+        course_id: Course identifier from the request path.
+        course_repo: Repository used to load courses.
+
+    Returns:
+        The matching course.
+
+    Raises:
+        HTTPException: If the course does not exist.
+    """
+    course = course_repo.get_by_id(course_id)
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found.")
+    return course
+
+
+CourseByCourseIDPathDI: TypeAlias = Annotated[Course, Depends(get_course_by_path_id)]
+
+
+def get_user_by_pid(pid: int, user_repo: UserRepositoryDI) -> User:
+    """Loads a user by pid or raises an HTTP 404.
+
+    Args:
+        pid: UNC person identifier.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+
+    Raises:
+        HTTPException: If the user does not exist.
+    """
+    user = user_repo.get_by_pid(pid)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return user
+
+
+def get_user_by_path_pid(
+    pid: Annotated[int, Path()], user_repo: UserRepositoryDI
+) -> User:
+    """Loads a user from the pid path parameter.
+
+    Args:
+        pid: User identifier from the request path.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+    """
+    return get_user_by_pid(pid, user_repo)
+
+
+UserByPIDPathDI: TypeAlias = Annotated[User, Depends(get_user_by_path_pid)]
+
+
+def get_user_by_add_member_request_pid(
+    body: AddMemberRequest, user_repo: UserRepositoryDI
+) -> User:
+    """Loads the user referenced by an add-member request payload.
+
+    Args:
+        body: Request payload containing the target pid.
+        user_repo: Repository used to load users.
+
+    Returns:
+        The matching user.
+    """
+    return get_user_by_pid(body.pid, user_repo)
+
+
+UserByAddMemberRequestPIDDI: TypeAlias = Annotated[
+    User, Depends(get_user_by_add_member_request_pid)
+]

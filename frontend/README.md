@@ -97,6 +97,8 @@ This workspace includes:
 - A `start` task for the dev server
 - A `test` task for watch-mode testing
 - A `Frontend: serve` launch configuration
-- A `Frontend: test` launch configuration
+- A `Frontend: test (Vitest)` launch configuration
 
 Those are useful when you are still learning the CLI and want repeatable entrypoints.
+
+The frontend uses Angular's Vitest-based unit test runner. To run and debug tests from the VS Code Testing view, install the recommended `Vitest` extension for this workspace. The frontend folder now includes a local `vitest.config.ts` so the extension can discover tests directly.

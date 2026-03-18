@@ -1,6 +1,7 @@
 import sys
+
+import learnwithai.tables  # noqa: F401
 from learnwithai.config import Settings
-import learnwithai.models  # noqa
 from learnwithai.db import create_db_and_tables
 
 settings = Settings()

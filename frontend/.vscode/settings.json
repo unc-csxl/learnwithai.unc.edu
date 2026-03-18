@@ -7,6 +7,8 @@
   "prettier.prettierPath": "./node_modules/prettier",
   "prettier.configPath": "./.prettierrc",
   "js/ts.preferences.importModuleSpecifier": "relative",
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
   "eslint.validate": [
     "typescript",
     "html"
@@ -20,5 +22,7 @@
     "**/node_modules": true,
     "**/dist": true,
     "**/.angular": true
-  }
+  },
+  "vitest.rootConfig": "vitest.config.ts",
+  "testing.automaticallyOpenTestResults": "openOnTestFailure"
 }
