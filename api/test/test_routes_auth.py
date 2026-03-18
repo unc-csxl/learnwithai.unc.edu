@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -41,11 +40,9 @@ def _stub_user(**overrides) -> User:
     Uses MagicMock wrapping User spec to avoid SQLAlchemy instrumentation issues
     when accessing attributes on non-session-bound instances.
     """
-    user_id = overrides.pop("id", uuid.uuid4())
     defaults = dict(
-        id=user_id,
+        pid=overrides.pop("pid", 123456789),
         name="Test User",
-        pid="123456789",
         onyen="testuser",
         email=None,
         family_name=None,
@@ -109,7 +106,7 @@ def test_authenticate_returns_500_when_registration_fails() -> None:
     session.begin.return_value.__enter__ = lambda s: s
     session.begin.return_value.__exit__ = lambda s, *a: None
     csxl_auth_svc = MagicMock()
-    csxl_auth_svc.verify_auth_token.return_value = ("testuser", "123456789")
+    csxl_auth_svc.verify_auth_token.return_value = ("testuser", 123456789)
     csxl_auth_svc.registered_user_from_onyen_pid.side_effect = AuthenticationException()
 
     # Act / Assert
@@ -126,7 +123,7 @@ def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
     session.begin.return_value.__exit__ = lambda s, *a: None
     user = _stub_user()
     csxl_auth_svc = MagicMock()
-    csxl_auth_svc.verify_auth_token.return_value = ("testuser", "123456789")
+    csxl_auth_svc.verify_auth_token.return_value = ("testuser", 123456789)
     csxl_auth_svc.registered_user_from_onyen_pid.return_value = user
     csxl_auth_svc.issue_jwt_token.return_value = "jwt-token-123"
 
@@ -181,8 +178,8 @@ def test_get_current_user_raises_401_for_invalid_jwt() -> None:
 def test_get_current_user_raises_401_when_user_not_found() -> None:
     # Arrange
     csxl_auth_svc = MagicMock()
-    csxl_auth_svc.verify_jwt.return_value = "some-user-id"
-    csxl_auth_svc.get_user_by_id.return_value = None
+    csxl_auth_svc.verify_jwt.return_value = 999999999
+    csxl_auth_svc.get_user_by_pid.return_value = None
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
@@ -193,11 +190,11 @@ def test_get_current_user_raises_401_when_user_not_found() -> None:
 
 def test_get_current_user_returns_user_for_valid_token() -> None:
     # Arrange
-    user_id = uuid.uuid4()
-    user = _stub_user(id=user_id)
+    pid = 123456789
+    user = _stub_user(pid=pid)
     csxl_auth_svc = MagicMock()
-    csxl_auth_svc.verify_jwt.return_value = str(user_id)
-    csxl_auth_svc.get_user_by_id.return_value = user
+    csxl_auth_svc.verify_jwt.return_value = pid
+    csxl_auth_svc.get_user_by_pid.return_value = user
 
     # Act
     result = get_current_user(csxl_auth_svc, authorization="Bearer valid-token")
@@ -205,7 +202,7 @@ def test_get_current_user_returns_user_for_valid_token() -> None:
     # Assert
     assert result is user
     csxl_auth_svc.verify_jwt.assert_called_once_with("valid-token")
-    csxl_auth_svc.get_user_by_id.assert_called_once_with(str(user_id))
+    csxl_auth_svc.get_user_by_pid.assert_called_once_with(pid)
 
 
 # ---- integration tests via TestClient ----

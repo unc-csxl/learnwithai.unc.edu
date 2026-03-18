@@ -1,21 +1,18 @@
 """Database-backed user models."""
 
 from datetime import datetime
-import uuid
 
 from sqlmodel import SQLModel, Field
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import Column, DateTime, Integer, func
 
 
 class User(SQLModel, table=True):
     """Represents an authenticated LearnWithAI user."""
 
-    id: uuid.UUID = Field(
-        primary_key=True,
-        default_factory=uuid.uuid4,
+    pid: int = Field(
+        sa_column=Column(Integer, primary_key=True, autoincrement=False),
     )
     name: str = Field()
-    pid: str = Field(index=True)
     onyen: str = Field()
     family_name: str | None = Field(default=None)
     given_name: str | None = Field(default=None)

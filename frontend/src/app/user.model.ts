@@ -1,7 +1,6 @@
 export interface User {
-  id: string;
+  pid: number;
   name: string;
-  pid: string;
   onyen: string;
   email: string | null;
 }

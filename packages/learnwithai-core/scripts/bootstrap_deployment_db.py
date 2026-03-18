@@ -18,7 +18,7 @@ def main() -> None:
         session.add(
             User(
                 name="Demo User",
-                pid="999999999",
+                pid=999999999,
                 onyen="demo",
                 family_name="User",
                 given_name="Demo",

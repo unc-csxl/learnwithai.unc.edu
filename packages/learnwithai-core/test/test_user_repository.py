@@ -33,7 +33,7 @@ def test_get_by_pid_returns_none_when_no_user_exists(session: Session) -> None:
     repo = UserRepository(session)
 
     # Act
-    result = repo.get_by_pid("nonexistent")
+    result = repo.get_by_pid(999999999)
 
     # Assert
     assert result is None
@@ -43,16 +43,16 @@ def test_get_by_pid_returns_none_when_no_user_exists(session: Session) -> None:
 def test_get_by_pid_returns_user_when_exists(session: Session) -> None:
     # Arrange
     repo = UserRepository(session)
-    user = User(name="Test User", pid="123456789", onyen="testuser")
+    user = User(pid=123456789, name="Test User", onyen="testuser")
     session.add(user)
     session.flush()
 
     # Act
-    result = repo.get_by_pid("123456789")
+    result = repo.get_by_pid(123456789)
 
     # Assert
     assert result is not None
-    assert result.pid == "123456789"
+    assert result.pid == 123456789
     assert result.name == "Test User"
 
 
@@ -63,47 +63,14 @@ def test_get_by_pid_returns_user_when_exists(session: Session) -> None:
 def test_register_user_persists_and_returns_user(session: Session) -> None:
     # Arrange
     repo = UserRepository(session)
-    new_user = User(name="New User", pid="987654321", onyen="newuser")
+    new_user = User(pid=987654321, name="New User", onyen="newuser")
 
     # Act
     result = repo.register_user(new_user)
 
     # Assert
-    assert result.id is not None
-    assert result.pid == "987654321"
+    assert result.pid == 987654321
     assert result.name == "New User"
-    fetched = repo.get_by_pid("987654321")
+    fetched = repo.get_by_pid(987654321)
     assert fetched is not None
-    assert fetched.id == result.id
-
-
-# --- get_by_id ---
-
-
-@pytest.mark.integration
-def test_get_by_id_returns_none_when_no_user_exists(session: Session) -> None:
-    # Arrange
-    repo = UserRepository(session)
-
-    # Act
-    result = repo.get_by_id("00000000-0000-0000-0000-000000000000")
-
-    # Assert
-    assert result is None
-
-
-@pytest.mark.integration
-def test_get_by_id_returns_user_when_exists(session: Session) -> None:
-    # Arrange
-    repo = UserRepository(session)
-    user = User(name="Test User", pid="111222333", onyen="testid")
-    session.add(user)
-    session.flush()
-
-    # Act
-    result = repo.get_by_id(str(user.id))
-
-    # Assert
-    assert result is not None
-    assert result.id == user.id
-    assert result.name == "Test User"
+    assert fetched.pid == result.pid

@@ -25,7 +25,7 @@ class CSXLAuthService:
         self._settings = settings
         self._user_repo = user_repo
 
-    def verify_auth_token(self, token: str):
+    def verify_auth_token(self, token: str) -> tuple[str, int]:
         """Validates a CSXL auth token and returns the UNC identity pair.
 
         Args:
@@ -46,12 +46,12 @@ class CSXLAuthService:
             if response.status_code == httpx.codes.OK:
                 body = response.json()
                 onyen = body["uid"]
-                pid = body["pid"]
+                pid = int(body["pid"])
                 return (onyen, pid)
             else:
                 raise AuthenticationException()
 
-    def registered_user_from_onyen_pid(self, onyen: str, pid: str) -> User:
+    def registered_user_from_onyen_pid(self, onyen: str, pid: int) -> User:
         """Loads or creates a user record for the authenticated UNC identity.
 
         Args:
@@ -64,7 +64,7 @@ class CSXLAuthService:
         user = self._user_repo.get_by_pid(pid)
         return user if user else self._register_new_user(onyen, pid)
 
-    def _register_new_user(self, onyen: str, pid: str) -> User:
+    def _register_new_user(self, onyen: str, pid: int) -> User:
         """Creates a new user record from UNC directory data.
 
         Args:
@@ -87,7 +87,7 @@ class CSXLAuthService:
         )
         return user
 
-    def _unc_directory_lookup(self, pid: str) -> UNCDirectorySearch:
+    def _unc_directory_lookup(self, pid: int) -> UNCDirectorySearch:
         """Retrieves user profile data from the UNC directory service.
 
         Args:
@@ -103,7 +103,7 @@ class CSXLAuthService:
                 if len(results) > 0:
                     results[0]["pid"] = str(pid)
                     return UNCDirectorySearch.model_validate(results[0])
-            return UNCDirectorySearch(pid=pid)
+            return UNCDirectorySearch(pid=str(pid))
 
     def issue_jwt_token(self, user: User) -> str:
         """Issues a short-lived JWT for a known user.
@@ -115,20 +115,20 @@ class CSXLAuthService:
             Encoded JWT string.
         """
         expire_at = datetime.now(timezone.utc) + timedelta(days=1)
-        payload = {"sub": str(user.id), "exp": expire_at}
+        payload = {"sub": str(user.pid), "exp": expire_at}
         token = jwt.encode(
             payload, self._settings.jwt_secret, algorithm=self._settings.jwt_algorithm
         )
         return token
 
-    def verify_jwt(self, token: str) -> str:
-        """Decodes a JWT and returns the user identifier.
+    def verify_jwt(self, token: str) -> int:
+        """Decodes a JWT and returns the user PID.
 
         Args:
             token: Encoded JWT issued by this service.
 
         Returns:
-            The user identifier stored in the token subject claim.
+            The user PID stored in the token subject claim.
 
         Raises:
             AuthenticationException: If the token is invalid or expired.
@@ -139,18 +139,18 @@ class CSXLAuthService:
                 self._settings.jwt_secret,
                 algorithms=[self._settings.jwt_algorithm],
             )
-            user_id: str = payload["sub"]
-            return user_id
-        except (jwt.InvalidTokenError, KeyError) as exc:
+            pid = int(payload["sub"])
+            return pid
+        except (jwt.InvalidTokenError, KeyError, ValueError) as exc:
             raise AuthenticationException() from exc
 
-    def get_user_by_id(self, user_id: str) -> User | None:
-        """Looks up a user by identifier.
+    def get_user_by_pid(self, pid: int) -> User | None:
+        """Looks up a user by PID.
 
         Args:
-            user_id: Unique user identifier.
+            pid: UNC person identifier.
 
         Returns:
             The matching user when found; otherwise, ``None``.
         """
-        return self._user_repo.get_by_id(user_id)
+        return self._user_repo.get_by_pid(pid)

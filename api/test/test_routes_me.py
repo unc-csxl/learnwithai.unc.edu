@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -15,9 +13,8 @@ from learnwithai.tables.user import User
 
 def _stub_user(
     *,
-    id: uuid.UUID | None = None,
+    pid: int = 123456789,
     name: str = "Test User",
-    pid: str = "123456789",
     onyen: str = "testuser",
     email: str | None = None,
     family_name: str | None = "User",
@@ -26,9 +23,8 @@ def _stub_user(
     """Builds a stubbed domain user for route tests."""
 
     return User(
-        id=id or uuid.uuid4(),
-        name=name,
         pid=pid,
+        name=name,
         onyen=onyen,
         email=email,
         family_name=family_name,
@@ -45,7 +41,7 @@ def test_get_current_user_profile_returns_user_profile() -> None:
 
     # Assert
     assert result == UserProfile(
-        id=str(user.id),
+        pid=user.pid,
         name="Test User",
         given_name="Test",
         family_name="User",

@@ -5,9 +5,8 @@ import { AuthService } from '../auth.service';
 import { User } from '../user.model';
 
 const fakeUser: User = {
-  id: '123',
+  pid: 999999999,
   name: 'Test User',
-  pid: '999999999',
   onyen: 'testuser',
   email: 'test@example.com',
 };

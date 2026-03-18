@@ -8,7 +8,7 @@ class UserProfile(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    pid: int
     name: str
     given_name: str
     family_name: str

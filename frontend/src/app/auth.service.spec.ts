@@ -7,9 +7,8 @@ import { authTokenInterceptor } from './auth-token.interceptor';
 import { AUTH_TOKEN_KEY } from './auth-token.service';
 
 const fakeUser: User = {
-  id: '123',
+  pid: 999999999,
   name: 'Test User',
-  pid: '999999999',
   onyen: 'testuser',
   email: 'test@example.com',
 };

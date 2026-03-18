@@ -16,20 +16,8 @@ class UserRepository:
         """
         self._session = session
 
-    def get_by_id(self, user_id: str) -> User | None:
-        """Looks up a user by primary key.
-
-        Args:
-            user_id: Unique user identifier.
-
-        Returns:
-            The matching user when found; otherwise, ``None``.
-        """
-        query = select(User).where(col(User.id) == user_id)
-        return self._session.exec(query).one_or_none()
-
-    def get_by_pid(self, pid: str) -> User | None:
-        """Looks up a user by UNC PID.
+    def get_by_pid(self, pid: int) -> User | None:
+        """Looks up a user by PID (primary key).
 
         Args:
             pid: UNC person identifier.

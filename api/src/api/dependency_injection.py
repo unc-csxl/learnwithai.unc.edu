@@ -81,10 +81,10 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Missing or invalid token.")
     token = authorization.removeprefix("Bearer ")
     try:
-        user_id = csxl_auth_svc.verify_jwt(token)
+        pid = csxl_auth_svc.verify_jwt(token)
     except AuthenticationException:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
-    user = csxl_auth_svc.get_user_by_id(user_id)
+    user = csxl_auth_svc.get_user_by_pid(pid)
     if user is None:
         raise HTTPException(status_code=401, detail="User not found.")
     return user

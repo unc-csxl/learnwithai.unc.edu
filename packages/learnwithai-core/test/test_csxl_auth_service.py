@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -34,9 +33,8 @@ def _build_service(
 
 def _make_user(**overrides) -> User:
     defaults = dict(
-        id=uuid.uuid4(),
+        pid=123456789,
         name="Test User",
-        pid="123456789",
         onyen="testuser",
     )
     defaults.update(overrides)
@@ -66,7 +64,7 @@ def test_verify_auth_token_returns_onyen_and_pid_on_success() -> None:
 
     # Assert
     assert onyen == "testuser"
-    assert pid == "123456789"
+    assert pid == 123456789
 
 
 def test_verify_auth_token_raises_on_non_200() -> None:
@@ -98,11 +96,11 @@ def test_registered_user_from_onyen_pid_returns_existing_user() -> None:
     svc = _build_service(user_repo=user_repo)
 
     # Act
-    result = svc.registered_user_from_onyen_pid("testuser", "123456789")
+    result = svc.registered_user_from_onyen_pid("testuser", 123456789)
 
     # Assert
     assert result is existing_user
-    user_repo.get_by_pid.assert_called_once_with("123456789")
+    user_repo.get_by_pid.assert_called_once_with(123456789)
 
 
 def test_registered_user_from_onyen_pid_registers_new_user_when_not_found() -> None:
@@ -123,7 +121,7 @@ def test_registered_user_from_onyen_pid_registers_new_user_when_not_found() -> N
 
     # Act
     with patch.object(svc, "_unc_directory_lookup", return_value=directory_info):
-        result = svc.registered_user_from_onyen_pid("testuser", "123456789")
+        result = svc.registered_user_from_onyen_pid("testuser", 123456789)
 
     # Assert
     assert result is new_user
@@ -131,7 +129,7 @@ def test_registered_user_from_onyen_pid_registers_new_user_when_not_found() -> N
     registered = user_repo.register_user.call_args.args[0]
     assert registered.name == "Test User"
     assert registered.onyen == "testuser"
-    assert registered.pid == "123456789"
+    assert registered.pid == 123456789
     assert registered.email == "test@example.com"
     assert registered.family_name == "User"
     assert registered.given_name == "Test"
@@ -162,7 +160,7 @@ def test_unc_directory_lookup_returns_parsed_result_on_success() -> None:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
-        result = svc._unc_directory_lookup("123456789")
+        result = svc._unc_directory_lookup(123456789)
 
     # Assert
     assert result.pid == "123456789"
@@ -184,7 +182,7 @@ def test_unc_directory_lookup_returns_default_on_empty_results() -> None:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
-        result = svc._unc_directory_lookup("123456789")
+        result = svc._unc_directory_lookup(123456789)
 
     # Assert
     assert result.pid == "123456789"
@@ -205,7 +203,7 @@ def test_unc_directory_lookup_returns_default_on_non_200() -> None:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
-        result = svc._unc_directory_lookup("123456789")
+        result = svc._unc_directory_lookup(123456789)
 
     # Assert
     assert result.pid == "123456789"
@@ -227,24 +225,24 @@ def test_issue_jwt_token_returns_decodable_jwt() -> None:
     decoded = jwt.decode(
         token, "really-secure-secret-is-really-secure", algorithms=["HS256"]
     )
-    assert decoded["sub"] == str(user.id)
+    assert decoded["sub"] == str(user.pid)
     assert "exp" in decoded
 
 
 # --- verify_jwt ---
 
 
-def test_verify_jwt_returns_user_id_for_valid_token() -> None:
+def test_verify_jwt_returns_pid_for_valid_token() -> None:
     # Arrange
     user = _make_user()
     svc = _build_service()
     token = svc.issue_jwt_token(user)
 
     # Act
-    user_id = svc.verify_jwt(token)
+    pid = svc.verify_jwt(token)
 
     # Assert
-    assert user_id == str(user.id)
+    assert pid == user.pid
 
 
 def test_verify_jwt_raises_on_invalid_token() -> None:
@@ -259,7 +257,7 @@ def test_verify_jwt_raises_on_invalid_token() -> None:
 def test_verify_jwt_raises_on_expired_token() -> None:
     # Arrange
     svc = _build_service()
-    expired_payload = {"sub": str(uuid.uuid4()), "exp": 0}
+    expired_payload = {"sub": "123456789", "exp": 0}
     expired_token = jwt.encode(
         expired_payload,
         "really-secure-secret-is-really-secure",
@@ -271,32 +269,32 @@ def test_verify_jwt_raises_on_expired_token() -> None:
         svc.verify_jwt(expired_token)
 
 
-# --- get_user_by_id ---
+# --- get_user_by_pid ---
 
 
-def test_get_user_by_id_delegates_to_repository() -> None:
+def test_get_user_by_pid_delegates_to_repository() -> None:
     # Arrange
     user = _make_user()
     user_repo = MagicMock(spec=UserRepository)
-    user_repo.get_by_id.return_value = user
+    user_repo.get_by_pid.return_value = user
     svc = _build_service(user_repo=user_repo)
 
     # Act
-    result = svc.get_user_by_id(str(user.id))
+    result = svc.get_user_by_pid(user.pid)
 
     # Assert
     assert result is user
-    user_repo.get_by_id.assert_called_once_with(str(user.id))
+    user_repo.get_by_pid.assert_called_once_with(user.pid)
 
 
-def test_get_user_by_id_returns_none_when_not_found() -> None:
+def test_get_user_by_pid_returns_none_when_not_found() -> None:
     # Arrange
     user_repo = MagicMock(spec=UserRepository)
-    user_repo.get_by_id.return_value = None
+    user_repo.get_by_pid.return_value = None
     svc = _build_service(user_repo=user_repo)
 
     # Act
-    result = svc.get_user_by_id("nonexistent")
+    result = svc.get_user_by_pid(999999999)
 
     # Assert
     assert result is None
