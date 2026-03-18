@@ -17,9 +17,27 @@ body {
 }
 
 a {
-  color: var(--mat-sys-primary);
+  color: var(--app-link-color);
 }
 
 a:visited {
-  color: var(--mat-sys-tertiary);
+  color: var(--app-link-color);
+}
+
+a:hover {
+  color: var(--app-link-hover);
+}
+
+.mat-mdc-card {
+  border: 1px solid var(--app-shell-edge);
+  box-shadow: var(--app-card-shadow);
+}
+
+.mat-drawer {
+  border-right: 1px solid var(--app-shell-edge);
+}
+
+.mat-mdc-tab-link.mdc-tab--active,
+.mat-mdc-tab-link.mat-mdc-tab-link-active {
+  color: var(--mat-sys-primary);
 }
