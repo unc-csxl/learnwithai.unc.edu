@@ -69,19 +69,21 @@ export class CourseDetail {
 
   constructor() {
     this.courseId = Number(this.route.snapshot.paramMap.get('id'));
-    this.courseService.getRoster(this.courseId).then(
-      (roster) => {
-        this.roster.set(roster);
-        this.loaded.set(true);
-      },
-      (err) => {
-        if (err.status === 403) {
-          this.errorMessage.set('You do not have permission to view this roster.');
-        } else {
-          this.errorMessage.set('Failed to load roster.');
-        }
-        this.loaded.set(true);
-      },
-    );
+    this.loadRoster();
+  }
+
+  private async loadRoster(): Promise<void> {
+    try {
+      const roster = await this.courseService.getRoster(this.courseId);
+      this.roster.set(roster);
+    } catch (err: unknown) {
+      if (err != null && typeof err === 'object' && 'status' in err && err.status === 403) {
+        this.errorMessage.set('You do not have permission to view this roster.');
+      } else {
+        this.errorMessage.set('Failed to load roster.');
+      }
+    } finally {
+      this.loaded.set(true);
+    }
   }
 }

@@ -40,13 +40,12 @@ export class CreateCourse {
     section: ['', Validators.required],
   });
 
-  protected onSubmit(): void {
+  protected async onSubmit(): Promise<void> {
     if (this.form.invalid) {
       return;
     }
     const { name, term, section } = this.form.getRawValue();
-    this.courseService
-      .createCourse({ name, term, section })
-      .then((course) => this.router.navigate(['/courses', course.id]));
+    const course = await this.courseService.createCourse({ name, term, section });
+    await this.router.navigate(['/courses', course.id]);
   }
 }

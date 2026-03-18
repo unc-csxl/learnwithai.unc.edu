@@ -39,16 +39,16 @@ export class AuthService {
   }
 
   /** Loads the current user profile for the persisted authentication token. */
-  fetchProfile(): void {
+  async fetchProfile(): Promise<void> {
     if (!this.tokenService.hasToken()) {
       return;
     }
-    this.api.invoke(getCurrentSubjectProfile).then(
-      (user) => this._user.set(user),
-      () => {
-        this.tokenService.clearToken();
-        this._user.set(null);
-      },
-    );
+    try {
+      const user = await this.api.invoke(getCurrentSubjectProfile);
+      this._user.set(user);
+    } catch {
+      this.tokenService.clearToken();
+      this._user.set(null);
+    }
   }
 }

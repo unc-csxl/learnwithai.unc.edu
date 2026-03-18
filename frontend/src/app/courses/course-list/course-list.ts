@@ -37,12 +37,17 @@ export class CourseList {
   protected readonly loaded = signal(false);
 
   constructor() {
-    this.courseService.getMyCourses().then(
-      (courses) => {
-        this.courses.set(courses);
-        this.loaded.set(true);
-      },
-      () => this.loaded.set(true),
-    );
+    this.loadCourses();
+  }
+
+  private async loadCourses(): Promise<void> {
+    try {
+      const courses = await this.courseService.getMyCourses();
+      this.courses.set(courses);
+    } catch {
+      // Courses remain empty on failure.
+    } finally {
+      this.loaded.set(true);
+    }
   }
 }

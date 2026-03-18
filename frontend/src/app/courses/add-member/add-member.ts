@@ -42,13 +42,12 @@ export class AddMember {
     type: ['student' as MembershipType, Validators.required],
   });
 
-  protected onSubmit(): void {
+  protected async onSubmit(): Promise<void> {
     if (this.form.invalid) {
       return;
     }
     const { pid, type } = this.form.getRawValue();
-    this.courseService
-      .addMember(this.courseId, { pid, type })
-      .then(() => this.router.navigate(['/courses', this.courseId]));
+    await this.courseService.addMember(this.courseId, { pid, type });
+    await this.router.navigate(['/courses', this.courseId]);
   }
 }
