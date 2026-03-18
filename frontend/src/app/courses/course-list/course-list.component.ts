@@ -8,7 +8,7 @@ import { Course } from '../../api/models';
   selector: 'app-course-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  templateUrl: './course-list.html',
+  templateUrl: './course-list.component.html',
 })
 export class CourseList {
   private courseService = inject(CourseService);

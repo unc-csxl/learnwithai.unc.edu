@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { CourseList } from './course-list';
+import { CourseList } from './course-list.component';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
 

@@ -7,7 +7,7 @@ import { AuthService } from '../auth.service';
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  templateUrl: './home.html',
+  templateUrl: './home.component.html',
 })
 export class Home {
   protected readonly auth = inject(AuthService);

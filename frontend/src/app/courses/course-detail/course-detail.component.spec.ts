@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
-import { CourseDetail } from './course-detail';
+import { CourseDetail } from './course-detail.component';
 import { CourseService } from '../course.service';
 import { Membership } from '../../api/models';
 

@@ -8,7 +8,7 @@ import { Membership } from '../../api/models';
   selector: 'app-course-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  templateUrl: './course-detail.html',
+  templateUrl: './course-detail.component.html',
   styles: `
     .sr-only {
       position: absolute;

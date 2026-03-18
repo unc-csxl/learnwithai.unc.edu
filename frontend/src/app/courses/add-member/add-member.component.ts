@@ -9,7 +9,7 @@ import { MembershipType } from '../../api/models';
   selector: 'app-add-member',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  templateUrl: './add-member.html',
+  templateUrl: './add-member.component.html',
 })
 export class AddMember {
   private courseService = inject(CourseService);

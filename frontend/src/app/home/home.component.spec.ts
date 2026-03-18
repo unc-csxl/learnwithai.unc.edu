@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Home } from './home';
+import { Home } from './home.component';
 import { AuthService } from '../auth.service';
 import { User } from '../api/models';
 

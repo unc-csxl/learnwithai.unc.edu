@@ -8,7 +8,7 @@ import { CourseService } from '../course.service';
   selector: 'app-create-course',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  templateUrl: './create-course.html',
+  templateUrl: './create-course.component.html',
 })
 export class CreateCourse {
   private courseService = inject(CourseService);

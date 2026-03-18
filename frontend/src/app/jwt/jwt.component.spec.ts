@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Jwt } from './jwt';
+import { Jwt } from './jwt.component';
 import { AuthService } from '../auth.service';
 
 describe('Jwt', () => {
