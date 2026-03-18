@@ -17,4 +17,8 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "identity endpoints."
         ),
     },
+    {
+        "name": "Courses",
+        "description": ("Course management, enrollment, and roster endpoints."),
+    },
 ]

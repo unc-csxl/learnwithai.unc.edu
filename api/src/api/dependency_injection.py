@@ -7,10 +7,13 @@ from learnwithai.services.csxl_auth_service import (
     CSXLAuthService,
     AuthenticationException,
 )
+from learnwithai.services.course_service import CourseService
 from learnwithai.db import get_session, Session
 from learnwithai.interfaces import JobQueue
 from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
+from learnwithai.repositories.course_repository import CourseRepository
+from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 
 SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
@@ -99,3 +102,56 @@ def job_queue_factory() -> JobQueue:
 
 
 JobQueueDI: TypeAlias = Annotated[JobQueue, Depends(job_queue_factory)]
+
+
+def course_repository_factory(session: SessionDI) -> CourseRepository:
+    """Constructs a course repository bound to the current request session.
+
+    Args:
+        session: Database session scoped to the request.
+
+    Returns:
+        A repository backed by the provided database session.
+    """
+    return CourseRepository(session)
+
+
+CourseRepositoryDI: TypeAlias = Annotated[
+    CourseRepository, Depends(course_repository_factory)
+]
+
+
+def membership_repository_factory(session: SessionDI) -> MembershipRepository:
+    """Constructs a membership repository bound to the current request session.
+
+    Args:
+        session: Database session scoped to the request.
+
+    Returns:
+        A repository backed by the provided database session.
+    """
+    return MembershipRepository(session)
+
+
+MembershipRepositoryDI: TypeAlias = Annotated[
+    MembershipRepository, Depends(membership_repository_factory)
+]
+
+
+def course_service_factory(
+    course_repo: CourseRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> CourseService:
+    """Creates the course service for the current request.
+
+    Args:
+        course_repo: Repository for course persistence.
+        membership_repo: Repository for membership persistence.
+
+    Returns:
+        A configured course service.
+    """
+    return CourseService(course_repo, membership_repo)
+
+
+CourseServiceDI: TypeAlias = Annotated[CourseService, Depends(course_service_factory)]
