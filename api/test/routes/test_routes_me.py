@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from api.dependency_injection import get_current_subject
+from api.dependency_injection import get_authenticated_user
 from api.main import app
 from api.models import UserProfile
 from api.routes.me import get_current_subject_profile
@@ -64,7 +64,7 @@ def test_get_current_subject_profile_raises_validation_error_when_email_is_missi
 def test_auth_me_returns_user_profile(client: TestClient) -> None:
     # Arrange
     user = _stub_user(email="test@example.com")
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
 
     # Act
     response = client.get("/api/me")

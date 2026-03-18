@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from api.dependency_injection import (
     settings_factory,
     csxl_auth_service_factory,
-    get_current_subject,
+    get_authenticated_user,
 )
 from api.main import app
 from api.routes.auth import (
@@ -147,7 +147,7 @@ def test_get_current_subject_raises_401_when_no_authorization_header() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_subject(csxl_auth_svc, authorization=None)
+        get_authenticated_user(csxl_auth_svc, authorization=None)
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -158,7 +158,7 @@ def test_get_current_subject_raises_401_for_non_bearer_header() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_subject(csxl_auth_svc, authorization="Basic abc")
+        get_authenticated_user(csxl_auth_svc, authorization="Basic abc")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -170,7 +170,7 @@ def test_get_current_subject_raises_401_for_invalid_jwt() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_subject(csxl_auth_svc, authorization="Bearer bad-token")
+        get_authenticated_user(csxl_auth_svc, authorization="Bearer bad-token")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -183,7 +183,7 @@ def test_get_current_subject_raises_401_when_user_not_found() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        get_current_subject(csxl_auth_svc, authorization="Bearer valid-token")
+        get_authenticated_user(csxl_auth_svc, authorization="Bearer valid-token")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
@@ -197,7 +197,7 @@ def test_get_current_subject_returns_user_for_valid_token() -> None:
     csxl_auth_svc.get_user_by_pid.return_value = user
 
     # Act
-    result = get_current_subject(csxl_auth_svc, authorization="Bearer valid-token")
+    result = get_authenticated_user(csxl_auth_svc, authorization="Bearer valid-token")
 
     # Assert
     assert result is user

@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from ..dependency_injection import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
-    CurrentSubjectDI,
+    AuthenticatedUserDI,
     SessionDI,
     UserByAddMemberRequestPIDDI,
     UserByPIDPathDI,
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
 def create_course(
     body: CreateCourseRequest,
     session: SessionDI,
-    subject: CurrentSubjectDI,
+    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> CourseResponse:
     """Creates a new course and enrolls the caller as instructor.
@@ -58,7 +58,7 @@ def create_course(
     responses={401: {"description": "Not authenticated."}},
 )
 def list_my_courses(
-    subject: CurrentSubjectDI,
+    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> list[CourseResponse]:
     """Returns courses the authenticated subject is enrolled in.
@@ -87,7 +87,7 @@ def list_my_courses(
 )
 def get_course_roster(
     course: CourseByCourseIDPathDI,
-    subject: CurrentSubjectDI,
+    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> list[MembershipResponse]:
     """Returns the full roster for a course.
@@ -122,7 +122,7 @@ def add_member(
     course: CourseByCourseIDPathDI,
     body: AddMemberRequest,
     session: SessionDI,
-    subject: CurrentSubjectDI,
+    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
     target_user: UserByAddMemberRequestPIDDI,
 ) -> MembershipResponse:
@@ -166,7 +166,7 @@ def drop_member(
     course: CourseByCourseIDPathDI,
     target_user: UserByPIDPathDI,
     session: SessionDI,
-    subject: CurrentSubjectDI,
+    subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> MembershipResponse:
     """Drops a member from a course.

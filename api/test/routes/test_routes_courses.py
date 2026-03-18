@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from api.dependency_injection import (
     course_repository_factory,
     course_service_factory,
-    get_current_subject,
+    get_authenticated_user,
     user_repository_factory,
 )
 from api.main import app
@@ -227,7 +227,7 @@ def test_drop_member_returns_membership_response() -> None:
 def test_create_course_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     mock_svc = MagicMock()
     mock_svc.create_course.return_value = course
@@ -249,7 +249,7 @@ def test_create_course_endpoint(client: TestClient) -> None:
 def test_list_courses_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     mock_svc = MagicMock()
     mock_svc.get_my_courses.return_value = [_stub_course()]
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
@@ -268,7 +268,7 @@ def test_list_courses_endpoint(client: TestClient) -> None:
 def test_get_roster_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     mock_svc = MagicMock()
     mock_svc.get_course_roster.return_value = [
@@ -294,7 +294,7 @@ def test_get_roster_endpoint(client: TestClient) -> None:
 def test_get_roster_returns_403_for_student(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     mock_svc = MagicMock()
     mock_svc.get_course_roster.side_effect = AuthorizationError(
@@ -317,7 +317,7 @@ def test_get_roster_returns_403_for_student(client: TestClient) -> None:
 def test_add_member_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     mock_svc = MagicMock()
@@ -355,7 +355,7 @@ def test_add_member_endpoint(client: TestClient) -> None:
 def test_drop_member_endpoint(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     target_membership = _stub_membership(user_pid=999, state=MembershipState.DROPPED)
@@ -383,7 +383,7 @@ def test_drop_member_endpoint(client: TestClient) -> None:
 def test_get_roster_returns_404_when_course_is_missing(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     mock_course_repo = MagicMock()
     mock_course_repo.get_by_id.return_value = None
     app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
@@ -400,7 +400,7 @@ def test_get_roster_returns_404_when_course_is_missing(client: TestClient) -> No
 def test_add_member_returns_404_when_target_user_is_missing(client: TestClient) -> None:
     # Arrange
     user = _stub_user()
-    app.dependency_overrides[get_current_subject] = lambda: user
+    app.dependency_overrides[get_authenticated_user] = lambda: user
     mock_course_repo = MagicMock()
     mock_course_repo.get_by_id.return_value = _stub_course()
     app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo

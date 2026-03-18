@@ -68,7 +68,7 @@ CSXLAuthServiceDI: TypeAlias = Annotated[
 ]
 
 
-def get_current_subject(
+def get_authenticated_user(
     csxl_auth_svc: CSXLAuthServiceDI,
     authorization: Annotated[str | None, Header()] = None,
 ) -> User:
@@ -97,7 +97,7 @@ def get_current_subject(
     return subject
 
 
-CurrentSubjectDI: TypeAlias = Annotated[User, Depends(get_current_subject)]
+AuthenticatedUserDI: TypeAlias = Annotated[User, Depends(get_authenticated_user)]
 
 
 def job_queue_factory() -> JobQueue:
