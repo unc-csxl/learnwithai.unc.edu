@@ -1,5 +1,6 @@
 """Database engine and session helpers."""
 
+from collections.abc import Generator
 from functools import lru_cache
 from importlib import import_module
 
@@ -103,6 +104,19 @@ def _quote_identifier(identifier: str) -> str:
     return '"' + identifier.replace('"', '""') + '"'
 
 
-def get_session() -> Session:
-    """Creates a new SQLModel session bound to the shared engine."""
-    return Session(get_engine())
+def get_session() -> Generator[Session, None, None]:
+    """Yields a transactional session that commits on success and rolls back on exception.
+
+    The session commits when the route handler returns normally.
+    Any unhandled exception triggers a rollback before propagating.
+    The connection is always released in the finally block.
+    """
+    session = Session(get_engine())
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()

@@ -8,7 +8,6 @@ from ..dependency_injection import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
     AuthenticatedUserDI,
-    SessionDI,
     UserRepositoryDI,
     UserByPIDPathDI,
 )
@@ -32,7 +31,6 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
 )
 def create_course(
     body: Annotated[CreateCourseRequest, Body()],
-    session: SessionDI,
     subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> CourseResponse:
@@ -40,7 +38,6 @@ def create_course(
 
     Args:
         body: Course creation payload.
-        session: Database session scoped to the request.
         subject: Authenticated subject.
         course_svc: Service used to create the course.
 
@@ -48,7 +45,6 @@ def create_course(
         The newly created course.
     """
     course = course_svc.create_course(subject, body.name, body.term, body.section)
-    session.commit()
     return CourseResponse.model_validate(course)
 
 
@@ -123,7 +119,6 @@ def get_course_roster(
 def add_member(
     course: CourseByCourseIDPathDI,
     add_member_request: Annotated[AddMemberRequest, Body()],
-    session: SessionDI,
     subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
     user_repo: UserRepositoryDI,
@@ -134,8 +129,7 @@ def add_member(
 
     Args:
         course: Course loaded via DI and course_id path param.
-        body: Member addition payload.
-        session: Database session scoped to the request.
+        add_member_request: Member addition payload.
         subject: Authenticated subject.
         course_svc: Service used to manage memberships.
         user_repo: Repository used to load the target user from the request body.
@@ -153,7 +147,6 @@ def add_member(
         target_user,
         add_member_request.type,
     )
-    session.commit()
     return MembershipResponse.model_validate(membership)
 
 
@@ -171,7 +164,6 @@ def add_member(
 def drop_member(
     course: CourseByCourseIDPathDI,
     target_user: UserByPIDPathDI,
-    session: SessionDI,
     subject: AuthenticatedUserDI,
     course_svc: CourseServiceDI,
 ) -> MembershipResponse:
@@ -182,7 +174,6 @@ def drop_member(
     Args:
         course: Course loaded via DI and course_id path param.
         target_user: User loaded via DI and pid path param.
-        session: Database session scoped to the request.
         subject: Authenticated subject.
         course_svc: Service used to manage memberships.
 
@@ -190,5 +181,4 @@ def drop_member(
         The updated membership.
     """
     membership = course_svc.drop_member(subject, course, target_user)
-    session.commit()
     return MembershipResponse.model_validate(membership)

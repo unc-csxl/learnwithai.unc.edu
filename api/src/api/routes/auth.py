@@ -8,7 +8,6 @@ from fastapi.responses import RedirectResponse
 from ..dependency_injection import (
     CSXLAuthServiceDI,
     SettingsDI,
-    SessionDI,
 )
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
@@ -50,7 +49,6 @@ def onyen_login_redirect(settings: SettingsDI) -> Response:
     },
 )
 def authenticate_with_csxl_callback(
-    session: SessionDI,
     csxl_auth_svc: CSXLAuthServiceDI,
     token: Annotated[
         str | None,
@@ -60,7 +58,6 @@ def authenticate_with_csxl_callback(
     """Completes the CSXL callback flow and issues a local JWT.
 
     Args:
-        session: Database session scoped to the request.
         csxl_auth_svc: Service used to validate CSXL tokens and manage users.
         token: Token returned by the upstream CSXL authentication flow.
 
@@ -81,8 +78,7 @@ def authenticate_with_csxl_callback(
 
     # Register new or retrieve existing user by their ONYEN and PID.
     try:
-        with session.begin():
-            user = csxl_auth_svc.registered_user_from_onyen_pid(onyen, pid)
+        user = csxl_auth_svc.registered_user_from_onyen_pid(onyen, pid)
     except AuthenticationException:
         raise HTTPException(status_code=500, detail="Failed to register user.")
 

@@ -76,11 +76,10 @@ def test_onyen_login_redirect_returns_307_to_auth_server() -> None:
 
 def test_authenticate_redirects_home_when_token_is_none() -> None:
     # Arrange
-    session = MagicMock()
     csxl_auth_svc = MagicMock()
 
     # Act
-    response = authenticate_with_csxl_callback(session, csxl_auth_svc, token=None)
+    response = authenticate_with_csxl_callback(csxl_auth_svc, token=None)
 
     # Assert
     assert response.status_code == 302
@@ -89,38 +88,31 @@ def test_authenticate_redirects_home_when_token_is_none() -> None:
 
 def test_authenticate_returns_401_when_token_verification_fails() -> None:
     # Arrange
-    session = MagicMock()
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.verify_auth_token.side_effect = AuthenticationException()
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        authenticate_with_csxl_callback(session, csxl_auth_svc, token="bad-token")
+        authenticate_with_csxl_callback(csxl_auth_svc, token="bad-token")
 
     assert exc_info.value.status_code == 401  # type: ignore[union-attr]
 
 
 def test_authenticate_returns_500_when_registration_fails() -> None:
     # Arrange
-    session = MagicMock()
-    session.begin.return_value.__enter__ = lambda s: s
-    session.begin.return_value.__exit__ = lambda s, *a: None
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.verify_auth_token.return_value = ("testuser", 123456789)
     csxl_auth_svc.registered_user_from_onyen_pid.side_effect = AuthenticationException()
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        authenticate_with_csxl_callback(session, csxl_auth_svc, token="valid-token")
+        authenticate_with_csxl_callback(csxl_auth_svc, token="valid-token")
 
     assert exc_info.value.status_code == 500  # type: ignore[union-attr]
 
 
 def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
     # Arrange
-    session = MagicMock()
-    session.begin.return_value.__enter__ = lambda s: s
-    session.begin.return_value.__exit__ = lambda s, *a: None
     user = _stub_user()
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.verify_auth_token.return_value = ("testuser", 123456789)
@@ -128,9 +120,7 @@ def test_authenticate_issues_jwt_and_redirects_on_success() -> None:
     csxl_auth_svc.issue_jwt_token.return_value = "jwt-token-123"
 
     # Act
-    response = authenticate_with_csxl_callback(
-        session, csxl_auth_svc, token="valid-token"
-    )
+    response = authenticate_with_csxl_callback(csxl_auth_svc, token="valid-token")
 
     # Assert
     assert response.status_code == 302

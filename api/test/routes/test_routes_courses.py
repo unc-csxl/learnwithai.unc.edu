@@ -81,14 +81,13 @@ def _stub_membership(
 def test_create_course_returns_course_response() -> None:
     # Arrange
     subject = _stub_user()
-    session = MagicMock()
     course = _stub_course()
     course_svc = MagicMock()
     course_svc.create_course.return_value = course
     body = CreateCourseRequest(name="Intro to CS", term="Fall 2026", section="001")
 
     # Act
-    result = create_course(body, session, subject, course_svc)
+    result = create_course(body, subject, course_svc)
 
     # Assert
     assert isinstance(result, CourseResponse)
@@ -96,9 +95,6 @@ def test_create_course_returns_course_response() -> None:
     course_svc.create_course.assert_called_once_with(
         subject, "Intro to CS", "Fall 2026", "001"
     )
-    session.commit.assert_called_once_with()
-    session.rollback.assert_not_called()
-    session.begin.assert_not_called()
 
 
 # ---- list_my_courses ----
@@ -157,7 +153,6 @@ def test_get_course_roster_returns_membership_list() -> None:
 def test_add_member_returns_membership_response() -> None:
     # Arrange
     user = _stub_user()
-    session = MagicMock()
     course = _stub_course()
     user_repo = MagicMock()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
@@ -171,7 +166,6 @@ def test_add_member_returns_membership_response() -> None:
     result = add_member(
         course,
         body,
-        session,
         user,
         course_svc,
         user_repo,
@@ -187,14 +181,10 @@ def test_add_member_returns_membership_response() -> None:
         target_user,
         MembershipType.STUDENT,
     )
-    session.commit.assert_called_once_with()
-    session.rollback.assert_not_called()
-    session.begin.assert_not_called()
 
 
 def test_add_member_raises_404_when_target_user_is_missing() -> None:
     # Arrange
-    session = MagicMock()
     course = _stub_course()
     subject = _stub_user()
     course_svc = MagicMock()
@@ -204,13 +194,12 @@ def test_add_member_raises_404_when_target_user_is_missing() -> None:
 
     # Act / Assert
     with pytest.raises(Exception) as exc_info:
-        add_member(course, body, session, subject, course_svc, user_repo)
+        add_member(course, body, subject, course_svc, user_repo)
 
     assert exc_info.value.status_code == 404  # type: ignore[union-attr]
     assert exc_info.value.detail == "User not found."  # type: ignore[union-attr]
     user_repo.get_by_pid.assert_called_once_with(999)
     course_svc.add_member.assert_not_called()
-    session.commit.assert_not_called()
 
 
 # ---- drop_member ----
@@ -219,7 +208,6 @@ def test_add_member_raises_404_when_target_user_is_missing() -> None:
 def test_drop_member_returns_membership_response() -> None:
     # Arrange
     user = _stub_user()
-    session = MagicMock()
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     membership = _stub_membership(state=MembershipState.DROPPED)
@@ -230,7 +218,6 @@ def test_drop_member_returns_membership_response() -> None:
     result = drop_member(
         course,
         target_user,
-        session,
         user,
         course_svc,
     )
@@ -239,9 +226,6 @@ def test_drop_member_returns_membership_response() -> None:
     assert isinstance(result, MembershipResponse)
     assert result.state == MembershipState.DROPPED
     course_svc.drop_member.assert_called_once_with(user, course, target_user)
-    session.commit.assert_called_once_with()
-    session.rollback.assert_not_called()
-    session.begin.assert_not_called()
 
 
 # ---- integration tests via TestClient ----

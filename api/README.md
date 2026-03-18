@@ -64,9 +64,13 @@ Use this mental model:
 2. Keep the route focused on HTTP details. Use typed helpers in `src/api/dependency_injection.py` for shared request-scoped services and path-derived resource loading.
 3. Declare request body models directly in the route signature. Prefer `Annotated[..., Body()]` when you want the body contract to be explicit at the API layer.
 4. If a request body contains an identifier that requires a database lookup, do that lookup in the route logic and translate missing resources into the appropriate `404` response there instead of creating a body-driven DI helper.
-5. Use dependency injection for settings, sessions, current user resolution, and shared services.
+5. Use dependency injection for settings, current user resolution, and shared services. Do **not** inject the session into a route handler directly — the session is managed automatically by `get_session` in `learnwithai-core` and reaches repositories through their own factories.
 6. Move reusable logic into `learnwithai-core`.
 7. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
+
+## Transaction Boundaries
+
+`get_session` is a yield-based FastAPI dependency. It commits when a route returns normally and rolls back on any unhandled exception. Route handlers must never call `session.commit()`, `session.rollback()`, or `session.begin()`. This keeps persistence lifecycle concerns in the infrastructure layer and out of HTTP handlers.
 
 ## Good First Files To Read
 

@@ -168,17 +168,63 @@ def test_quote_identifier_escapes_quotes() -> None:
     assert quoted == '"learn""withai"'
 
 
-def test_get_session_builds_session_from_engine() -> None:
+def test_get_session_yields_session_from_engine() -> None:
     # Arrange
     expected_engine = object()
+    mock_session = MagicMock()
 
     # Act
     with (
         patch("learnwithai.db.get_engine", return_value=expected_engine),
-        patch("learnwithai.db.Session", return_value="session") as session_mock,
+        patch("learnwithai.db.Session", return_value=mock_session) as session_mock,
     ):
-        session = db.get_session()
+        gen = db.get_session()
+        yielded = next(gen)
 
     # Assert
-    assert session == "session"
+    assert yielded is mock_session
     session_mock.assert_called_once_with(expected_engine)
+
+
+def test_get_session_commits_and_closes_on_success() -> None:
+    # Arrange
+    mock_session = MagicMock()
+
+    # Act
+    with (
+        patch("learnwithai.db.get_engine"),
+        patch("learnwithai.db.Session", return_value=mock_session),
+    ):
+        gen = db.get_session()
+        next(gen)
+        try:
+            next(gen)
+        except StopIteration:
+            pass
+
+    # Assert
+    mock_session.commit.assert_called_once_with()
+    mock_session.close.assert_called_once_with()
+    mock_session.rollback.assert_not_called()
+
+
+def test_get_session_rolls_back_and_closes_on_exception() -> None:
+    # Arrange
+    mock_session = MagicMock()
+
+    # Act
+    with (
+        patch("learnwithai.db.get_engine"),
+        patch("learnwithai.db.Session", return_value=mock_session),
+    ):
+        gen = db.get_session()
+        next(gen)
+        try:
+            gen.throw(ValueError("db error"))
+        except ValueError:
+            pass
+
+    # Assert
+    mock_session.rollback.assert_called_once_with()
+    mock_session.close.assert_called_once_with()
+    mock_session.commit.assert_not_called()

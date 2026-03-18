@@ -10,12 +10,24 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 
 - Keep route handlers thin.
 - Put reusable business logic in `packages/learnwithai-core/`.
-- Use dependency injection for sessions, settings, auth helpers, and shared services.
+- Use dependency injection for settings, auth helpers, and shared services.
 - Define DI types and factories in `src/api/dependency_injection.py`.
 - Keep request body models explicit in route signatures with `Annotated[..., Body()]` when you need body metadata or want to signal API-layer ownership clearly.
 - Do not add DI aliases or helper dependencies that derive values from request bodies. If a body field requires a database lookup, perform that lookup in the route logic and translate missing resources into the appropriate HTTP response there.
 - Add Google-style docstrings to maintained Python modules and public functions.
 - Keep type annotations explicit on public APIs.
+
+## Transaction Management
+
+The `get_session` dependency in `learnwithai-core` is a yield-based FastAPI dependency that owns the full transaction lifecycle:
+
+- It commits automatically when a route handler returns normally.
+- It rolls back automatically when any exception propagates out of the handler.
+- It closes the session in a `finally` block regardless of outcome.
+
+**Route handlers must never call `session.commit()`, `session.rollback()`, or `session.begin()`.** These are the job of the infrastructure layer, not the HTTP layer. Routes should generally not declare `session: SessionDI` at all — the session reaches repositories transitively through their own DI factories.
+
+This means a route composed of multiple service calls is automatically atomic. If the second call fails, the first call's pending writes are rolled back along with it.
 
 ## Testing And Validation
 
