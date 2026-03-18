@@ -58,10 +58,13 @@ import { PageTitleService } from '../page-title.service';
 
     .sidenav {
       width: 240px;
+      border-radius: 0 !important;
+      /* remove any platform or theme-imposed rounding */
     }
 
     .sidenav-mobile {
       width: 100vw;
+      border-radius: 0 !important;
     }
 
     .sidenav-brand-wrap {
