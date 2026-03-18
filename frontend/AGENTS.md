@@ -16,7 +16,7 @@ Frontend TypeScript models and HTTP client functions are auto-generated from the
 - Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), **not** from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated wire-format names to clean domain names.
 - When new models are generated, add domain aliases to `src/app/api/models.ts`.
 - Use the generated `Api` service's `invoke(fn, params)` method with generated endpoint functions (e.g. `listMyCourses`, `createCourse`). Do **not** use `HttpClient` directly in services.
-- `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `.then()` or `await`.
+- `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `async`/`await`.
 - When backend routes or response shapes change, run `pnpm api:sync` to regenerate, then update affected services, the domain barrel, and components.
 - Do **not** create hand-written model interfaces for API shapes. Use the generated models via the domain barrel instead.
 
@@ -51,7 +51,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use `input()` and `output()` functions instead of decorators
 - Use `computed()` for derived state
 - Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
-- Prefer inline templates for small components
+- Use external HTML template files (sibling `.html`) for all components except trivial ones (e.g. `<router-outlet />`)
 - Prefer Reactive forms instead of Template-driven ones
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead

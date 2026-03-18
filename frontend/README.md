@@ -85,7 +85,7 @@ After regenerating, update any frontend services or components that reference ch
 
 - **Domain types:** Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), not from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated names (`CourseResponse`, `UserProfile`) to clean domain names.
 - **Service methods:** Use `this.api.invoke(generatedFn, params)` instead of manual `HttpClient` calls. This ensures URL paths, parameter shapes, and body types stay in sync with the backend spec.
-- **Promises, not Observables:** `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `.then()` or `await`.
+- **Promises, not Observables:** `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `async`/`await`. The `promises` option in ng-openapi-gen (default `true`) controls this; individual generated endpoint functions still use Observables internally, but `Api.invoke` converts via `firstValueFrom`.
 - Do not add or modify files inside `src/app/api/generated/`. They are overwritten on every regeneration.
 - When new models are generated, add domain aliases to `src/app/api/models.ts`.
 - Generated files are excluded from Prettier, ESLint, and coverage reporting.
