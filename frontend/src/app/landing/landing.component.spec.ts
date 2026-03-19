@@ -9,8 +9,20 @@ import { AuthService } from '../auth.service';
 import { User } from '../api/models';
 
 const devUsers: User[] = [
-  { pid: 222222222, name: 'Ina Instructor', given_name: 'Ina', family_name: 'Instructor', email: 'instructor@unc.edu' },
-  { pid: 111111111, name: 'Sally Student', given_name: 'Sally', family_name: 'Student', email: 'student@unc.edu' },
+  {
+    pid: 222222222,
+    name: 'Ina Instructor',
+    given_name: 'Ina',
+    family_name: 'Instructor',
+    email: 'instructor@unc.edu',
+  },
+  {
+    pid: 111111111,
+    name: 'Sally Student',
+    given_name: 'Sally',
+    family_name: 'Student',
+    email: 'student@unc.edu',
+  },
 ];
 
 describe('Landing', () => {

@@ -38,7 +38,17 @@ def _stub_user(**overrides) -> User:
 
 def test_dev_list_users_returns_user_profiles() -> None:
     user_repo = MagicMock()
-    user_repo.list_all.return_value = [_stub_user(), _stub_user(pid=111111111, name="Sally Student", onyen="student", email="student@unc.edu", given_name="Sally", family_name="Student")]
+    user_repo.list_all.return_value = [
+        _stub_user(),
+        _stub_user(
+            pid=111111111,
+            name="Sally Student",
+            onyen="student",
+            email="student@unc.edu",
+            given_name="Sally",
+            family_name="Student",
+        ),
+    ]
 
     result = dev_list_users(user_repo)
 

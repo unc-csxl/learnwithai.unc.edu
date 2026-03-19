@@ -25,7 +25,7 @@ function setup(authenticated: boolean) {
 
 describe('authGuard', () => {
   it('should allow access when authenticated', () => {
-    const { router } = setup(true);
+    setup(true);
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/protected' } as never),
     );
