@@ -1,6 +1,8 @@
 .angular/
 dist/
 node_modules/
+playwright-report/
+test-results/
 .vscode/
 pnpm-lock.yaml
 src/app/api/generated/

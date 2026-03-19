@@ -18,7 +18,7 @@ The repository is designed to work especially well in VS Code with the multi-roo
 
 1. Open `learnwithai.code-workspace` in VS Code.
 2. Reopen the repository in the dev container when VS Code prompts you.
-3. Wait for the post-create setup to finish. It installs Python dependencies with `uv` and frontend dependencies with `pnpm`.
+3. Wait for the post-create setup to finish. It installs Python dependencies with `uv`, frontend dependencies with `pnpm`, and Chromium support for Playwright UI testing.
 4. Start the app stack:
    - Frontend: run the `start` task from the `frontend` workspace, or run `cd frontend && pnpm start`
    - API: run the `api: run` task from the repository workspace

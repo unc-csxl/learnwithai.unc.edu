@@ -11,8 +11,9 @@ from api.dependency_injection import (
     course_service_factory,
     membership_repository_factory,
 )
-from api.main import app, settings
+from api.main import app, create_app, settings
 from api.openapi import OPENAPI_TAGS
+from learnwithai.config import Settings
 from learnwithai.services.course_service import AuthorizationError
 
 
@@ -40,6 +41,8 @@ def test_app_registers_expected_routes() -> None:
     has_roster_route = "/api/courses/{course_id}/roster" in route_paths
     has_members_route = "/api/courses/{course_id}/members" in route_paths
     has_drop_route = "/api/courses/{course_id}/members/{pid}" in route_paths
+    has_dev_login_route = "/api/auth/as/{pid}" in route_paths
+    has_dev_reset_route = "/api/dev/reset-db" in route_paths
 
     # Assert
     assert has_health_route is True
@@ -50,6 +53,25 @@ def test_app_registers_expected_routes() -> None:
     assert has_roster_route is True
     assert has_members_route is True
     assert has_drop_route is True
+    assert has_dev_login_route is True
+    assert has_dev_reset_route is True
+
+
+def test_app_excludes_dev_routes_in_production() -> None:
+    # Arrange
+    prod_settings = Settings.model_construct(
+        _fields_set=None, environment="production", app_name="learnwithai"
+    )
+
+    # Act
+    prod_app = create_app(prod_settings)
+    route_paths = {
+        route.path for route in prod_app.routes if isinstance(route, APIRoute)
+    }
+
+    # Assert
+    assert "/api/auth/as/{pid}" not in route_paths
+    assert "/api/dev/reset-db" not in route_paths
 
 
 def test_app_exposes_expected_openapi_tags() -> None:
@@ -81,6 +103,8 @@ def test_app_assigns_tags_to_current_routes() -> None:
     drop_member_tags = openapi["paths"]["/api/courses/{course_id}/members/{pid}"][
         "delete"
     ]["tags"]
+    dev_login_tags = openapi["paths"]["/api/auth/as/{pid}"]["get"]["tags"]
+    dev_reset_tags = openapi["paths"]["/api/dev/reset-db"]["post"]["tags"]
 
     # Assert
     assert health_tags == ["Operations"]
@@ -92,6 +116,8 @@ def test_app_assigns_tags_to_current_routes() -> None:
     assert roster_tags == ["Courses"]
     assert add_member_tags == ["Courses"]
     assert drop_member_tags == ["Courses"]
+    assert dev_login_tags == ["Development"]
+    assert dev_reset_tags == ["Development"]
 
 
 def test_operation_ids_use_function_names() -> None:

@@ -6,6 +6,7 @@ services:
     volumes:
       - ..:/workspaces/learnwithai:cached
       - learnwithai-uv-cache:/home/vscode/.cache/uv
+      - learnwithai-playwright-cache:/home/vscode/.cache/ms-playwright
       - learnwithai-npm-cache:/home/vscode/.npm
       - learnwithai-pnpm-store:/home/vscode/.local/share/pnpm/store
     working_dir: /workspaces/learnwithai
@@ -53,5 +54,6 @@ services:
 volumes:
   learnwithai-postgres-data:
   learnwithai-uv-cache:
+  learnwithai-playwright-cache:
   learnwithai-npm-cache:
   learnwithai-pnpm-store:

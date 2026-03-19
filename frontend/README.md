@@ -75,6 +75,35 @@ Or in VS Code, run the `start` task from the `frontend` workspace.
 
 Then open `http://localhost:4200`.
 
+## Playwright UI Testing
+
+The frontend includes a Playwright end-to-end test harness rooted in `e2e/`.
+
+### Running Playwright tests
+
+From the `frontend/` directory:
+
+```bash
+pnpm test:e2e
+pnpm test:e2e:headed
+pnpm test:e2e:ui
+```
+
+The shared dev container installs Chromium for Playwright during post-create setup.
+
+The default Playwright config starts the Angular dev server automatically when one is not already running and writes artifacts to `test-results/` and `playwright-report/`.
+
+## MCP Servers
+
+The repository now shares workspace MCP configuration for frontend agent workflows through `.vscode/mcp.json` at the repository root and in `frontend/.vscode/mcp.json` for folder-only usage.
+
+The configured servers are:
+
+- `angular-cli` for Angular-aware project tooling via `ng mcp`
+- `playwright` for browser automation and agent-driven UI interaction
+
+In the dev container, VS Code is configured with `chat.mcp.autoStart` so these servers are ready to start as soon as the workspace is trusted.
+
 ## API Client Code Generation
 
 Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI specification using [ng-openapi-gen](https://github.com/cyclosproject/ng-openapi-gen). The generated code lives in `src/app/api/generated/` and should never be edited by hand.
@@ -118,6 +147,7 @@ From the `frontend/` directory:
 pnpm format:check
 pnpm lint
 pnpm test:ci
+pnpm test:e2e
 ```
 
 If you want local autofixes first:

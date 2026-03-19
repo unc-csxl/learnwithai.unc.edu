@@ -7,6 +7,7 @@
   "prettier.prettierPath": "./node_modules/prettier",
   "prettier.configPath": "./.prettierrc",
   "js/ts.preferences.importModuleSpecifier": "relative",
+  "chat.mcp.autoStart": true,
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": false,
   "eslint.validate": [
@@ -15,11 +16,15 @@
   ],
   "files.exclude": {
     "**/node_modules": true,
+    "**/playwright-report": true,
+    "**/test-results": true,
     "**/dist": true,
     "**/.angular": true
   },
   "search.exclude": {
     "**/node_modules": true,
+    "**/playwright-report": true,
+    "**/test-results": true,
     "**/dist": true,
     "**/.angular": true
   },
