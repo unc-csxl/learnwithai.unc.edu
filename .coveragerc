@@ -8,6 +8,7 @@ omit =
     */test/*
     */tests/*
     */conftest.py
+    */scripts/*
 
 [report]
 fail_under = 100
