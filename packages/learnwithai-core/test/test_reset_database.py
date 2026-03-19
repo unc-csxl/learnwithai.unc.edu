@@ -10,9 +10,7 @@ from unittest.mock import MagicMock, patch
 
 def _load_reset_module() -> ModuleType:
     """Load the reset_database.py script as a module."""
-    script_path = (
-        Path(__file__).resolve().parents[1] / "scripts" / "reset_database.py"
-    )
+    script_path = Path(__file__).resolve().parents[1] / "scripts" / "reset_database.py"
     spec = importlib.util.spec_from_file_location("reset_database", script_path)
     if spec is None or spec.loader is None:
         raise AssertionError("Expected reset_database script to be loadable")
@@ -35,8 +33,8 @@ def test_main_resets_database_and_seeds(monkeypatch) -> None:
             return_value=MagicMock(environment="development"),
         ),
         patch.object(module, "reset_db_and_tables") as mock_reset,
-        patch.object(module, "Session", return_value=mock_session) as mock_session_cls,
-        patch.object(module, "get_engine") as mock_engine,
+        patch.object(module, "Session", return_value=mock_session),
+        patch.object(module, "get_engine"),
         patch.object(module, "seed") as mock_seed,
         patch("builtins.print"),
     ):

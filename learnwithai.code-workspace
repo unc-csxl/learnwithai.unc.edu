@@ -1,68 +1,73 @@
 {
-    "folders": [
-        {
-            "name": "frontend",
-            "path": "frontend"
-        },
-        {
-            "name": "api",
-            "path": "api"
-        },
-        {
-            "name": "core",
-            "path": "packages/learnwithai-core"
-        },
-        {
-            "name": "job_queue",
-            "path": "packages/learnwithai-jobqueue"
-        },
-        {
-            "name": "infra",
-            "path": "infra"
-        },
-        {
-            "name": "repo",
-            "path": "."
-        }
-    ],
-    "settings": {
-        "files.exclude": {
-            "**/.git": true,
-            "**/__pycache__": true,
-            "**/.pytest_cache": true,
-            "**/.ruff_cache": true,
-            "**/.pnpm-store": true,
-            "**/node_modules": true,
-            "**/.angular": true
-        },
-        "search.exclude": {
-            "**/.venv": true,
-            "**/__pycache__": true,
-            "**/.pytest_cache": true,
-            "**/.ruff_cache": true,
-            "**/.pnpm-store": true,
-            "**/node_modules": true,
-            "**/dist": true,
-            "**/.angular": true
-        },
-        "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
-        "python.analysis.extraPaths": [
-            "/workspaces/learnwithai/api/src",
-            "/workspaces/learnwithai/packages/learnwithai-core/src",
-            "/workspaces/learnwithai/packages/learnwithai-jobqueue/src"
-        ]
+  "folders": [
+    {
+      "name": "frontend",
+      "path": "frontend",
     },
-    "launch": {
-        "version": "0.2.0",
-        "compounds": [
-            {
-                "name": "Debug Frontend + API + Worker",
-                "configurations": [
-                    "Frontend: serve",
-                    "API: FastAPI",
-                    "Worker: Dramatiq"
-                ],
-            }
-        ]
-    }
+    {
+      "name": "api",
+      "path": "api",
+    },
+    {
+      "name": "core",
+      "path": "packages/learnwithai-core",
+    },
+    {
+      "name": "job_queue",
+      "path": "packages/learnwithai-jobqueue",
+    },
+    {
+      "name": "infra",
+      "path": "infra",
+    },
+    {
+      "name": "repo",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "chat.mcp.autoStart": true,
+    "files.exclude": {
+      "**/.git": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.pnpm-store": true,
+      "**/node_modules": true,
+      "**/playwright-report": true,
+      "**/test-results": true,
+      "**/.angular": true,
+    },
+    "search.exclude": {
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.pnpm-store": true,
+      "**/node_modules": true,
+      "**/playwright-report": true,
+      "**/test-results": true,
+      "**/dist": true,
+      "**/.angular": true,
+    },
+    "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
+    "python.analysis.extraPaths": [
+      "/workspaces/learnwithai/api/src",
+      "/workspaces/learnwithai/packages/learnwithai-core/src",
+      "/workspaces/learnwithai/packages/learnwithai-jobqueue/src",
+    ],
+  },
+  "launch": {
+    "version": "0.2.0",
+    "compounds": [
+      {
+        "name": "Debug Frontend + API + Worker",
+        "configurations": [
+          "Frontend: serve",
+          "API: FastAPI",
+          "Worker: Dramatiq",
+        ],
+      },
+    ],
+  },
 }

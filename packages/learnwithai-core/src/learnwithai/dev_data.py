@@ -50,6 +50,7 @@ def seed(session: Session) -> None:
     course = Course(name="COMP423", term="Spring 2026", section="001")
     session.add(course)
     session.flush()
+    assert course.id is not None
 
     memberships = [
         Membership(

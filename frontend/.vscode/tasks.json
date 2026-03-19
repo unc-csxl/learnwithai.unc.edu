@@ -39,6 +39,12 @@
           }
         }
       }
+    },
+    {
+      "label": "test:e2e",
+      "type": "shell",
+      "command": "pnpm test:e2e",
+      "problemMatcher": []
     }
   ]
 }

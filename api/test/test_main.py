@@ -11,8 +11,9 @@ from api.dependency_injection import (
     course_service_factory,
     membership_repository_factory,
 )
-from api.main import app, settings
+from api.main import app, create_app, settings
 from api.openapi import OPENAPI_TAGS
+from learnwithai.config import Settings
 from learnwithai.services.course_service import AuthorizationError
 
 
@@ -54,6 +55,23 @@ def test_app_registers_expected_routes() -> None:
     assert has_drop_route is True
     assert has_dev_login_route is True
     assert has_dev_reset_route is True
+
+
+def test_app_excludes_dev_routes_in_production() -> None:
+    # Arrange
+    prod_settings = Settings.model_construct(
+        _fields_set=None, environment="production", app_name="learnwithai"
+    )
+
+    # Act
+    prod_app = create_app(prod_settings)
+    route_paths = {
+        route.path for route in prod_app.routes if isinstance(route, APIRoute)
+    }
+
+    # Assert
+    assert "/api/auth/as/{pid}" not in route_paths
+    assert "/api/dev/reset-db" not in route_paths
 
 
 def test_app_exposes_expected_openapi_tags() -> None:
