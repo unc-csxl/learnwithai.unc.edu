@@ -46,7 +46,13 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -79,7 +85,9 @@
                 "src/main.ts",
                 "src/app/app.component.ts",
                 "src/app/theme.service.ts",
-                "src/app/api/generated/**"
+                "src/app/api/generated/**",
+                "src/environments/environment.ts",
+                "src/app/landing/landing.component.html"
               ],
               "coverageThresholds": {
                 "statements": 100,

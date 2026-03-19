@@ -1,0 +1,72 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.landing-container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+}
+
+.landing-card {
+  max-width: 400px;
+  padding: 48px 32px 32px;
+  text-align: center;
+  width: 90vw;
+}
+
+.brand {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  margin-bottom: 40px;
+}
+
+.brand-learn {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.brand-line-two {
+  align-items: baseline;
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.brand-with {
+  font-size: 1.2rem;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  opacity: 0.88;
+  text-transform: lowercase;
+}
+
+.brand-ai {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.landing-footer {
+  color: var(--mat-sys-on-background, #666);
+  font-size: 0.82rem;
+  margin-top: 32px;
+  text-align: center;
+}
+
+.landing-footer a {
+  color: inherit;
+  text-decoration: underline;
+}
