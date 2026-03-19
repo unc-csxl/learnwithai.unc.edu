@@ -1,12 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
+import { vi } from 'vitest';
 import { authGuard, landingGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 function setup(authenticated: boolean) {
   const mockAuth = {
     isAuthenticated: signal(authenticated),
+    whenReady: vi.fn().mockResolvedValue(undefined),
   };
 
   TestBed.configureTestingModule({
@@ -24,17 +26,17 @@ function setup(authenticated: boolean) {
 }
 
 describe('authGuard', () => {
-  it('should allow access when authenticated', () => {
+  it('should allow access when authenticated', async () => {
     setup(true);
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/protected' } as never),
     );
     expect(result).toBe(true);
   });
 
-  it('should redirect to landing when not authenticated', () => {
+  it('should redirect to landing when not authenticated', async () => {
     const { router } = setup(false);
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       authGuard({} as never, { url: '/protected' } as never),
     );
     expect(result).toEqual(router.createUrlTree(['/']));
@@ -42,17 +44,17 @@ describe('authGuard', () => {
 });
 
 describe('landingGuard', () => {
-  it('should redirect authenticated users to courses', () => {
+  it('should redirect authenticated users to courses', async () => {
     const { router } = setup(true);
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       landingGuard({} as never, { url: '/' } as never),
     );
     expect(result).toEqual(router.createUrlTree(['/courses']));
   });
 
-  it('should allow unauthenticated users to see landing', () => {
+  it('should allow unauthenticated users to see landing', async () => {
     setup(false);
-    const result = TestBed.runInInjectionContext(() =>
+    const result = await TestBed.runInInjectionContext(() =>
       landingGuard({} as never, { url: '/' } as never),
     );
     expect(result).toBe(true);

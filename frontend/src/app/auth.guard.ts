@@ -3,9 +3,11 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 /** Redirects unauthenticated users to the landing page. */
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+
+  await auth.whenReady();
 
   if (auth.isAuthenticated()) {
     return true;
@@ -14,9 +16,11 @@ export const authGuard: CanActivateFn = () => {
 };
 
 /** Redirects authenticated users away from the landing page to courses. */
-export const landingGuard: CanActivateFn = () => {
+export const landingGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+
+  await auth.whenReady();
 
   if (auth.isAuthenticated()) {
     return router.createUrlTree(['/courses']);

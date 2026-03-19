@@ -10,6 +10,19 @@ test.describe('authenticated course and roster flow', () => {
     await request.post('/api/dev/reset-db');
   });
 
+  test('stays authenticated after a full page refresh', async ({ page }) => {
+    await page.goto('/api/auth/as/222222222');
+
+    await page.waitForURL('**/courses');
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+
+    await page.reload();
+
+    await page.waitForURL('**/courses');
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+    await expect(page.getByText('COMP423')).toBeVisible();
+  });
+
   test('login, view courses, and verify roster', async ({ page }) => {
     // Dev login as Ina Instructor (pid 222222222)
     await page.goto('/api/auth/as/222222222');

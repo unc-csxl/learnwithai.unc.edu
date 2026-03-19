@@ -12,6 +12,7 @@ export class AuthService {
   private tokenService = inject(AuthTokenService);
   private router = inject(Router);
   private _user = signal<User | null>(null);
+  private restorePromise: Promise<void> = Promise.resolve();
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
@@ -19,8 +20,13 @@ export class AuthService {
   /** Restores a previously persisted token when one is available. */
   constructor() {
     if (this.tokenService.hasToken()) {
-      this.fetchProfile();
+      this.restorePromise = this.fetchProfile();
     }
+  }
+
+  /** Resolves once the initial persisted-session restoration has completed. */
+  whenReady(): Promise<void> {
+    return this.restorePromise;
   }
 
   /** Redirects the browser to the server-side login flow. */
@@ -40,7 +46,8 @@ export class AuthService {
   /** Persists a freshly issued token and refreshes the current user profile. */
   async handleToken(token: string): Promise<void> {
     this.tokenService.setToken(token);
-    await this.fetchProfile();
+    this.restorePromise = this.fetchProfile();
+    await this.restorePromise;
   }
 
   /** Loads the current user profile for the persisted authentication token. */

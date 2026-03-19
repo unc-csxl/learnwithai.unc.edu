@@ -46,6 +46,10 @@ describe('AuthService', () => {
     expect(service.user()).toBeNull();
   });
 
+  it('whenReady should resolve immediately without a persisted token', async () => {
+    await expect(service.whenReady()).resolves.toBeUndefined();
+  });
+
   it('login should redirect to auth endpoint', () => {
     Object.defineProperty(window, 'location', {
       value: { href: '' },
@@ -119,10 +123,12 @@ describe('AuthService', () => {
     });
     const newService = TestBed.inject(AuthService);
     const newHttpTesting = TestBed.inject(HttpTestingController);
+    const ready = newService.whenReady();
 
     const req = newHttpTesting.expectOne('/api/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer existing-token');
     req.flush(fakeUser);
+    await ready;
     await flush();
 
     expect(newService.user()).toEqual(fakeUser);
