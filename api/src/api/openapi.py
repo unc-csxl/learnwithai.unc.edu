@@ -21,4 +21,11 @@ OPENAPI_TAGS: list[dict[str, str]] = [
         "name": "Courses",
         "description": ("Course management, enrollment, and roster endpoints."),
     },
+    {
+        "name": "Development",
+        "description": (
+            "Routes available only in the development environment for local "
+            "testing and database management."
+        ),
+    },
 ]
