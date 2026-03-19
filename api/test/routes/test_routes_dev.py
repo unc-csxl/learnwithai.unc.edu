@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import csxl_auth_service_factory
+from api.dependency_injection import csxl_auth_service_factory, user_repository_factory
 from api.main import app
-from api.routes.dev import dev_login_as, dev_reset_db
+from api.routes.dev import dev_list_users, dev_login_as, dev_reset_db
 from learnwithai.tables.user import User
 
 
@@ -31,6 +31,30 @@ def _stub_user(**overrides) -> User:
     for key, value in defaults.items():
         setattr(mock, key, value)
     return mock  # type: ignore[return-value]
+
+
+# ---- dev_list_users unit tests ----
+
+
+def test_dev_list_users_returns_user_profiles() -> None:
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = [_stub_user(), _stub_user(pid=111111111, name="Sally Student", onyen="student", email="student@unc.edu", given_name="Sally", family_name="Student")]
+
+    result = dev_list_users(user_repo)
+
+    assert len(result) == 2
+    assert result[0].pid == 222222222
+    assert result[1].pid == 111111111
+    user_repo.list_all.assert_called_once()
+
+
+def test_dev_list_users_returns_empty_list() -> None:
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = []
+
+    result = dev_list_users(user_repo)
+
+    assert result == []
 
 
 # ---- dev_login_as unit tests ----
@@ -133,3 +157,28 @@ def test_dev_reset_db_endpoint(
 
     assert response.status_code == 200
     assert response.json() == {"detail": "Database reset and seeded."}
+
+
+@pytest.mark.integration
+def test_dev_list_users_endpoint_returns_users(client: TestClient) -> None:
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = [
+        _stub_user(),
+        _stub_user(
+            pid=111111111,
+            name="Sally Student",
+            onyen="student",
+            email="student@unc.edu",
+            given_name="Sally",
+            family_name="Student",
+        ),
+    ]
+    app.dependency_overrides[user_repository_factory] = lambda: user_repo
+
+    response = client.get("/api/dev/users")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["pid"] == 222222222
+    assert data[1]["pid"] == 111111111
