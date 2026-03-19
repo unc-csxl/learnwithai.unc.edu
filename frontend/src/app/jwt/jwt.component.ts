@@ -14,11 +14,11 @@ export class Jwt implements OnInit {
   private auth = inject(AuthService);
 
   /** Extracts the token from the callback URL and routes the user home. */
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (token) {
-      this.auth.handleToken(token);
+      await this.auth.handleToken(token);
     }
-    this.router.navigate(['/']);
+    this.router.navigate(['/courses']);
   }
 }

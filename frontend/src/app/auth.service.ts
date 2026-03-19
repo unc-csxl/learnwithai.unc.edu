@@ -33,9 +33,9 @@ export class AuthService {
   }
 
   /** Persists a freshly issued token and refreshes the current user profile. */
-  handleToken(token: string): void {
+  async handleToken(token: string): Promise<void> {
     this.tokenService.setToken(token);
-    this.fetchProfile();
+    await this.fetchProfile();
   }
 
   /** Loads the current user profile for the persisted authentication token. */

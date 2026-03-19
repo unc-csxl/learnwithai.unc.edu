@@ -4,9 +4,9 @@ import { Jwt } from './jwt.component';
 import { AuthService } from '../auth.service';
 
 describe('Jwt', () => {
-  function setup(queryParams: Record<string, string>) {
+  async function setup(queryParams: Record<string, string>) {
     const mockAuth = {
-      handleToken: vi.fn(),
+      handleToken: vi.fn().mockResolvedValue(undefined),
     };
     const mockRoute = {
       snapshot: {
@@ -30,23 +30,24 @@ describe('Jwt', () => {
 
     const fixture = TestBed.createComponent(Jwt);
     fixture.detectChanges();
+    await fixture.whenStable();
     return { fixture, mockAuth, mockRouter };
   }
 
-  it('should handle token from query params and navigate home', () => {
-    const { mockAuth, mockRouter } = setup({ token: 'my-jwt-token' });
+  it('should handle token from query params and navigate to courses', async () => {
+    const { mockAuth, mockRouter } = await setup({ token: 'my-jwt-token' });
     expect(mockAuth.handleToken).toHaveBeenCalledWith('my-jwt-token');
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/courses']);
   });
 
-  it('should navigate home without calling handleToken when no token', () => {
-    const { mockAuth, mockRouter } = setup({});
+  it('should navigate to courses without calling handleToken when no token', async () => {
+    const { mockAuth, mockRouter } = await setup({});
     expect(mockAuth.handleToken).not.toHaveBeenCalled();
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/courses']);
   });
 
-  it('should show authenticating message', () => {
-    const { fixture } = setup({ token: 'test' });
+  it('should show authenticating message', async () => {
+    const { fixture } = await setup({ token: 'test' });
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('Authenticating...');
   });

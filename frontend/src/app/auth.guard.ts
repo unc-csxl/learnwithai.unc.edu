@@ -12,3 +12,14 @@ export const authGuard: CanActivateFn = () => {
   }
   return router.createUrlTree(['/']);
 };
+
+/** Redirects authenticated users away from the landing page to courses. */
+export const landingGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return router.createUrlTree(['/courses']);
+  }
+  return true;
+};
