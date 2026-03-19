@@ -1,5 +1,7 @@
 """Persistence helpers for user records."""
 
+from sqlmodel import select
+
 from ..db import Session
 from ..tables.user import User
 
@@ -25,6 +27,14 @@ class UserRepository:
             The matching user when found; otherwise, ``None``.
         """
         return self._session.get(User, pid)
+
+    def list_all(self) -> list[User]:
+        """Returns all registered users.
+
+        Returns:
+            A list of all user records.
+        """
+        return list(self._session.exec(select(User)).all())
 
     def register_user(self, new_user: User) -> User:
         """Persists a new user record and reloads database defaults.

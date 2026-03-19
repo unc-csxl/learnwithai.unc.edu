@@ -57,3 +57,29 @@ def test_register_user_persists_and_returns_user(session: Session) -> None:
     fetched = repo.get_by_pid(987654321)
     assert fetched is not None
     assert fetched.pid == result.pid
+
+
+# --- list_all ---
+
+
+@pytest.mark.integration
+def test_list_all_returns_empty_when_no_users(session: Session) -> None:
+    repo = UserRepository(session)
+
+    result = repo.list_all()
+
+    assert result == []
+
+
+@pytest.mark.integration
+def test_list_all_returns_all_users(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="User A", onyen="usera"))
+    session.add(User(pid=100000002, name="User B", onyen="userb"))
+    session.flush()
+
+    result = repo.list_all()
+
+    assert len(result) == 2
+    pids = {u.pid for u in result}
+    assert pids == {100000001, 100000002}

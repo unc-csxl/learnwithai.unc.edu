@@ -17,6 +17,14 @@ from learnwithai.config import Settings
 from learnwithai.services.course_service import AuthorizationError
 
 
+def _development_settings() -> Settings:
+    return Settings.model_construct(
+        _fields_set=None,
+        environment="development",
+        app_name="learnwithai",
+    )
+
+
 def test_app_uses_settings_app_name_for_title() -> None:
     # Arrange
     expected_title = settings.app_name
@@ -30,7 +38,10 @@ def test_app_uses_settings_app_name_for_title() -> None:
 
 def test_app_registers_expected_routes() -> None:
     # Arrange
-    route_paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
+    dev_app = create_app(_development_settings())
+    route_paths = {
+        route.path for route in dev_app.routes if isinstance(route, APIRoute)
+    }
 
     # Act
     has_health_route = "/api/health" in route_paths
@@ -87,7 +98,8 @@ def test_app_exposes_expected_openapi_tags() -> None:
 
 def test_app_assigns_tags_to_current_routes() -> None:
     # Arrange
-    openapi = app.openapi()
+    dev_app = create_app(_development_settings())
+    openapi = dev_app.openapi()
 
     # Act
     health_tags = openapi["paths"]["/api/health"]["get"]["tags"]

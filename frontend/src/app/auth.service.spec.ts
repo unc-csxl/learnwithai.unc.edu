@@ -58,10 +58,22 @@ describe('AuthService', () => {
 
   it('logout should clear token and user', () => {
     localStorage.setItem(AUTH_TOKEN_KEY, 'some-token');
+    // Make `window.location.href` writable so logout can assign to it.
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true,
+      configurable: true,
+    });
+
     service.logout();
+
+    // Token and user cleared
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
     expect(service.user()).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
+
+    // And navigation should return to the landing/login gate
+    expect(window.location.href).toBe('/');
   });
 
   it('handleToken should store token and fetch profile', async () => {

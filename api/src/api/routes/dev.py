@@ -11,9 +11,28 @@ from learnwithai.db import get_engine, reset_db_and_tables
 from learnwithai.dev_data import seed
 from sqlmodel import Session
 
-from ..dependency_injection import CSXLAuthServiceDI
+from ..dependency_injection import CSXLAuthServiceDI, UserRepositoryDI
+from ..models.user_profile import UserProfile
 
 router = APIRouter(tags=["Development"])
+
+
+@router.get(
+    "/dev/users",
+    summary="List all registered users (dev only)",
+    response_description="List of all registered users.",
+)
+def dev_list_users(user_repo: UserRepositoryDI) -> list[UserProfile]:
+    """Returns all registered users for the development login chooser.
+
+    Args:
+        user_repo: Repository used to load users.
+
+    Returns:
+        A list of all registered user profiles.
+    """
+    users = user_repo.list_all()
+    return [UserProfile.model_validate(u) for u in users]
 
 
 @router.get(

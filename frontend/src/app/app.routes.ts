@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard, landingGuard } from './auth.guard';
 
 /** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
@@ -8,7 +9,14 @@ export const routes: Routes = [
   },
   {
     path: '',
+    pathMatch: 'full',
+    canActivate: [landingGuard],
+    loadComponent: () => import('./landing/landing.component').then((m) => m.Landing),
+  },
+  {
+    path: '',
     loadComponent: () => import('./layout/layout.component').then((m) => m.Layout),
+    canActivate: [authGuard],
     children: [
       {
         path: 'courses/create',

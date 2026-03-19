@@ -1,4 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
+import { Router } from '@angular/router';
 import { Api } from './api/generated/api';
 import { getCurrentSubjectProfile } from './api/generated/fn/authentication/get-current-subject-profile';
 import { User } from './api/models';
@@ -9,6 +10,7 @@ import { AuthTokenService } from './auth-token.service';
 export class AuthService {
   private api = inject(Api);
   private tokenService = inject(AuthTokenService);
+  private router = inject(Router);
   private _user = signal<User | null>(null);
 
   readonly user = this._user.asReadonly();
@@ -30,12 +32,15 @@ export class AuthService {
   logout(): void {
     this.tokenService.clearToken();
     this._user.set(null);
+    // Ensure the app navigates back to the landing/login gate after logout.
+    // Use a full navigation to the root so the landing gate is shown reliably.
+    window.location.href = '/';
   }
 
   /** Persists a freshly issued token and refreshes the current user profile. */
-  handleToken(token: string): void {
+  async handleToken(token: string): Promise<void> {
     this.tokenService.setToken(token);
-    this.fetchProfile();
+    await this.fetchProfile();
   }
 
   /** Loads the current user profile for the persisted authentication token. */

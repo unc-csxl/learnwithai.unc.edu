@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import csxl_auth_service_factory
-from api.main import app
-from api.routes.dev import dev_login_as, dev_reset_db
+from api.dependency_injection import csxl_auth_service_factory, user_repository_factory
+from api.main import create_app
+from api.routes.dev import dev_list_users, dev_login_as, dev_reset_db
+from learnwithai.config import Settings
 from learnwithai.tables.user import User
 
 
@@ -31,6 +35,40 @@ def _stub_user(**overrides) -> User:
     for key, value in defaults.items():
         setattr(mock, key, value)
     return mock  # type: ignore[return-value]
+
+
+# ---- dev_list_users unit tests ----
+
+
+def test_dev_list_users_returns_user_profiles() -> None:
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = [
+        _stub_user(),
+        _stub_user(
+            pid=111111111,
+            name="Sally Student",
+            onyen="student",
+            email="student@unc.edu",
+            given_name="Sally",
+            family_name="Student",
+        ),
+    ]
+
+    result = dev_list_users(user_repo)
+
+    assert len(result) == 2
+    assert result[0].pid == 222222222
+    assert result[1].pid == 111111111
+    user_repo.list_all.assert_called_once()
+
+
+def test_dev_list_users_returns_empty_list() -> None:
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = []
+
+    result = dev_list_users(user_repo)
+
+    assert result == []
 
 
 # ---- dev_login_as unit tests ----
@@ -88,27 +126,47 @@ def test_dev_reset_db_calls_reset_and_seed(
 # ---- integration tests via TestClient ----
 
 
+@pytest.fixture
+def dev_app() -> FastAPI:
+    development_settings = Settings.model_construct(
+        _fields_set=None,
+        environment="development",
+        app_name="learnwithai",
+    )
+    return create_app(development_settings)
+
+
+@pytest.fixture
+def dev_client(dev_app: FastAPI) -> Iterator[TestClient]:
+    with TestClient(dev_app) as test_client:
+        yield test_client
+
+
 @pytest.mark.integration
-def test_dev_login_endpoint_returns_302_for_known_user(client: TestClient) -> None:
+def test_dev_login_endpoint_returns_302_for_known_user(dev_client: TestClient) -> None:
+    dev_app = cast(FastAPI, dev_client.app)
     user = _stub_user(pid=222222222)
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.get_user_by_pid.return_value = user
     csxl_auth_svc.issue_jwt_token.return_value = "test-jwt"
-    app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
+    dev_app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
 
-    response = client.get("/api/auth/as/222222222", follow_redirects=False)
+    response = dev_client.get("/api/auth/as/222222222", follow_redirects=False)
 
     assert response.status_code == 302
     assert response.headers["location"] == "/jwt?token=test-jwt"
 
 
 @pytest.mark.integration
-def test_dev_login_endpoint_returns_404_for_unknown_user(client: TestClient) -> None:
+def test_dev_login_endpoint_returns_404_for_unknown_user(
+    dev_client: TestClient,
+) -> None:
+    dev_app = cast(FastAPI, dev_client.app)
     csxl_auth_svc = MagicMock()
     csxl_auth_svc.get_user_by_pid.return_value = None
-    app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
+    dev_app.dependency_overrides[csxl_auth_service_factory] = lambda: csxl_auth_svc
 
-    response = client.get("/api/auth/as/999999999")
+    response = dev_client.get("/api/auth/as/999999999")
 
     assert response.status_code == 404
 
@@ -123,13 +181,39 @@ def test_dev_reset_db_endpoint(
     mock_get_engine: MagicMock,
     mock_session_cls: MagicMock,
     mock_seed: MagicMock,
-    client: TestClient,
+    dev_client: TestClient,
 ) -> None:
     mock_session = MagicMock()
     mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
     mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
 
-    response = client.post("/api/dev/reset-db")
+    response = dev_client.post("/api/dev/reset-db")
 
     assert response.status_code == 200
     assert response.json() == {"detail": "Database reset and seeded."}
+
+
+@pytest.mark.integration
+def test_dev_list_users_endpoint_returns_users(dev_client: TestClient) -> None:
+    dev_app = cast(FastAPI, dev_client.app)
+    user_repo = MagicMock()
+    user_repo.list_all.return_value = [
+        _stub_user(),
+        _stub_user(
+            pid=111111111,
+            name="Sally Student",
+            onyen="student",
+            email="student@unc.edu",
+            given_name="Sally",
+            family_name="Student",
+        ),
+    ]
+    dev_app.dependency_overrides[user_repository_factory] = lambda: user_repo
+
+    response = dev_client.get("/api/dev/users")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["pid"] == 222222222
+    assert data[1]["pid"] == 111111111
