@@ -10,6 +10,7 @@ import { AuthService } from '../auth.service';
 import { ThemeService } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
 import { User } from '../api/models';
+import { LayoutNavigationSection, LayoutNavigationService } from './layout-navigation.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -24,7 +25,11 @@ const fakeUser: User = {
 
 describe('Layout', () => {
   function setup(
-    options: { authenticated: boolean; handset?: boolean } = { authenticated: false },
+    options: {
+      authenticated: boolean;
+      handset?: boolean;
+      section?: LayoutNavigationSection | null;
+    } = { authenticated: false },
   ) {
     const userSignal = signal<User | null>(options.authenticated ? fakeUser : null);
     const mockAuth = {
@@ -45,6 +50,12 @@ describe('Layout', () => {
       setTitle: vi.fn(),
     };
 
+    const mockLayoutNavigation = {
+      section: signal(options.section ?? null).asReadonly(),
+      setSection: vi.fn(),
+      clear: vi.fn(),
+    };
+
     const breakpoint$ = new Subject<BreakpointState>();
     const mockBreakpointObserver = {
       observe: () => breakpoint$,
@@ -57,6 +68,7 @@ describe('Layout', () => {
         { provide: AuthService, useValue: mockAuth },
         { provide: ThemeService, useValue: mockTheme },
         { provide: PageTitleService, useValue: mockPageTitle },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
         { provide: BreakpointObserver, useValue: mockBreakpointObserver },
       ],
     });
@@ -68,7 +80,7 @@ describe('Layout', () => {
       breakpoints: {},
     });
     fixture.detectChanges();
-    return { fixture, mockAuth, mockTheme, mockPageTitle, breakpoint$ };
+    return { fixture, mockAuth, mockTheme, mockPageTitle, mockLayoutNavigation, breakpoint$ };
   }
 
   it('should create', () => {
@@ -129,6 +141,29 @@ describe('Layout', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('mat-sidenav')?.textContent).toContain('Courses');
+  });
+
+  it('should show contextual course navigation in the shared sidebar', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      section: {
+        label: 'Instructor view',
+        title: 'COMP423',
+        subtitle: 'Spring 2026 - Section 001',
+        items: [
+          {
+            route: '/courses/1/dashboard',
+            label: 'Dashboard',
+            description: 'Course overview and quick links',
+            icon: 'dashboard',
+          },
+        ],
+      },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Instructor view');
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('COMP423');
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Dashboard');
   });
 
   it('should show hamburger menu on handset', () => {

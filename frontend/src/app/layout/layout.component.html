@@ -37,6 +37,38 @@
         <span matListItemTitle>Courses</span>
       </a>
     </mat-nav-list>
+
+    @if (layoutNavigation.section(); as section) {
+      <section class="context-nav" aria-label="Course navigation">
+        <div class="context-nav-header">
+          <p class="context-nav-label">{{ section.label }}</p>
+          @if (section.title) {
+            <p class="context-nav-title">{{ section.title }}</p>
+          }
+          @if (section.subtitle) {
+            <p class="context-nav-subtitle">{{ section.subtitle }}</p>
+          }
+        </div>
+
+        <mat-nav-list>
+          @for (item of section.items; track item.route) {
+            <a
+              mat-list-item
+              [routerLink]="item.route"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeMobileSidenav()"
+            >
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.label }}</span>
+              @if (item.description) {
+                <span matListItemLine>{{ item.description }}</span>
+              }
+            </a>
+          }
+        </mat-nav-list>
+      </section>
+    }
   </mat-sidenav>
 
   <mat-sidenav-content>

@@ -92,6 +92,40 @@
   letter-spacing: 0.14em;
 }
 
+.context-nav {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.context-nav-header {
+  padding: 0 1rem 0.5rem;
+}
+
+.context-nav-label,
+.context-nav-subtitle {
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0;
+}
+
+.context-nav-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.context-nav-title {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.context-nav-subtitle {
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
+}
+
 .spacer {
   flex: 1;
 }

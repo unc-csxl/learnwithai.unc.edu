@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CourseService } from '../../course.service';
 import { Membership } from '../../../api/models';
+import { PageTitleService } from '../../../page-title.service';
 
 /** Displays the roster for a course. */
 @Component({
@@ -16,6 +17,7 @@ import { Membership } from '../../../api/models';
 export class Roster {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
+  private titleService = inject(PageTitleService);
 
   protected readonly roster = signal<Membership[]>([]);
   protected readonly loaded = signal(false);
@@ -25,6 +27,7 @@ export class Roster {
   protected readonly dataSource = computed(() => this.roster());
 
   constructor() {
+    this.titleService.setTitle('Roster');
     this.courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
     this.loadRoster();
   }
