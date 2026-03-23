@@ -166,6 +166,27 @@ describe('Layout', () => {
     expect(el.querySelector('mat-sidenav')?.textContent).toContain('Dashboard');
   });
 
+  it('should render contextual navigation items without optional metadata', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      section: {
+        label: 'Instructor view',
+        items: [
+          {
+            route: '/courses/1/settings',
+            label: 'Course Settings',
+            icon: 'settings',
+          },
+        ],
+      },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.context-nav-title')).toBeFalsy();
+    expect(el.querySelector('.context-nav-subtitle')).toBeFalsy();
+    expect(el.querySelector('[matlistitemline]')).toBeFalsy();
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Course Settings');
+  });
+
   it('should show hamburger menu on handset', () => {
     const { fixture } = setup({ authenticated: false, handset: true });
     const el: HTMLElement = fixture.nativeElement;
@@ -198,6 +219,30 @@ describe('Layout', () => {
     const navLink = el.querySelector('mat-nav-list a') as HTMLElement;
     expect(navLink).toBeTruthy();
     navLink.click();
+    fixture.detectChanges();
+  });
+
+  it('should close sidenav on contextual nav click in handset mode', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      handset: true,
+      section: {
+        label: 'Instructor view',
+        items: [
+          {
+            route: '/courses/1/roster',
+            label: 'Roster',
+            description: 'See current course membership',
+            icon: 'groups',
+          },
+        ],
+      },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    const navLists = el.querySelectorAll('mat-nav-list');
+    const contextualLink = navLists[1]?.querySelector('a') as HTMLElement | null;
+    expect(contextualLink).toBeTruthy();
+    contextualLink?.click();
     fixture.detectChanges();
   });
 });

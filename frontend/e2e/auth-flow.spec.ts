@@ -38,9 +38,18 @@ test.describe('authenticated course and roster flow', () => {
 
     // Navigate to the course detail page
     await page.getByText('COMP423').click();
+    await page.waitForURL('**/courses/*/dashboard');
+
+    await expect(page.getByRole('link', { name: /Dashboard/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Student Activities/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Instructor Tools/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Roster/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Course Settings/i })).toBeVisible();
+
+    await page.getByRole('link', { name: /Roster/i }).click();
     await page.waitForURL('**/courses/*/roster');
 
-    // The roster tab should be active and show all three members
+    // The roster screen should show all three members
     await expect(page.getByText('222222222')).toBeVisible();
     await expect(page.getByText('111111111')).toBeVisible();
     await expect(page.getByText('333333333')).toBeVisible();
