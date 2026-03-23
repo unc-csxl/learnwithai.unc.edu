@@ -13,6 +13,7 @@ import { PageTitleService } from '../../page-title.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './course-list.component.html',
+  styleUrl: './course-list.component.scss',
 })
 export class CourseList {
   private courseService = inject(CourseService);

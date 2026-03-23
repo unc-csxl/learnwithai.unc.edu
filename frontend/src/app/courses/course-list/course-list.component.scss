@@ -1,0 +1,32 @@
+/* Improve internal spacing and visual rhythm for course cards */
+.course-link {
+  display: block;
+}
+
+.course-card {
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-card ::ng-deep .mat-card-header {
+  padding: 20px 28px;
+}
+
+.course-card ::ng-deep .mat-card-title {
+  font-size: 1.9rem;
+  line-height: 1.05;
+  margin: 0 0 6px 0;
+  font-weight: 600;
+}
+
+.course-card .mat-mdc-card-subtitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.5rem 0 1rem 0;
+}
+
+/* Ensure grid items have comfortable spacing on small screens */
+:host {
+  display: block;
+}

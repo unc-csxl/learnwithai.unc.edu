@@ -7,8 +7,8 @@
 @if (courses().length > 0) {
   <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
     @for (course of courses(); track course.id) {
-      <a [routerLink]="['/courses', course.id]" class="no-underline">
-        <mat-card>
+      <a [routerLink]="['/courses', course.id]" class="no-underline course-link">
+        <mat-card class="course-card">
           <mat-card-header>
             <mat-card-title>{{ course.name }}</mat-card-title>
             <mat-card-subtitle
