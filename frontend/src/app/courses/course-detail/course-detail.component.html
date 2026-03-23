@@ -1,37 +1,8 @@
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
 } @else if (course(); as c) {
-  <p class="text-sm opacity-75 mb-2">{{ c.term }} &mdash; Section {{ c.section }}</p>
-  <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Course navigation">
-    <a
-      mat-tab-link
-      routerLink="roster"
-      routerLinkActive
-      #rlaRoster="routerLinkActive"
-      [active]="rlaRoster.isActive"
-    >
-      Roster
-    </a>
-    <a
-      mat-tab-link
-      routerLink="activities"
-      routerLinkActive
-      #rlaActivities="routerLinkActive"
-      [active]="rlaActivities.isActive"
-    >
-      Activities
-    </a>
-    <a
-      mat-tab-link
-      routerLink="tools"
-      routerLinkActive
-      #rlaTools="routerLinkActive"
-      [active]="rlaTools.isActive"
-    >
-      Tools
-    </a>
-  </nav>
-  <mat-tab-nav-panel #tabPanel>
+  <section aria-label="Course content">
+    <p class="mb-4 text-sm opacity-75">{{ c.term }} - Section {{ c.section }}</p>
     <router-outlet />
-  </mat-tab-nav-panel>
+  </section>
 }

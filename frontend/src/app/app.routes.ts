@@ -29,6 +29,13 @@ export const routes: Routes = [
           import('./courses/course-detail/course-detail.component').then((m) => m.CourseDetail),
         children: [
           {
+            path: 'dashboard',
+            loadComponent: () =>
+              import('./courses/course-detail/dashboard/dashboard.component').then(
+                (m) => m.Dashboard,
+              ),
+          },
+          {
             path: 'roster',
             loadComponent: () =>
               import('./courses/course-detail/roster/roster.component').then((m) => m.Roster),
@@ -51,13 +58,18 @@ export const routes: Routes = [
               import('./courses/course-detail/tools/tools.component').then((m) => m.Tools),
           },
           {
+            path: 'settings',
+            loadComponent: () =>
+              import('./courses/course-detail/settings/settings.component').then((m) => m.Settings),
+          },
+          {
             path: 'student',
             loadComponent: () =>
               import('./courses/course-detail/student/student-view.component').then(
                 (m) => m.StudentView,
               ),
           },
-          { path: '', redirectTo: 'roster', pathMatch: 'full' },
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
         ],
       },
       {

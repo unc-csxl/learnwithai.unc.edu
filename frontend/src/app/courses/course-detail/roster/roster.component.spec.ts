@@ -5,6 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Roster } from './roster.component';
 import { CourseService } from '../../course.service';
 import { Membership } from '../../../api/models';
+import { PageTitleService } from '../../../page-title.service';
 
 const fakeRoster: Membership[] = [
   { user_pid: 111, course_id: 1, type: 'instructor', state: 'enrolled' },
@@ -30,6 +31,13 @@ describe('Roster', () => {
       providers: [
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
+        {
+          provide: PageTitleService,
+          useValue: {
+            title: vi.fn(),
+            setTitle: vi.fn(),
+          },
+        },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
     });

@@ -14,6 +14,7 @@ from api.dependency_injection import (
 from api.main import app
 from api.models import (
     AddMemberRequest,
+    CourseMembership,
     CourseResponse,
     CreateCourseRequest,
     MembershipResponse,
@@ -66,12 +67,14 @@ def _stub_membership(
     course_id: int = 1,
     type: MembershipType = MembershipType.STUDENT,
     state: MembershipState = MembershipState.ENROLLED,
+    course: MagicMock | None = None,
 ) -> MagicMock:
     mock = MagicMock()
     mock.user_pid = user_pid
     mock.course_id = course_id
     mock.type = type
     mock.state = state
+    mock.course = course
     return mock
 
 
@@ -92,6 +95,10 @@ def test_create_course_returns_course_response() -> None:
     # Assert
     assert isinstance(result, CourseResponse)
     assert result.name == "Intro to CS"
+    assert result.membership == CourseMembership(
+        type=MembershipType.INSTRUCTOR,
+        state=MembershipState.ENROLLED,
+    )
     course_svc.create_course.assert_called_once_with(
         subject, "Intro to CS", "Fall 2026", "001"
     )
@@ -104,7 +111,17 @@ def test_list_my_courses_returns_course_list() -> None:
     # Arrange
     user = _stub_user()
     course_svc = MagicMock()
-    course_svc.get_my_courses.return_value = [_stub_course(id=1), _stub_course(id=2)]
+    course_svc.get_my_courses.return_value = [
+        _stub_membership(
+            type=MembershipType.STUDENT,
+            course=_stub_course(id=1),
+        ),
+        _stub_membership(
+            type=MembershipType.TA,
+            state=MembershipState.PENDING,
+            course=_stub_course(id=2),
+        ),
+    ]
 
     # Act
     result = list_my_courses(user, course_svc)
@@ -112,6 +129,14 @@ def test_list_my_courses_returns_course_list() -> None:
     # Assert
     assert len(result) == 2
     assert all(isinstance(r, CourseResponse) for r in result)
+    assert result[0].membership == CourseMembership(
+        type=MembershipType.STUDENT,
+        state=MembershipState.ENROLLED,
+    )
+    assert result[1].membership == CourseMembership(
+        type=MembershipType.TA,
+        state=MembershipState.PENDING,
+    )
 
 
 def test_list_my_courses_returns_empty_list() -> None:
@@ -251,6 +276,7 @@ def test_create_course_endpoint(client: TestClient) -> None:
     assert response.status_code == 201
     body = response.json()
     assert body["name"] == "Intro to CS"
+    assert body["membership"] == {"type": "instructor", "state": "enrolled"}
 
 
 @pytest.mark.integration
@@ -259,7 +285,12 @@ def test_list_courses_endpoint(client: TestClient) -> None:
     user = _stub_user()
     app.dependency_overrides[get_authenticated_user] = lambda: user
     mock_svc = MagicMock()
-    mock_svc.get_my_courses.return_value = [_stub_course()]
+    mock_svc.get_my_courses.return_value = [
+        _stub_membership(
+            type=MembershipType.STUDENT,
+            course=_stub_course(),
+        )
+    ]
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
 
     # Act
@@ -270,6 +301,7 @@ def test_list_courses_endpoint(client: TestClient) -> None:
     body = response.json()
     assert len(body) == 1
     assert body[0]["name"] == "Intro to CS"
+    assert body[0]["membership"] == {"type": "student", "state": "enrolled"}
 
 
 @pytest.mark.integration

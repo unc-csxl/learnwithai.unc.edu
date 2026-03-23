@@ -12,6 +12,7 @@ import { map } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { ThemeService, ThemeMode } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
+import { LayoutNavigationService } from './layout-navigation.service';
 
 /** App shell with a responsive toolbar and sidenav. */
 @Component({
@@ -36,6 +37,7 @@ export class Layout {
   protected auth = inject(AuthService);
   protected theme = inject(ThemeService);
   protected pageTitle = inject(PageTitleService);
+  protected layoutNavigation = inject(LayoutNavigationService);
 
   protected readonly drawerRef = viewChild<MatSidenav>('drawer');
 

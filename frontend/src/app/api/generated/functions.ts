@@ -21,3 +21,9 @@ export type { AddMember$Params as AddMember$Params } from './fn/courses/add-memb
 export { addMember as addMember } from './fn/courses/add-member';
 export type { DropMember$Params as DropMember$Params } from './fn/courses/drop-member';
 export { dropMember as dropMember } from './fn/courses/drop-member';
+export type { DevListUsers$Params as DevListUsers$Params } from './fn/development/dev-list-users';
+export { devListUsers as devListUsers } from './fn/development/dev-list-users';
+export type { DevLoginAs$Params as DevLoginAs$Params } from './fn/development/dev-login-as';
+export { devLoginAs as devLoginAs } from './fn/development/dev-login-as';
+export type { DevResetDb$Params as DevResetDb$Params } from './fn/development/dev-reset-db';
+export { devResetDb as devResetDb } from './fn/development/dev-reset-db';

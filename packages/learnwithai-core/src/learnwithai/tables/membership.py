@@ -2,9 +2,23 @@
 
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, func
-from sqlmodel import Field, SQLModel
+from sqlmodel import (
+    Field,
+    Relationship,
+    SQLModel,
+    Column,
+    DateTime,
+    Enum,
+    Integer,
+    ForeignKey,
+    func,
+)
+
+if TYPE_CHECKING:
+    from .course import Course
+    from .user import User
 
 
 class MembershipType(str, enum.Enum):
@@ -66,4 +80,12 @@ class Membership(SQLModel, table=True):
             nullable=False,
         ),
         default=None,
+    )
+    course: "Course" = Relationship()
+    user: "User" = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "Membership.user_pid == User.pid",
+            "foreign_keys": "[Membership.user_pid]",
+            "viewonly": True,
+        }
     )

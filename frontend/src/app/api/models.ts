@@ -7,6 +7,7 @@
  */
 
 export type { CourseResponse as Course } from './generated/models/course-response';
+export type { CourseMembership } from './generated/models/course-membership';
 export type { CreateCourseRequest as CreateCourse } from './generated/models/create-course-request';
 export type { MembershipResponse as Membership } from './generated/models/membership-response';
 export type { AddMemberRequest as AddMember } from './generated/models/add-member-request';

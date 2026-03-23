@@ -12,6 +12,8 @@ describe('CourseService', () => {
   let service: CourseService;
   let api: { invoke: ReturnType<typeof vi.fn> };
 
+  const membership = { type: 'student', state: 'enrolled' } as const;
+
   beforeEach(() => {
     api = { invoke: vi.fn() };
     TestBed.configureTestingModule({
@@ -21,7 +23,9 @@ describe('CourseService', () => {
   });
 
   it('fetches courses via listMyCourses', async () => {
-    const mockCourses: Course[] = [{ id: 1, name: 'Intro', term: 'Fall 2026', section: '001' }];
+    const mockCourses: Course[] = [
+      { id: 1, name: 'Intro', term: 'Fall 2026', section: '001', membership },
+    ];
     api.invoke.mockResolvedValue(mockCourses);
     const result = await service.getMyCourses();
     expect(result).toEqual(mockCourses);
@@ -29,7 +33,13 @@ describe('CourseService', () => {
   });
 
   it('creates a course via createCourse', async () => {
-    const created: Course = { id: 2, name: 'Algo', term: 'Spring 2027', section: '002' };
+    const created: Course = {
+      id: 2,
+      name: 'Algo',
+      term: 'Spring 2027',
+      section: '002',
+      membership: { type: 'instructor', state: 'enrolled' },
+    };
     api.invoke.mockResolvedValue(created);
     const result = await service.createCourse({
       name: 'Algo',

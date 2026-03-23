@@ -5,6 +5,15 @@ from pydantic import BaseModel, ConfigDict
 from learnwithai.tables.membership import MembershipState, MembershipType
 
 
+class CourseMembership(BaseModel):
+    """Represents the caller's membership for a returned course."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    type: MembershipType
+    state: MembershipState
+
+
 class CourseResponse(BaseModel):
     """Represents a course returned by the API."""
 
@@ -14,6 +23,7 @@ class CourseResponse(BaseModel):
     name: str
     term: str
     section: str
+    membership: CourseMembership
 
 
 class CreateCourseRequest(BaseModel):
