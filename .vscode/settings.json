@@ -11,7 +11,7 @@
         {
             "path": ".",
             "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
+            "alwaysUseUv": true
         }
     ],
     "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
