@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CourseDetail } from './course-detail.component';
 import { CourseService } from '../course.service';
@@ -19,10 +19,21 @@ const fakeCourse: Course = {
   section: '001',
   membership: { type: 'instructor', state: 'enrolled' },
 };
+
+const fakeStudentCourse: Course = {
+  id: 1,
+  name: 'Intro CS',
+  term: 'Fall 2026',
+  section: '001',
+  membership: { type: 'student', state: 'enrolled' },
+};
+
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('CourseDetail', () => {
-  async function setup(options: { courses?: Course[]; error?: boolean } = {}) {
+  async function setup(
+    options: { courses?: Course[]; error?: boolean; activeChildPath?: string | null } = {},
+  ) {
     const courses = options.courses ?? [fakeCourse];
     const mockService = {
       getMyCourses: options.error
@@ -37,6 +48,10 @@ describe('CourseDetail', () => {
 
     const mockRoute = {
       snapshot: { paramMap: new Map([['id', '1']]) },
+      firstChild:
+        options.activeChildPath === null
+          ? null
+          : { routeConfig: { path: options.activeChildPath ?? 'dashboard' } },
     };
 
     const mockLayoutNavigation = {
@@ -53,6 +68,7 @@ describe('CourseDetail', () => {
           { path: 'roster', component: DummyComponent },
           { path: 'activities', component: DummyComponent },
           { path: 'tools', component: DummyComponent },
+          { path: 'student', component: DummyComponent },
           { path: 'settings', component: DummyComponent },
         ]),
         { provide: CourseService, useValue: mockService },
@@ -62,11 +78,14 @@ describe('CourseDetail', () => {
       ],
     });
 
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const fixture = TestBed.createComponent(CourseDetail);
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
-    return { fixture, mockService, mockPageTitle, mockLayoutNavigation };
+    return { fixture, mockService, mockPageTitle, mockLayoutNavigation, navigateSpy };
   }
 
   it('should set page title to course name and show term', async () => {
@@ -115,6 +134,39 @@ describe('CourseDetail', () => {
         },
       ],
     });
+  });
+
+  it('should register student navigation with only student links', async () => {
+    const { mockLayoutNavigation, navigateSpy } = await setup({
+      courses: [fakeStudentCourse],
+      activeChildPath: 'activities',
+    });
+
+    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith({
+      label: 'Student view',
+      title: 'Intro CS',
+      subtitle: 'Fall 2026 - Section 001',
+      items: [
+        {
+          route: '/courses/1/activities',
+          label: 'Student Activities',
+          description: 'Review your course activities and assigned work',
+          icon: 'assignment',
+        },
+        {
+          route: '/courses/1/student',
+          label: 'Student Tools',
+          description: 'Open student-facing tools and workflows',
+          icon: 'build',
+        },
+      ],
+    });
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it('should redirect students away from the dashboard route', async () => {
+    const { navigateSpy } = await setup({ courses: [fakeStudentCourse] });
+    expect(navigateSpy).toHaveBeenCalledWith(['/courses', 1, 'activities']);
   });
 
   it('should show course term metadata in the content area', async () => {

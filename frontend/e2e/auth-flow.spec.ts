@@ -10,6 +10,25 @@ test.describe('authenticated course and roster flow', () => {
     await request.post('/api/dev/reset-db');
   });
 
+  test('shows the student sidebar for Sally Student', async ({ page }) => {
+    await page.goto('/api/auth/as/111111111');
+
+    await page.waitForURL('**/courses');
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+
+    await page.getByText('COMP423').click();
+    await page.waitForURL('**/courses/*/activities');
+
+    const sidenav = page.locator('mat-sidenav');
+    await expect(sidenav).toContainText('Student view');
+    await expect(sidenav.getByRole('link', { name: 'Student Activities' })).toBeVisible();
+    await expect(sidenav.getByRole('link', { name: 'Student Tools' })).toBeVisible();
+    await expect(sidenav.getByRole('link', { name: 'Dashboard' })).toHaveCount(0);
+    await expect(sidenav.getByRole('link', { name: 'Instructor Tools' })).toHaveCount(0);
+    await expect(sidenav.getByRole('link', { name: 'Roster' })).toHaveCount(0);
+    await expect(sidenav.getByRole('link', { name: 'Course Settings' })).toHaveCount(0);
+  });
+
   test('stays authenticated after a full page refresh', async ({ page }) => {
     await page.goto('/api/auth/as/222222222');
 

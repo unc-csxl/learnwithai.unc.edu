@@ -58,12 +58,10 @@
               routerLinkActive="active-link"
               [routerLinkActiveOptions]="{ exact: true }"
               (click)="closeMobileSidenav()"
+              [attr.title]="item.description"
             >
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
               <span matListItemTitle>{{ item.label }}</span>
-              @if (item.description) {
-                <span matListItemLine>{{ item.description }}</span>
-              }
             </a>
           }
         </mat-nav-list>
