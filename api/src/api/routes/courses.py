@@ -13,10 +13,13 @@ from ..dependency_injection import (
 )
 from ..models import (
     AddMemberRequest,
+    CourseMembership,
     CourseResponse,
     CreateCourseRequest,
     MembershipResponse,
 )
+from learnwithai.tables.course import Course
+from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
 
@@ -45,7 +48,13 @@ def create_course(
         The newly created course.
     """
     course = course_svc.create_course(subject, body.name, body.term, body.section)
-    return CourseResponse.model_validate(course)
+    return _build_course_response(
+        course,
+        CourseMembership(
+            type=MembershipType.INSTRUCTOR,
+            state=MembershipState.ENROLLED,
+        ),
+    )
 
 
 @router.get(
@@ -68,8 +77,11 @@ def list_my_courses(
     Returns:
         List of courses with active membership.
     """
-    courses = course_svc.get_my_courses(subject)
-    return [CourseResponse.model_validate(c) for c in courses]
+    memberships = course_svc.get_my_courses(subject)
+    return [
+        _build_course_response(membership.course, membership)
+        for membership in memberships
+    ]
 
 
 @router.get(
@@ -182,3 +194,20 @@ def drop_member(
     """
     membership = course_svc.drop_member(subject, course, target_user)
     return MembershipResponse.model_validate(membership)
+
+
+def _build_course_response(
+    course: Course,
+    membership: Membership | CourseMembership,
+) -> CourseResponse:
+    """Builds a course response with embedded membership context."""
+
+    assert course.id is not None
+
+    return CourseResponse(
+        id=course.id,
+        name=course.name,
+        term=course.term,
+        section=course.section,
+        membership=CourseMembership.model_validate(membership),
+    )

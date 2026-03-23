@@ -45,12 +45,14 @@ def _make_membership(
     course_id: int = 1,
     type: MembershipType = MembershipType.STUDENT,
     state: MembershipState = MembershipState.ENROLLED,
+    course: Course | None = None,
 ) -> Membership:
     mock = MagicMock(spec=Membership)
     mock.user_pid = user_pid
     mock.course_id = course_id
     mock.type = type
     mock.state = state
+    mock.course = course
     return mock  # type: ignore[return-value]
 
 
@@ -84,23 +86,42 @@ def test_create_course_creates_and_enrolls_instructor() -> None:
 
 def test_get_my_courses_returns_courses_for_active_memberships() -> None:
     # Arrange
-    course_repo = MagicMock(spec=CourseRepository)
     membership_repo = MagicMock(spec=MembershipRepository)
-    m1 = _make_membership(course_id=1)
-    m2 = _make_membership(course_id=2)
-    membership_repo.get_active_by_user.return_value = [m1, m2]
     c1 = _make_course(1)
     c2 = _make_course(2)
-    course_repo.get_by_id.side_effect = lambda cid: {1: c1, 2: c2}.get(cid)
-    svc = _build_service(course_repo, membership_repo)
+    m1 = _make_membership(course_id=1, course=c1)
+    m2 = _make_membership(course_id=2, course=c2)
+    membership_repo.get_active_by_user.return_value = [m1, m2]
+    svc = _build_service(membership_repo=membership_repo)
     subject = _make_user()
 
     # Act
     result = svc.get_my_courses(subject)
 
     # Assert
-    assert result == [c1, c2]
+    assert result == [m1, m2]
     membership_repo.get_active_by_user.assert_called_once_with(subject)
+
+
+def test_get_my_courses_preserves_membership_context() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    course = _make_course(1)
+    membership = _make_membership(
+        course_id=1,
+        type=MembershipType.TA,
+        state=MembershipState.PENDING,
+        course=course,
+    )
+    membership_repo.get_active_by_user.return_value = [membership]
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act
+    result = svc.get_my_courses(_make_user())
+
+    # Assert
+    assert result[0] is membership
+    assert result[0].course is course
 
 
 def test_get_my_courses_returns_empty_list_when_no_memberships() -> None:
@@ -108,22 +129,6 @@ def test_get_my_courses_returns_empty_list_when_no_memberships() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     membership_repo.get_active_by_user.return_value = []
     svc = _build_service(membership_repo=membership_repo)
-
-    # Act
-    result = svc.get_my_courses(_make_user())
-
-    # Assert
-    assert result == []
-
-
-def test_get_my_courses_skips_missing_courses() -> None:
-    # Arrange
-    course_repo = MagicMock(spec=CourseRepository)
-    membership_repo = MagicMock(spec=MembershipRepository)
-    m1 = _make_membership(course_id=1)
-    membership_repo.get_active_by_user.return_value = [m1]
-    course_repo.get_by_id.return_value = None
-    svc = _build_service(course_repo, membership_repo)
 
     # Act
     result = svc.get_my_courses(_make_user())

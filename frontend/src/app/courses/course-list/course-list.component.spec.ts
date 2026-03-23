@@ -6,8 +6,20 @@ import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
 
 const fakeCourses: Course[] = [
-  { id: 1, name: 'Intro to CS', term: 'Fall 2026', section: '001' },
-  { id: 2, name: 'Data Structures', term: 'Spring 2027', section: '001' },
+  {
+    id: 1,
+    name: 'Intro to CS',
+    term: 'Fall 2026',
+    section: '001',
+    membership: { type: 'student', state: 'enrolled' },
+  },
+  {
+    id: 2,
+    name: 'Data Structures',
+    term: 'Spring 2027',
+    section: '001',
+    membership: { type: 'student', state: 'pending' },
+  },
 ];
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));

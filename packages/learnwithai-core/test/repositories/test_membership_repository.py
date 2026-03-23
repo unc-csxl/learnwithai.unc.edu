@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import inspect
 from sqlmodel import Session
 
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
@@ -233,6 +234,11 @@ def test_get_active_by_user_returns_non_dropped(session: Session) -> None:
     # Assert
     assert len(result) == 1
     assert result[0].course_id == c1.id
+    assert result[0].course is not None
+    assert result[0].course.name == c1.name
+    state = inspect(result[0])
+    assert state is not None
+    assert "course" not in state.unloaded
 
 
 @pytest.mark.integration

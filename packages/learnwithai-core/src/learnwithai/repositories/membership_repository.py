@@ -1,5 +1,6 @@
 """Persistence helpers for membership (user-course join) records."""
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 
 from ..db import Session
@@ -80,9 +81,13 @@ class MembershipRepository:
         Returns:
             List of active memberships.
         """
-        query = select(Membership).where(
-            col(Membership.user_pid) == user.pid,
-            col(Membership.state) != MembershipState.DROPPED,
+        query = (
+            select(Membership)
+            .options(selectinload(Membership.course))  # type: ignore
+            .where(
+                col(Membership.user_pid) == user.pid,
+                col(Membership.state) != MembershipState.DROPPED,
+            )
         )
         return list(self._session.exec(query).all())
 

@@ -12,7 +12,13 @@ import { LayoutNavigationService } from '../../layout/layout-navigation.service'
 @Component({ template: '' })
 class DummyComponent {}
 
-const fakeCourse: Course = { id: 1, name: 'Intro CS', term: 'Fall 2026', section: '001' };
+const fakeCourse: Course = {
+  id: 1,
+  name: 'Intro CS',
+  term: 'Fall 2026',
+  section: '001',
+  membership: { type: 'instructor', state: 'enrolled' },
+};
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('CourseDetail', () => {

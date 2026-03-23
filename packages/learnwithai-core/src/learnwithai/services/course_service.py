@@ -50,22 +50,16 @@ class CourseService:
         )
         return course
 
-    def get_my_courses(self, subject: User) -> list[Course]:
+    def get_my_courses(self, subject: User) -> list[Membership]:
         """Returns courses where the subject has an active membership.
 
         Args:
             subject: Authenticated subject.
 
         Returns:
-            List of courses where the subject is enrolled.
+            List of active memberships with related course data loaded.
         """
-        memberships = self._membership_repo.get_active_by_user(subject)
-        courses: list[Course] = []
-        for m in memberships:
-            course = self._course_repo.get_by_id(m.course_id)
-            if course is not None:
-                courses.append(course)
-        return courses
+        return self._membership_repo.get_active_by_user(subject)
 
     def get_course_roster(
         self,

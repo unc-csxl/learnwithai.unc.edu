@@ -439,6 +439,105 @@
           }
         }
       }
+    },
+    "/api/dev/users": {
+      "get": {
+        "tags": [
+          "Development"
+        ],
+        "summary": "List all registered users (dev only)",
+        "description": "Returns all registered users for the development login chooser.",
+        "operationId": "dev_list_users",
+        "responses": {
+          "200": {
+            "description": "List of all registered users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  },
+                  "type": "array",
+                  "title": "Response Dev List Users"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/as/{pid}": {
+      "get": {
+        "tags": [
+          "Development"
+        ],
+        "summary": "Log in as a user by PID (dev only)",
+        "description": "Issues a JWT for the user identified by *pid* and redirects to the frontend.\n\nThis bypasses external UNC authentication entirely. The user must already\nexist in the local database.\n\nArgs:\n    pid: UNC person identifier of the user to authenticate as.\n    csxl_auth_svc: Service used to look up the user and issue a JWT.\n\nReturns:\n    A redirect to ``/jwt?token=<jwt>`` when the user exists.\n\nRaises:\n    HTTPException: 404 when no user with the given PID is found.",
+        "operationId": "dev_login_as",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Redirect to the frontend with a local JWT.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect to the frontend with a JWT."
+          },
+          "404": {
+            "description": "No user with the given PID exists."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dev/reset-db": {
+      "post": {
+        "tags": [
+          "Development"
+        ],
+        "summary": "Reset and seed the development database",
+        "description": "Drops and recreates the database, then inserts development seed data.\n\nReturns:\n    A simple status message confirming the reset.",
+        "operationId": "dev_reset_db",
+        "responses": {
+          "200": {
+            "description": "Confirmation that the database was reset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Dev Reset Db"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -461,6 +560,23 @@
         "title": "AddMemberRequest",
         "description": "Payload for adding a member to a course."
       },
+      "CourseMembership": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/MembershipType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MembershipState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "state"
+        ],
+        "title": "CourseMembership",
+        "description": "Represents the caller's membership for a returned course."
+      },
       "CourseResponse": {
         "properties": {
           "id": {
@@ -478,6 +594,9 @@
           "section": {
             "type": "string",
             "title": "Section"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/CourseMembership"
           }
         },
         "type": "object",
@@ -485,7 +604,8 @@
           "id",
           "name",
           "term",
-          "section"
+          "section",
+          "membership"
         ],
         "title": "CourseResponse",
         "description": "Represents a course returned by the API."
@@ -668,6 +788,10 @@
     {
       "name": "Courses",
       "description": "Course management, enrollment, and roster endpoints."
+    },
+    {
+      "name": "Development",
+      "description": "Routes available only in the development environment for local testing and database management."
     }
   ]
 }
