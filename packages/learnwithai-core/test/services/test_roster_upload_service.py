@@ -10,9 +10,7 @@ import pytest
 from learnwithai.services.roster_upload_service import (
     ImportResult,
     ParsedStudent,
-    _do_process,
-    _import_students,
-    _mark_failed,
+    RosterUploadService,
     parse_canvas_csv,
     process_roster_upload,
 )
@@ -110,158 +108,67 @@ def test_parse_canvas_csv_returns_empty_for_headers_only() -> None:
     assert len(students) == 0
 
 
-# ---- _import_students ----
+# ---- helpers ----
 
 
-def test_import_students_creates_new_user_and_membership() -> None:
-    # Arrange
-    session = MagicMock()
-    user_repo = MagicMock()
-    user_repo.get_by_pid.return_value = None
-    membership_repo = MagicMock()
-    membership_repo.get_by_user_and_course_ids.return_value = None
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
+def _make_service(
+    upload_repo: MagicMock | None = None,
+    user_repo: MagicMock | None = None,
+    membership_repo: MagicMock | None = None,
+) -> RosterUploadService:
+    return RosterUploadService(
+        upload_repo=upload_repo or MagicMock(),
+        user_repo=user_repo or MagicMock(),
+        membership_repo=membership_repo or MagicMock(),
     )
 
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.UserRepository",
-            return_value=user_repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service.MembershipRepository",
-            return_value=membership_repo,
-        ),
-    ):
-        # Act
-        result = _import_students(session, 1, [student])
+
+# ---- RosterUploadService.submit_upload ----
+
+
+def test_submit_upload_creates_job_and_enqueues() -> None:
+    # Arrange
+    subject = MagicMock()
+    subject.pid = 123456789
+    created_job = MagicMock(spec=RosterUploadJob)
+    created_job.id = 42
+    upload_repo = MagicMock()
+    upload_repo.create.return_value = created_job
+    job_queue = MagicMock()
+    svc = _make_service(upload_repo=upload_repo)
+
+    # Act
+    with patch(
+        "learnwithai.services.roster_upload_service.RosterUploadJob"
+    ) as mock_job_cls:
+        mock_job_cls.return_value = MagicMock()
+        result = svc.submit_upload(subject, course_id=1, csv_text="data", job_queue=job_queue)
 
     # Assert
-    assert result.created == 1
-    assert result.updated == 0
-    assert result.errors == []
-    user_repo.register_user.assert_called_once()
-    membership_repo.create.assert_called_once()
+    assert result is created_job
+    upload_repo.create.assert_called_once()
+    job_queue.enqueue.assert_called_once()
 
 
-def test_import_students_re_enrolls_dropped_membership() -> None:
+# ---- RosterUploadService.process_upload ----
+
+
+def test_process_upload_parses_csv_and_updates_job() -> None:
     # Arrange
-    session = MagicMock()
-    user_repo = MagicMock()
-    user_repo.get_by_pid.return_value = MagicMock()
-    existing = MagicMock()
-    existing.state = MembershipState.DROPPED
-    membership_repo = MagicMock()
-    membership_repo.get_by_user_and_course_ids.return_value = existing
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
-
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.UserRepository",
-            return_value=user_repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service.MembershipRepository",
-            return_value=membership_repo,
-        ),
-    ):
-        # Act
-        result = _import_students(session, 1, [student])
-
-    # Assert
-    assert result.updated == 1
-    assert result.created == 0
-    assert existing.state == MembershipState.ENROLLED
-    session.flush.assert_called()
-
-
-def test_import_students_skips_already_enrolled() -> None:
-    # Arrange
-    session = MagicMock()
-    user_repo = MagicMock()
-    user_repo.get_by_pid.return_value = MagicMock()
-    existing = MagicMock()
-    existing.state = MembershipState.ENROLLED
-    membership_repo = MagicMock()
-    membership_repo.get_by_user_and_course_ids.return_value = existing
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
-
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.UserRepository",
-            return_value=user_repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service.MembershipRepository",
-            return_value=membership_repo,
-        ),
-    ):
-        # Act
-        result = _import_students(session, 1, [student])
-
-    # Assert
-    assert result.created == 0
-    assert result.updated == 0
-    assert result.errors == []
-
-
-def test_import_students_records_error_on_exception() -> None:
-    # Arrange
-    session = MagicMock()
-    user_repo = MagicMock()
-    user_repo.get_by_pid.side_effect = RuntimeError("db error")
-    membership_repo = MagicMock()
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
-
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.UserRepository",
-            return_value=user_repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service.MembershipRepository",
-            return_value=membership_repo,
-        ),
-    ):
-        # Act
-        result = _import_students(session, 1, [student])
-
-    # Assert
-    assert len(result.errors) == 1
-    assert "999999999" in result.errors[0]
-
-
-# ---- _do_process ----
-
-
-def test_do_process_parses_csv_and_updates_job() -> None:
-    # Arrange
-    session = MagicMock()
     job = MagicMock(spec=RosterUploadJob)
     job.csv_data = "Student,ID,SIS User ID,SIS Login ID\n"
     job.course_id = 1
-    repo = MagicMock()
-    repo.get_by_id.return_value = job
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.return_value = job
+    svc = _make_service(upload_repo=upload_repo)
 
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.RosterUploadRepository",
-            return_value=repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service._import_students",
-            return_value=ImportResult(created=2, updated=1, errors=["err"]),
-        ) as mock_import,
-    ):
+    with patch.object(
+        svc,
+        "_import_students",
+        return_value=ImportResult(created=2, updated=1, errors=["err"]),
+    ) as mock_import:
         # Act
-        _do_process(session, 42)
+        svc.process_upload(42)
 
     # Assert
     assert job.status == RosterUploadStatus.COMPLETED
@@ -273,98 +180,167 @@ def test_do_process_parses_csv_and_updates_job() -> None:
     mock_import.assert_called_once()
 
 
-def test_do_process_raises_when_job_not_found() -> None:
+def test_process_upload_raises_when_job_not_found() -> None:
     # Arrange
-    session = MagicMock()
-    repo = MagicMock()
-    repo.get_by_id.return_value = None
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.return_value = None
+    svc = _make_service(upload_repo=upload_repo)
 
-    with patch(
-        "learnwithai.services.roster_upload_service.RosterUploadRepository",
-        return_value=repo,
-    ):
-        # Act / Assert
-        with pytest.raises(ValueError, match="not found"):
-            _do_process(session, 999)
+    # Act / Assert
+    with pytest.raises(ValueError, match="not found"):
+        svc.process_upload(999)
 
 
-def test_do_process_sets_no_error_details_when_no_errors() -> None:
+def test_process_upload_sets_no_error_details_when_no_errors() -> None:
     # Arrange
-    session = MagicMock()
     job = MagicMock(spec=RosterUploadJob)
     job.csv_data = "Student,ID,SIS User ID,SIS Login ID\n"
     job.course_id = 1
-    repo = MagicMock()
-    repo.get_by_id.return_value = job
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.return_value = job
+    svc = _make_service(upload_repo=upload_repo)
 
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.RosterUploadRepository",
-            return_value=repo,
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service._import_students",
-            return_value=ImportResult(created=0, updated=0, errors=[]),
-        ),
+    with patch.object(
+        svc,
+        "_import_students",
+        return_value=ImportResult(created=0, updated=0, errors=[]),
     ):
         # Act
-        _do_process(session, 1)
+        svc.process_upload(1)
 
     # Assert
     assert job.error_details is None
 
 
-# ---- _mark_failed ----
+# ---- RosterUploadService.mark_failed ----
 
 
 def test_mark_failed_sets_status_to_failed() -> None:
     # Arrange
-    session = MagicMock()
     job = MagicMock(spec=RosterUploadJob)
-    repo = MagicMock()
-    repo.get_by_id.return_value = job
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.return_value = job
+    svc = _make_service(upload_repo=upload_repo)
 
-    with patch(
-        "learnwithai.services.roster_upload_service.RosterUploadRepository",
-        return_value=repo,
-    ):
-        # Act
-        _mark_failed(session, 42)
+    # Act
+    svc.mark_failed(42)
 
     # Assert
     assert job.status == RosterUploadStatus.FAILED
     assert job.completed_at is not None
+    upload_repo.update.assert_called_once_with(job)
 
 
 def test_mark_failed_does_nothing_when_job_not_found() -> None:
     # Arrange
-    session = MagicMock()
-    repo = MagicMock()
-    repo.get_by_id.return_value = None
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.return_value = None
+    svc = _make_service(upload_repo=upload_repo)
 
-    with patch(
-        "learnwithai.services.roster_upload_service.RosterUploadRepository",
-        return_value=repo,
-    ):
-        # Act (should not raise)
-        _mark_failed(session, 999)
+    # Act (should not raise)
+    svc.mark_failed(999)
+
+    upload_repo.update.assert_not_called()
 
 
 def test_mark_failed_swallows_exceptions() -> None:
     # Arrange
-    session = MagicMock()
-    repo = MagicMock()
-    repo.get_by_id.side_effect = RuntimeError("db gone")
+    upload_repo = MagicMock()
+    upload_repo.get_by_id.side_effect = RuntimeError("db gone")
+    svc = _make_service(upload_repo=upload_repo)
 
-    with patch(
-        "learnwithai.services.roster_upload_service.RosterUploadRepository",
-        return_value=repo,
-    ):
-        # Act (should not raise)
-        _mark_failed(session, 42)
+    # Act (should not raise)
+    svc.mark_failed(42)
 
 
-# ---- process_roster_upload ----
+# ---- RosterUploadService._import_students ----
+
+
+def test_import_students_creates_new_user_and_membership() -> None:
+    # Arrange
+    user_repo = MagicMock()
+    user_repo.get_by_pid.return_value = None
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course_ids.return_value = None
+    svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
+    student = ParsedStudent(
+        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
+    )
+
+    # Act
+    result = svc._import_students(1, [student])
+
+    # Assert
+    assert result.created == 1
+    assert result.updated == 0
+    assert result.errors == []
+    user_repo.register_user.assert_called_once()
+    membership_repo.create.assert_called_once()
+
+
+def test_import_students_re_enrolls_dropped_membership() -> None:
+    # Arrange
+    user_repo = MagicMock()
+    user_repo.get_by_pid.return_value = MagicMock()
+    existing = MagicMock()
+    existing.state = MembershipState.DROPPED
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course_ids.return_value = existing
+    svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
+    student = ParsedStudent(
+        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
+    )
+
+    # Act
+    result = svc._import_students(1, [student])
+
+    # Assert
+    assert result.updated == 1
+    assert result.created == 0
+    assert existing.state == MembershipState.ENROLLED
+    membership_repo.update.assert_called_once_with(existing)
+
+
+def test_import_students_skips_already_enrolled() -> None:
+    # Arrange
+    user_repo = MagicMock()
+    user_repo.get_by_pid.return_value = MagicMock()
+    existing = MagicMock()
+    existing.state = MembershipState.ENROLLED
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course_ids.return_value = existing
+    svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
+    student = ParsedStudent(
+        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
+    )
+
+    # Act
+    result = svc._import_students(1, [student])
+
+    # Assert
+    assert result.created == 0
+    assert result.updated == 0
+    assert result.errors == []
+
+
+def test_import_students_records_error_on_exception() -> None:
+    # Arrange
+    user_repo = MagicMock()
+    user_repo.get_by_pid.side_effect = RuntimeError("db error")
+    svc = _make_service(user_repo=user_repo)
+    student = ParsedStudent(
+        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
+    )
+
+    # Act
+    result = svc._import_students(1, [student])
+
+    # Assert
+    assert len(result.errors) == 1
+    assert "999999999" in result.errors[0]
+
+
+# ---- process_roster_upload (backward-compat shim) ----
 
 
 def test_process_roster_upload_commits_on_success() -> None:
@@ -373,25 +349,24 @@ def test_process_roster_upload_commits_on_success() -> None:
     mock_session.__enter__ = MagicMock(return_value=mock_session)
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_engine = MagicMock()
+    mock_svc = MagicMock()
 
     with (
         patch(
             "learnwithai.services.roster_upload_service.get_engine",
             return_value=mock_engine,
         ),
+        patch("sqlmodel.Session", return_value=mock_session),
         patch(
-            "sqlmodel.Session",
-            return_value=mock_session,
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=mock_svc,
         ),
-        patch(
-            "learnwithai.services.roster_upload_service._do_process",
-        ) as mock_do,
     ):
         # Act
         process_roster_upload(42)
 
     # Assert
-    mock_do.assert_called_once_with(mock_session, 42)
+    mock_svc.process_upload.assert_called_once_with(42)
     mock_session.commit.assert_called_once()
     mock_session.rollback.assert_not_called()
 
@@ -402,23 +377,19 @@ def test_process_roster_upload_rolls_back_and_marks_failed_on_error() -> None:
     mock_session.__enter__ = MagicMock(return_value=mock_session)
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_engine = MagicMock()
+    mock_svc = MagicMock()
+    mock_svc.process_upload.side_effect = RuntimeError("boom")
 
     with (
         patch(
             "learnwithai.services.roster_upload_service.get_engine",
             return_value=mock_engine,
         ),
+        patch("sqlmodel.Session", return_value=mock_session),
         patch(
-            "sqlmodel.Session",
-            return_value=mock_session,
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=mock_svc,
         ),
-        patch(
-            "learnwithai.services.roster_upload_service._do_process",
-            side_effect=RuntimeError("boom"),
-        ),
-        patch(
-            "learnwithai.services.roster_upload_service._mark_failed",
-        ) as mock_fail,
         pytest.raises(RuntimeError, match="boom"),
     ):
         # Act
@@ -426,4 +397,5 @@ def test_process_roster_upload_rolls_back_and_marks_failed_on_error() -> None:
 
     # Assert
     mock_session.rollback.assert_called_once()
-    mock_fail.assert_called_once_with(mock_session, 42)
+    mock_svc.mark_failed.assert_called_once_with(42)
+
