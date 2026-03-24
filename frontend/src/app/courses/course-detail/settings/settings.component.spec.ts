@@ -78,7 +78,7 @@ describe('Settings', () => {
   });
 
   it('should show error when fetch fails', async () => {
-    const { fixture, mockCourseService } = setup();
+    const { mockCourseService } = setup();
     mockCourseService.getMyCourses.mockRejectedValueOnce(new Error('fail'));
 
     // Recreate to trigger the failed fetch
@@ -96,7 +96,9 @@ describe('Settings', () => {
     await flush();
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     await flush();
     fixture.detectChanges();
@@ -128,7 +130,9 @@ describe('Settings', () => {
     fixture.detectChanges();
 
     mockCourseService.updateCourse.mockRejectedValueOnce(new Error('fail'));
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     await flush();
     fixture.detectChanges();
@@ -149,7 +153,9 @@ describe('Settings', () => {
       }),
     );
 
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     fixture.detectChanges();
 

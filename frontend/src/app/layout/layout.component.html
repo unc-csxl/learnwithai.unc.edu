@@ -81,11 +81,7 @@
           <mat-icon>person</mat-icon>
           <span class="user-name">{{ auth.user()!.name }}</span>
         </a>
-        <button
-          mat-icon-button
-          aria-label="Logout"
-          (click)="auth.logout()"
-        >
+        <button mat-icon-button aria-label="Logout" (click)="auth.logout()">
           <mat-icon>logout</mat-icon>
         </button>
       } @else {

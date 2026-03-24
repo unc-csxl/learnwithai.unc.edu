@@ -10,7 +10,13 @@ import { TERM } from '../../api/models';
 @Component({
   selector: 'app-course-form-fields',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, TitleCasePipe, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    ReactiveFormsModule,
+    TitleCasePipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
   templateUrl: './course-form-fields.component.html',
 })
 export class CourseFormFields {

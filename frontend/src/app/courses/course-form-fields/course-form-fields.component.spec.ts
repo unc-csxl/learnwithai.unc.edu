@@ -10,13 +10,16 @@ describe('CourseFormFields', () => {
     });
 
     const fixture = TestBed.createComponent(CourseFormFields);
-    fixture.componentRef.setInput('formGroup', new FormGroup({
-      course_number: new FormControl(''),
-      name: new FormControl(''),
-      description: new FormControl(''),
-      term: new FormControl(''),
-      year: new FormControl(2026),
-    }));
+    fixture.componentRef.setInput(
+      'formGroup',
+      new FormGroup({
+        course_number: new FormControl(''),
+        name: new FormControl(''),
+        description: new FormControl(''),
+        term: new FormControl(''),
+        year: new FormControl(2026),
+      }),
+    );
     fixture.detectChanges();
 
     const el: HTMLElement = fixture.nativeElement;

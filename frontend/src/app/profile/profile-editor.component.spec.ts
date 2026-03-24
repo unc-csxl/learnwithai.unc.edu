@@ -22,7 +22,12 @@ describe('ProfileEditor', () => {
     const mockAuth = {
       user: signal(user).asReadonly(),
       updateProfile: vi.fn(() =>
-        Promise.resolve({ ...fakeUser, given_name: 'Updated', family_name: 'Name', name: 'Updated Name' }),
+        Promise.resolve({
+          ...fakeUser,
+          given_name: 'Updated',
+          family_name: 'Name',
+          name: 'Updated Name',
+        }),
       ),
     };
 
@@ -89,7 +94,9 @@ describe('ProfileEditor', () => {
     const component = fixture.componentInstance;
     component['form'].patchValue({ given_name: '', family_name: '' });
     fixture.detectChanges();
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 
@@ -99,7 +106,9 @@ describe('ProfileEditor', () => {
     component['form'].setValue({ given_name: 'Updated', family_name: 'Name' });
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     await flush();
     fixture.detectChanges();
@@ -116,7 +125,9 @@ describe('ProfileEditor', () => {
     component['form'].setValue({ given_name: 'Updated', family_name: 'Name' });
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     await flush();
     fixture.detectChanges();
@@ -145,14 +156,21 @@ describe('ProfileEditor', () => {
     component['form'].setValue({ given_name: 'Updated', family_name: 'Name' });
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const button = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
     button.click();
     fixture.detectChanges();
 
     expect(button.textContent).toContain('Saving');
     expect(button.disabled).toBe(true);
 
-    resolveUpdate({ ...fakeUser, given_name: 'Updated', family_name: 'Name', name: 'Updated Name' });
+    resolveUpdate({
+      ...fakeUser,
+      given_name: 'Updated',
+      family_name: 'Name',
+      name: 'Updated Name',
+    });
     await new Promise((r) => setTimeout(r));
     fixture.detectChanges();
 

@@ -411,9 +411,7 @@ def test_update_course_updates_fields() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     course = MagicMock(spec=Course)
     course.id = 1
-    instructor_m = _make_membership(
-        user_pid=123456789, type=MembershipType.INSTRUCTOR
-    )
+    instructor_m = _make_membership(user_pid=123456789, type=MembershipType.INSTRUCTOR)
     membership_repo.get_by_user_and_course.return_value = instructor_m
     updated_course = _make_course()
     course_repo.update.return_value = updated_course
@@ -440,9 +438,7 @@ def test_update_course_raises_when_not_instructor() -> None:
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.update_course(
-            _make_user(), course, "COMP999", "New", Term.FALL, 2027
-        )
+        svc.update_course(_make_user(), course, "COMP999", "New", Term.FALL, 2027)
 
 
 def test_update_course_raises_when_not_member() -> None:
@@ -454,6 +450,4 @@ def test_update_course_raises_when_not_member() -> None:
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        svc.update_course(
-            _make_user(), course, "COMP999", "New", Term.FALL, 2027
-        )
+        svc.update_course(_make_user(), course, "COMP999", "New", Term.FALL, 2027)
