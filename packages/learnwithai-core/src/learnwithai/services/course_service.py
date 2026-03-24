@@ -3,7 +3,7 @@
 from ..errors import AuthorizationError
 from ..repositories.course_repository import CourseRepository
 from ..repositories.membership_repository import MembershipRepository
-from ..tables.course import Course
+from ..tables.course import Course, Term
 from ..tables.membership import Membership, MembershipState, MembershipType
 from ..tables.user import User
 
@@ -26,20 +26,36 @@ class CourseService:
         self._membership_repo = membership_repo
 
     def create_course(
-        self, subject: User, name: str, term: str, section: str
+        self,
+        subject: User,
+        course_number: str,
+        name: str,
+        term: Term,
+        year: int,
+        description: str = "",
     ) -> Course:
         """Creates a course and enrolls the creator as instructor.
 
         Args:
             subject: Authenticated subject creating the course.
+            course_number: Short identifier (e.g. "COMP423").
             name: Course name.
-            term: Academic term (e.g. "Fall 2026").
-            section: Section identifier (e.g. "001").
+            term: Academic term.
+            year: Academic year.
+            description: Optional course description.
 
         Returns:
             The newly created course.
         """
-        course = self._course_repo.create(Course(name=name, term=term, section=section))
+        course = self._course_repo.create(
+            Course(
+                course_number=course_number,
+                name=name,
+                description=description,
+                term=term,
+                year=year,
+            )
+        )
         self._membership_repo.create(
             Membership(
                 user_pid=subject.pid,

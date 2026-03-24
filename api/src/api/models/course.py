@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict
 
+from learnwithai.tables.course import Term
 from learnwithai.tables.membership import MembershipState, MembershipType
 
 
@@ -20,18 +21,22 @@ class CourseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    course_number: str
     name: str
-    term: str
-    section: str
+    description: str
+    term: Term
+    year: int
     membership: CourseMembership
 
 
 class CreateCourseRequest(BaseModel):
     """Payload for creating a new course."""
 
+    course_number: str
     name: str
-    term: str
-    section: str
+    description: str = ""
+    term: Term
+    year: int
 
 
 class AddMemberRequest(BaseModel):

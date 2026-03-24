@@ -24,7 +24,15 @@ describe('CourseService', () => {
 
   it('fetches courses via listMyCourses', async () => {
     const mockCourses: Course[] = [
-      { id: 1, name: 'Intro', term: 'Fall 2026', section: '001', membership },
+      {
+        id: 1,
+        course_number: 'COMP101',
+        name: 'Intro',
+        description: '',
+        term: 'fall',
+        year: 2026,
+        membership,
+      },
     ];
     api.invoke.mockResolvedValue(mockCourses);
     const result = await service.getMyCourses();
@@ -35,20 +43,23 @@ describe('CourseService', () => {
   it('creates a course via createCourse', async () => {
     const created: Course = {
       id: 2,
+      course_number: 'COMP301',
       name: 'Algo',
-      term: 'Spring 2027',
-      section: '002',
+      description: '',
+      term: 'spring',
+      year: 2027,
       membership: { type: 'instructor', state: 'enrolled' },
     };
     api.invoke.mockResolvedValue(created);
     const result = await service.createCourse({
+      course_number: 'COMP301',
       name: 'Algo',
-      term: 'Spring 2027',
-      section: '002',
+      term: 'spring',
+      year: 2027,
     });
     expect(result).toEqual(created);
     expect(api.invoke).toHaveBeenCalledWith(createCourse, {
-      body: { name: 'Algo', term: 'Spring 2027', section: '002' },
+      body: { course_number: 'COMP301', name: 'Algo', term: 'spring', year: 2027 },
     });
   });
 

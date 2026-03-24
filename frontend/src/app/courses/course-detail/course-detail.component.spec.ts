@@ -14,17 +14,21 @@ class DummyComponent {}
 
 const fakeCourse: Course = {
   id: 1,
+  course_number: 'COMP101',
   name: 'Intro CS',
-  term: 'Fall 2026',
-  section: '001',
+  description: '',
+  term: 'fall',
+  year: 2026,
   membership: { type: 'instructor', state: 'enrolled' },
 };
 
 const fakeStudentCourse: Course = {
   id: 1,
+  course_number: 'COMP101',
   name: 'Intro CS',
-  term: 'Fall 2026',
-  section: '001',
+  description: '',
+  term: 'fall',
+  year: 2026,
   membership: { type: 'student', state: 'enrolled' },
 };
 
@@ -88,19 +92,19 @@ describe('CourseDetail', () => {
     return { fixture, mockService, mockPageTitle, mockLayoutNavigation, navigateSpy };
   }
 
-  it('should set page title to course name and show term', async () => {
+  it('should set page title to course number and name', async () => {
     const { fixture, mockPageTitle } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Intro CS');
-    expect(el.textContent).toContain('Fall 2026');
+    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('COMP101: Intro CS');
+    expect(el.querySelector('section[aria-label="Course content"]')).toBeTruthy();
   });
 
   it('should register instructor navigation with the shared app sidebar', async () => {
     const { mockLayoutNavigation } = await setup();
     expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith({
       label: 'Instructor view',
-      title: 'Intro CS',
-      subtitle: 'Fall 2026 - Section 001',
+      title: 'COMP101: Intro CS',
+      subtitle: 'Fall 2026',
       items: [
         {
           route: '/courses/1/dashboard',
@@ -144,8 +148,8 @@ describe('CourseDetail', () => {
 
     expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith({
       label: 'Student view',
-      title: 'Intro CS',
-      subtitle: 'Fall 2026 - Section 001',
+      title: 'COMP101: Intro CS',
+      subtitle: 'Fall 2026',
       items: [
         {
           route: '/courses/1/activities',
@@ -170,10 +174,12 @@ describe('CourseDetail', () => {
   });
 
   it('should show course term metadata in the content area', async () => {
-    const { fixture } = await setup();
+    const { fixture, mockLayoutNavigation } = await setup();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).not.toContain('Instructor view');
-    expect(el.textContent).toContain('Section 001');
+    expect(mockLayoutNavigation.setSection).toHaveBeenCalled();
+    const section = mockLayoutNavigation.setSection.mock.calls[0][0];
+    expect(section.subtitle).toBe('Fall 2026');
   });
 
   it('should show error message on load failure', async () => {

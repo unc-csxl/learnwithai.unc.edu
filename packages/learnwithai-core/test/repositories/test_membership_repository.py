@@ -5,13 +5,15 @@ from sqlalchemy import inspect
 from sqlmodel import Session
 
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
-from learnwithai.tables.course import Course
+from learnwithai.tables.course import Course, Term
 from learnwithai.tables.user import User
 from learnwithai.repositories.membership_repository import MembershipRepository
 
 
 def _seed_course(session: Session) -> Course:
-    course = Course(name="Intro to CS", term="Fall 2026", section="001")
+    course = Course(
+        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
+    )
     session.add(course)
     session.flush()
     return course
@@ -87,9 +89,11 @@ def test_get_by_user_and_course_returns_none_when_not_found(
     missing_course = Course.model_construct(
         _fields_set=None,
         id=999999,
+        course_number="COMP999",
         name="Missing",
-        term="Fall 2026",
-        section="999",
+        description="",
+        term=Term.FALL,
+        year=2026,
     )
     result = repo.get_by_user_and_course(_make_user(999999999), missing_course)
 
@@ -101,7 +105,9 @@ def test_get_by_user_and_course_returns_none_when_not_found(
 def test_get_by_user_and_course_raises_for_unpersisted_course(session: Session) -> None:
     # Arrange
     repo = MembershipRepository(session)
-    missing_id_course = Course(name="Draft", term="Fall 2026", section="001")
+    missing_id_course = Course(
+        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
+    )
 
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):
@@ -207,7 +213,7 @@ def test_delete_removes_membership(session: Session) -> None:
 def test_get_active_by_user_returns_non_dropped(session: Session) -> None:
     # Arrange
     c1 = _seed_course(session)
-    c2 = Course(name="Algorithms", term="Spring 2027", section="002")
+    c2 = Course(course_number="COMP301", name="Algorithms", term=Term.SPRING, year=2027)
     session.add(c2)
     session.flush()
     repo = MembershipRepository(session)
@@ -299,7 +305,9 @@ def test_get_all_by_course_returns_all_memberships(session: Session) -> None:
 def test_get_all_by_course_raises_for_unpersisted_course(session: Session) -> None:
     # Arrange
     repo = MembershipRepository(session)
-    missing_id_course = Course(name="Draft", term="Fall 2026", section="001")
+    missing_id_course = Course(
+        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
+    )
 
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):

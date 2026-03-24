@@ -8,7 +8,7 @@ from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai.errors import AuthorizationError
 from learnwithai.services.course_service import CourseService
-from learnwithai.tables.course import Course
+from learnwithai.tables.course import Course, Term
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 from learnwithai.tables.user import User
 
@@ -34,9 +34,11 @@ def _make_course(course_id: int = 1) -> Course:
     return Course.model_construct(
         _fields_set=None,
         id=course_id,
+        course_number="COMP101",
         name="Intro to CS",
-        term="Fall 2026",
-        section="001",
+        description="",
+        term=Term.FALL,
+        year=2026,
     )
 
 
@@ -69,7 +71,7 @@ def test_create_course_creates_and_enrolls_instructor() -> None:
     subject = _make_user()
 
     # Act
-    result = svc.create_course(subject, "Intro to CS", "Fall 2026", "001")
+    result = svc.create_course(subject, "COMP101", "Intro to CS", Term.FALL, 2026)
 
     # Assert
     assert result is course
@@ -256,7 +258,9 @@ def test_add_member_raises_for_unpersisted_course() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
-    draft_course = Course(name="Draft", term="Fall 2026", section="001")
+    draft_course = Course(
+        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
+    )
     membership_repo.get_by_user_and_course.return_value = instructor_m
     svc = _build_service(membership_repo=membership_repo)
 

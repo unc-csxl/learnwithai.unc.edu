@@ -44,7 +44,8 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     # Verify course
     course = added_single[0]
-    assert course.name == "COMP423"
+    assert course.course_number == "COMP423"
+    assert course.name == "Foundations of Software Engineering"
 
     # Verify memberships
     memberships = added[1]

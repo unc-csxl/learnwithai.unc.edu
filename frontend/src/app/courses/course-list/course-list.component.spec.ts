@@ -8,16 +8,20 @@ import { Course } from '../../api/models';
 const fakeCourses: Course[] = [
   {
     id: 1,
+    course_number: 'COMP101',
     name: 'Intro to CS',
-    term: 'Fall 2026',
-    section: '001',
+    description: '',
+    term: 'fall',
+    year: 2026,
     membership: { type: 'student', state: 'enrolled' },
   },
   {
     id: 2,
+    course_number: 'COMP210',
     name: 'Data Structures',
-    term: 'Spring 2027',
-    section: '001',
+    description: '',
+    term: 'spring',
+    year: 2027,
     membership: { type: 'student', state: 'pending' },
   },
 ];

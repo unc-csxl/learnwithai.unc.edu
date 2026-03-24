@@ -47,7 +47,9 @@ def create_course(
     Returns:
         The newly created course.
     """
-    course = course_svc.create_course(subject, body.name, body.term, body.section)
+    course = course_svc.create_course(
+        subject, body.course_number, body.name, body.term, body.year, body.description
+    )
     return _build_course_response(
         course,
         CourseMembership(
@@ -206,8 +208,10 @@ def _build_course_response(
 
     return CourseResponse(
         id=course.id,
+        course_number=course.course_number,
         name=course.name,
+        description=course.description,
         term=course.term,
-        section=course.section,
+        year=course.year,
         membership=CourseMembership.model_validate(membership),
     )

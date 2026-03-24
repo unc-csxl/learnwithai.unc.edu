@@ -10,10 +10,8 @@
       <a [routerLink]="['/courses', course.id]" class="no-underline course-link">
         <mat-card class="course-card">
           <mat-card-header>
-            <mat-card-title>{{ course.name }}</mat-card-title>
-            <mat-card-subtitle
-              >{{ course.term }} &mdash; Section {{ course.section }}</mat-card-subtitle
-            >
+            <mat-card-title>{{ course.course_number }}: {{ course.name }}</mat-card-title>
+            <mat-card-subtitle>{{ course.term | titlecase }} {{ course.year }}</mat-card-subtitle>
           </mat-card-header>
         </mat-card>
       </a>
