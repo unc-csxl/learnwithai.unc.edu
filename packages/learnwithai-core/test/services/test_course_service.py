@@ -258,7 +258,9 @@ def test_add_member_raises_for_unpersisted_course() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
-    draft_course = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
+    draft_course = Course(
+        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
+    )
     membership_repo.get_by_user_and_course.return_value = instructor_m
     svc = _build_service(membership_repo=membership_repo)
 

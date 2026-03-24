@@ -27,6 +27,7 @@ from api.routes.courses import (
     list_my_courses,
 )
 from learnwithai.errors import AuthorizationError
+from learnwithai.tables.course import Term
 from learnwithai.tables.membership import MembershipState, MembershipType
 
 
@@ -91,7 +92,9 @@ def test_create_course_returns_course_response() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     course_svc.create_course.return_value = course
-    body = CreateCourseRequest(course_number="COMP101", name="Intro to CS", term="fall", year=2026)
+    body = CreateCourseRequest(
+        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
+    )
 
     # Act
     result = create_course(subject, body, course_svc)
@@ -104,7 +107,7 @@ def test_create_course_returns_course_response() -> None:
         state=MembershipState.ENROLLED,
     )
     course_svc.create_course.assert_called_once_with(
-        subject, "COMP101", "Intro to CS", "fall", 2026, ""
+        subject, "COMP101", "Intro to CS", Term.FALL, 2026, ""
     )
 
 
@@ -273,7 +276,12 @@ def test_create_course_endpoint(client: TestClient) -> None:
     # Act
     response = client.post(
         "/api/courses",
-        json={"course_number": "COMP101", "name": "Intro to CS", "term": "fall", "year": 2026},
+        json={
+            "course_number": "COMP101",
+            "name": "Intro to CS",
+            "term": "fall",
+            "year": 2026,
+        },
     )
 
     # Assert

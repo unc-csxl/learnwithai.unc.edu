@@ -37,7 +37,7 @@ export class CreateCourse {
     name: ['', Validators.required],
     description: [''],
     term: ['', Validators.required],
-    year: [new Date().getFullYear(), [Validators.required, Validators.min(2000)]],
+    year: [new Date().getFullYear(), [Validators.required, Validators.min(2026)]],
   });
 
   constructor() {

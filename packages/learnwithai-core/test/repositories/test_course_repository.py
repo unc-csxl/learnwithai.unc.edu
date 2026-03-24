@@ -14,7 +14,9 @@ from learnwithai.repositories.course_repository import CourseRepository
 def test_create_persists_and_returns_course(session: Session) -> None:
     # Arrange
     repo = CourseRepository(session)
-    course = Course(course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026)
+    course = Course(
+        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
+    )
 
     # Act
     result = repo.create(course)
@@ -37,7 +39,9 @@ def test_create_persists_and_returns_course(session: Session) -> None:
 def test_get_by_id_returns_course_when_exists(session: Session) -> None:
     # Arrange
     repo = CourseRepository(session)
-    course = repo.create(Course(course_number="COMP301", name="Algorithms", term=Term.SPRING, year=2027))
+    course = repo.create(
+        Course(course_number="COMP301", name="Algorithms", term=Term.SPRING, year=2027)
+    )
 
     # Act
     result = repo.get_by_id(course.id)  # type: ignore[arg-type]
@@ -66,7 +70,9 @@ def test_get_by_id_returns_none_when_not_found(session: Session) -> None:
 def test_update_modifies_course(session: Session) -> None:
     # Arrange
     repo = CourseRepository(session)
-    course = repo.create(Course(course_number="COMP101", name="Old Name", term=Term.FALL, year=2026))
+    course = repo.create(
+        Course(course_number="COMP101", name="Old Name", term=Term.FALL, year=2026)
+    )
     course.name = "New Name"
 
     # Act
@@ -86,7 +92,9 @@ def test_update_modifies_course(session: Session) -> None:
 def test_delete_removes_course(session: Session) -> None:
     # Arrange
     repo = CourseRepository(session)
-    course = repo.create(Course(course_number="COMP101", name="To Delete", term=Term.FALL, year=2026))
+    course = repo.create(
+        Course(course_number="COMP101", name="To Delete", term=Term.FALL, year=2026)
+    )
     course_id = course.id
 
     # Act
