@@ -1,6 +1,7 @@
 """Business logic for course and membership management."""
 
 from ..errors import AuthorizationError
+from ..pagination import PaginatedResult, PaginationParams
 from ..repositories.course_repository import CourseRepository
 from ..repositories.membership_repository import MembershipRepository
 from ..tables.course import Course, Term
@@ -81,17 +82,22 @@ class CourseService:
         self,
         subject: User,
         course: Course,
-    ) -> list[Membership]:
-        """Returns the full roster for a course.
+        pagination: PaginationParams | None = None,
+        query: str = "",
+    ) -> PaginatedResult[Membership]:
+        """Returns the paginated roster for a course.
 
         Only instructors and TAs may view the roster.
 
         Args:
             subject: Authenticated subject requesting the roster.
             course: Course whose roster should be returned.
+            pagination: Page and page-size parameters. Defaults to page 1,
+                size 25 when *None*.
+            query: Optional search string to filter by name, PID, or email.
 
         Returns:
-            List of all memberships for the course.
+            A paginated result of memberships for the course.
 
         Raises:
             AuthorizationError: If the user is not an instructor or TA.
@@ -103,7 +109,9 @@ class CourseService:
             requester_membership,
             {MembershipType.INSTRUCTOR, MembershipType.TA},
         )
-        return self._membership_repo.get_all_by_course(course)
+        if pagination is None:
+            pagination = PaginationParams()
+        return self._membership_repo.get_roster_page(course, pagination, query)
 
     def add_member(
         self,

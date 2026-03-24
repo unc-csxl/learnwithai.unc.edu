@@ -2,12 +2,13 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Query
 
 from ..dependency_injection import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
     AuthenticatedUserDI,
+    PaginationParamsDI,
     UserRepositoryDI,
     UserByPIDPathDI,
 )
@@ -17,6 +18,8 @@ from ..models import (
     CourseResponse,
     CreateCourseRequest,
     MembershipResponse,
+    PaginatedRosterResponse,
+    RosterMemberResponse,
 )
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
@@ -88,9 +91,9 @@ def list_my_courses(
 
 @router.get(
     "/{course_id}/roster",
-    response_model=list[MembershipResponse],
+    response_model=PaginatedRosterResponse,
     summary="Get course roster",
-    response_description="All memberships for the course.",
+    response_description="Paginated roster with user details.",
     responses={
         401: {"description": "Not authenticated."},
         403: {"description": "Insufficient permissions."},
@@ -101,8 +104,10 @@ def get_course_roster(
     subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
-) -> list[MembershipResponse]:
-    """Returns the full roster for a course.
+    pagination: PaginationParamsDI,
+    q: Annotated[str, Query()] = "",
+) -> PaginatedRosterResponse:
+    """Returns the paginated roster for a course.
 
     Only instructors and TAs may view the roster.
 
@@ -110,12 +115,20 @@ def get_course_roster(
         subject: Authenticated subject.
         course: Course loaded via DI and course_id Path param.
         course_svc: Service used to query the roster.
+        pagination: Pagination parameters from query string.
+        q: Optional search query to filter by name, PID, or email.
 
     Returns:
-        List of memberships for the course.
+        Paginated roster with user details.
     """
-    memberships = course_svc.get_course_roster(subject, course)
-    return [MembershipResponse.model_validate(m) for m in memberships]
+    result = course_svc.get_course_roster(subject, course, pagination, q)
+    items = [_build_roster_member(m) for m in result.items]
+    return PaginatedRosterResponse(
+        items=items,
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+    )
 
 
 @router.post(
@@ -214,4 +227,18 @@ def _build_course_response(
         term=course.term,
         year=course.year,
         membership=CourseMembership.model_validate(membership),
+    )
+
+
+def _build_roster_member(membership: Membership) -> RosterMemberResponse:
+    """Builds a roster member response from a membership with eager-loaded user."""
+    user = membership.user
+    return RosterMemberResponse(
+        user_pid=membership.user_pid,
+        course_id=membership.course_id,
+        type=membership.type,
+        state=membership.state,
+        given_name=user.given_name or "",
+        family_name=user.family_name or "",
+        email=user.email or "",
     )

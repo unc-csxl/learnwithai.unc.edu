@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import inspect
 from sqlmodel import Session
 
+from learnwithai.pagination import PaginationParams
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 from learnwithai.tables.course import Course, Term
 from learnwithai.tables.user import User
@@ -312,3 +313,192 @@ def test_get_all_by_course_raises_for_unpersisted_course(session: Session) -> No
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):
         repo.get_all_by_course(missing_id_course)
+
+
+# --- get_roster_page ---
+
+
+def _seed_user(session: Session, pid: int, given: str, family: str, email: str) -> User:
+    user = User(
+        pid=pid,
+        name=f"{given} {family}",
+        onyen=f"user{pid}",
+        given_name=given,
+        family_name=family,
+        email=email,
+    )
+    session.add(user)
+    session.flush()
+    return user
+
+
+@pytest.mark.integration
+def test_get_roster_page_returns_paginated_members(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    u1 = _seed_user(session, 100, "Alice", "Alpha", "alice@unc.edu")
+    u2 = _seed_user(session, 200, "Bob", "Bravo", "bob@unc.edu")
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=u1.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    repo.create(
+        Membership(
+            user_pid=u2.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.TA,
+            state=MembershipState.ENROLLED,
+        )
+    )
+
+    # Act
+    result = repo.get_roster_page(course, PaginationParams(page=1, page_size=25))
+
+    # Assert
+    assert result.total == 2
+    assert len(result.items) == 2
+    assert result.page == 1
+
+
+@pytest.mark.integration
+def test_get_roster_page_paginates(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    for i in range(3):
+        u = _seed_user(session, 100 + i, f"U{i}", "Last", f"u{i}@unc.edu")
+        repo = MembershipRepository(session)
+        repo.create(
+            Membership(
+                user_pid=u.pid,
+                course_id=course.id,  # type: ignore[arg-type]
+                type=MembershipType.STUDENT,
+                state=MembershipState.ENROLLED,
+            )
+        )
+
+    # Act
+    repo = MembershipRepository(session)
+    result = repo.get_roster_page(course, PaginationParams(page=1, page_size=2))
+
+    # Assert
+    assert result.total == 3
+    assert len(result.items) == 2
+    assert result.page == 1
+    assert result.page_size == 2
+
+
+@pytest.mark.integration
+def test_get_roster_page_filters_by_name(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    u1 = _seed_user(session, 100, "Alice", "Alpha", "alice@unc.edu")
+    u2 = _seed_user(session, 200, "Bob", "Bravo", "bob@unc.edu")
+    repo = MembershipRepository(session)
+    for u in [u1, u2]:
+        repo.create(
+            Membership(
+                user_pid=u.pid,
+                course_id=course.id,  # type: ignore[arg-type]
+                type=MembershipType.STUDENT,
+                state=MembershipState.ENROLLED,
+            )
+        )
+
+    # Act
+    result = repo.get_roster_page(course, PaginationParams(), "alice")
+
+    # Assert
+    assert result.total == 1
+    assert result.items[0].user_pid == 100
+
+
+@pytest.mark.integration
+def test_get_roster_page_filters_by_email(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    u1 = _seed_user(session, 100, "Alice", "Alpha", "alice@unc.edu")
+    u2 = _seed_user(session, 200, "Bob", "Bravo", "bob@unc.edu")
+    repo = MembershipRepository(session)
+    for u in [u1, u2]:
+        repo.create(
+            Membership(
+                user_pid=u.pid,
+                course_id=course.id,  # type: ignore[arg-type]
+                type=MembershipType.STUDENT,
+                state=MembershipState.ENROLLED,
+            )
+        )
+
+    # Act
+    result = repo.get_roster_page(course, PaginationParams(), "bob@")
+
+    # Assert
+    assert result.total == 1
+    assert result.items[0].user_pid == 200
+
+
+@pytest.mark.integration
+def test_get_roster_page_filters_by_pid(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    u1 = _seed_user(session, 100, "Alice", "Alpha", "alice@unc.edu")
+    u2 = _seed_user(session, 200, "Bob", "Bravo", "bob@unc.edu")
+    repo = MembershipRepository(session)
+    for u in [u1, u2]:
+        repo.create(
+            Membership(
+                user_pid=u.pid,
+                course_id=course.id,  # type: ignore[arg-type]
+                type=MembershipType.STUDENT,
+                state=MembershipState.ENROLLED,
+            )
+        )
+
+    # Act
+    result = repo.get_roster_page(course, PaginationParams(), "200")
+
+    # Assert
+    assert result.total == 1
+    assert result.items[0].user_pid == 200
+
+
+@pytest.mark.integration
+def test_get_roster_page_eager_loads_user(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    u = _seed_user(session, 100, "Alice", "Alpha", "alice@unc.edu")
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=u.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+
+    # Act
+    result = repo.get_roster_page(course, PaginationParams())
+
+    # Assert
+    member = result.items[0]
+    state = inspect(member)
+    assert state is not None
+    assert "user" not in state.unloaded
+    assert member.user.given_name == "Alice"
+
+
+@pytest.mark.integration
+def test_get_roster_page_raises_for_unpersisted_course(session: Session) -> None:
+    # Arrange
+    repo = MembershipRepository(session)
+    draft = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Course must be persisted"):
+        repo.get_roster_page(draft, PaginationParams())

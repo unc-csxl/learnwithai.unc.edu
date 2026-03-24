@@ -55,3 +55,24 @@ class MembershipResponse(BaseModel):
     course_id: int
     type: MembershipType
     state: MembershipState
+
+
+class RosterMemberResponse(BaseModel):
+    """A roster entry combining membership and user details."""
+
+    user_pid: int
+    course_id: int
+    type: MembershipType
+    state: MembershipState
+    given_name: str
+    family_name: str
+    email: str
+
+
+class PaginatedRosterResponse(BaseModel):
+    """Paginated wrapper around roster member entries."""
+
+    items: list[RosterMemberResponse]
+    total: int
+    page: int
+    page_size: int

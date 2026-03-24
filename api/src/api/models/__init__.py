@@ -4,6 +4,8 @@ from .course import (
     CourseResponse,
     CreateCourseRequest,
     MembershipResponse,
+    PaginatedRosterResponse,
+    RosterMemberResponse,
 )
 from .user_profile import UserProfile
 
@@ -13,5 +15,7 @@ __all__ = [
     "CourseResponse",
     "CreateCourseRequest",
     "MembershipResponse",
+    "PaginatedRosterResponse",
+    "RosterMemberResponse",
     "UserProfile",
 ]

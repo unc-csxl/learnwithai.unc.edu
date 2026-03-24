@@ -2,10 +2,11 @@
 
 from typing import Annotated, TypeAlias
 
-from fastapi import Depends, HTTPException, Path
+from fastapi import Depends, HTTPException, Path, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from learnwithai.config import Settings
+from learnwithai.pagination import PaginationParams
 from learnwithai.services.csxl_auth_service import (
     CSXLAuthService,
     AuthenticationException,
@@ -222,3 +223,24 @@ def get_user_by_path_pid(
 
 
 UserByPIDPathDI: TypeAlias = Annotated[User, Depends(get_user_by_path_pid)]
+
+
+def get_pagination_params(
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 25,
+) -> PaginationParams:
+    """Extracts pagination query parameters into a shared dataclass.
+
+    Args:
+        page: 1-based page number.
+        page_size: Maximum items per page (1–100).
+
+    Returns:
+        A PaginationParams instance.
+    """
+    return PaginationParams(page=page, page_size=page_size)
+
+
+PaginationParamsDI: TypeAlias = Annotated[
+    PaginationParams, Depends(get_pagination_params)
+]

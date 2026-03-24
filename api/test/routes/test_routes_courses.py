@@ -18,6 +18,7 @@ from api.models import (
     CourseResponse,
     CreateCourseRequest,
     MembershipResponse,
+    RosterMemberResponse,
 )
 from api.routes.courses import (
     add_member,
@@ -27,6 +28,7 @@ from api.routes.courses import (
     list_my_courses,
 )
 from learnwithai.errors import AuthorizationError
+from learnwithai.pagination import PaginatedResult, PaginationParams
 from learnwithai.tables.course import Term
 from learnwithai.tables.membership import MembershipState, MembershipType
 
@@ -73,6 +75,9 @@ def _stub_membership(
     type: MembershipType = MembershipType.STUDENT,
     state: MembershipState = MembershipState.ENROLLED,
     course: MagicMock | None = None,
+    given_name: str = "Test",
+    family_name: str = "User",
+    email: str = "test@example.com",
 ) -> MagicMock:
     mock = MagicMock()
     mock.user_pid = user_pid
@@ -80,6 +85,11 @@ def _stub_membership(
     mock.type = type
     mock.state = state
     mock.course = course
+    user = MagicMock()
+    user.given_name = given_name
+    user.family_name = family_name
+    user.email = email
+    mock.user = user
     return mock
 
 
@@ -162,21 +172,25 @@ def test_list_my_courses_returns_empty_list() -> None:
 # ---- get_course_roster ----
 
 
-def test_get_course_roster_returns_membership_list() -> None:
+def test_get_course_roster_returns_paginated_roster() -> None:
     # Arrange
     user = _stub_user()
     course = _stub_course()
     roster_membership = _stub_membership(type=MembershipType.INSTRUCTOR)
     course_svc = MagicMock()
-    course_svc.get_course_roster.return_value = [roster_membership]
+    course_svc.get_course_roster.return_value = PaginatedResult(
+        items=[roster_membership], total=1, page=1, page_size=25
+    )
+    pagination = PaginationParams()
 
     # Act
-    result = get_course_roster(user, course, course_svc)
+    result = get_course_roster(user, course, course_svc, pagination, "")
 
     # Assert
-    assert len(result) == 1
-    assert isinstance(result[0], MembershipResponse)
-    course_svc.get_course_roster.assert_called_once_with(user, course)
+    assert len(result.items) == 1
+    assert isinstance(result.items[0], RosterMemberResponse)
+    assert result.total == 1
+    course_svc.get_course_roster.assert_called_once_with(user, course, pagination, "")
 
 
 # ---- add_member ----
@@ -323,9 +337,12 @@ def test_get_roster_endpoint(client: TestClient) -> None:
     app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     mock_svc = MagicMock()
-    mock_svc.get_course_roster.return_value = [
-        _stub_membership(type=MembershipType.INSTRUCTOR)
-    ]
+    mock_svc.get_course_roster.return_value = PaginatedResult(
+        items=[_stub_membership(type=MembershipType.INSTRUCTOR)],
+        total=1,
+        page=1,
+        page_size=25,
+    )
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
     mock_course_repo = MagicMock()
     mock_course_repo.get_by_id.return_value = course
@@ -337,9 +354,10 @@ def test_get_roster_endpoint(client: TestClient) -> None:
     # Assert
     assert response.status_code == 200
     body = response.json()
-    assert len(body) == 1
-    assert body[0]["type"] == "instructor"
-    mock_svc.get_course_roster.assert_called_once_with(user, course)
+    assert body["total"] == 1
+    assert len(body["items"]) == 1
+    assert body["items"][0]["type"] == "instructor"
+    assert body["items"][0]["given_name"] == "Test"
 
 
 @pytest.mark.integration

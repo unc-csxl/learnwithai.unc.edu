@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from learnwithai.pagination import PaginatedResult, PaginationParams
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai.errors import AuthorizationError
@@ -149,17 +150,20 @@ def test_get_course_roster_returns_roster_for_instructor() -> None:
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
     course = _make_course()
     roster = [instructor_m, _make_membership(user_pid=999)]
+    paginated = PaginatedResult[Membership](items=roster, total=2, page=1, page_size=25)
     membership_repo.get_by_user_and_course.return_value = instructor_m
-    membership_repo.get_all_by_course.return_value = roster
+    membership_repo.get_roster_page.return_value = paginated
     svc = _build_service(membership_repo=membership_repo)
+    pagination = PaginationParams()
 
     # Act
-    result = svc.get_course_roster(user, course)
+    result = svc.get_course_roster(user, course, pagination)
 
     # Assert
-    assert result == roster
+    assert result.items == roster
+    assert result.total == 2
     membership_repo.get_by_user_and_course.assert_called_once_with(user, course)
-    membership_repo.get_all_by_course.assert_called_once_with(course)
+    membership_repo.get_roster_page.assert_called_once_with(course, pagination, "")
 
 
 def test_get_course_roster_returns_roster_for_ta() -> None:
@@ -168,16 +172,16 @@ def test_get_course_roster_returns_roster_for_ta() -> None:
     user = _make_user()
     ta_m = _make_membership(user_pid=user.pid, type=MembershipType.TA)
     course = _make_course()
-    roster = [ta_m]
+    paginated = PaginatedResult[Membership](items=[ta_m], total=1, page=1, page_size=25)
     membership_repo.get_by_user_and_course.return_value = ta_m
-    membership_repo.get_all_by_course.return_value = roster
+    membership_repo.get_roster_page.return_value = paginated
     svc = _build_service(membership_repo=membership_repo)
 
     # Act
     result = svc.get_course_roster(user, course)
 
     # Assert
-    assert result == roster
+    assert result.items == [ta_m]
 
 
 def test_get_course_roster_raises_for_student() -> None:
