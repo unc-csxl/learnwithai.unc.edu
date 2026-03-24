@@ -220,6 +220,3 @@ def test_get_roster_upload_status_raises_403_for_non_instructor() -> None:
     # Act / Assert
     with pytest.raises(AuthorizationError):
         get_roster_upload_status(subject, course, course_svc, upload_repo, 42)
-
-
-

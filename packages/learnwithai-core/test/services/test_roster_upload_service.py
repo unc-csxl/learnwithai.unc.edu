@@ -141,7 +141,9 @@ def test_submit_upload_creates_job_and_enqueues() -> None:
         "learnwithai.services.roster_upload_service.RosterUploadJob"
     ) as mock_job_cls:
         mock_job_cls.return_value = MagicMock()
-        result = svc.submit_upload(subject, course_id=1, csv_text="data", job_queue=job_queue)
+        result = svc.submit_upload(
+            subject, course_id=1, csv_text="data", job_queue=job_queue
+        )
 
     # Assert
     assert result is created_job
@@ -337,4 +339,3 @@ def test_import_students_records_error_on_exception() -> None:
     # Assert
     assert len(result.errors) == 1
     assert "999999999" in result.errors[0]
-

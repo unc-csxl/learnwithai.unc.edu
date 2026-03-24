@@ -149,7 +149,9 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
             "learnwithai.services.roster_upload_service.RosterUploadService",
             return_value=mock_svc,
         ),
-        patch("learnwithai.repositories.roster_upload_repository.RosterUploadRepository"),
+        patch(
+            "learnwithai.repositories.roster_upload_repository.RosterUploadRepository"
+        ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
     ):
@@ -179,7 +181,9 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
             "learnwithai.services.roster_upload_service.RosterUploadService",
             return_value=mock_svc,
         ),
-        patch("learnwithai.repositories.roster_upload_repository.RosterUploadRepository"),
+        patch(
+            "learnwithai.repositories.roster_upload_repository.RosterUploadRepository"
+        ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
         pytest.raises(RuntimeError, match="boom"),

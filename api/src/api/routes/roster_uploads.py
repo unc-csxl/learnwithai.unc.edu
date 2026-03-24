@@ -11,7 +11,6 @@ from ..dependency_injection import (
     RosterUploadServiceDI,
 )
 from ..models import RosterUploadResponse, RosterUploadStatusResponse
-from learnwithai.tables.roster_upload_job import RosterUploadJob
 
 router = APIRouter(
     prefix="/courses/{course_id}/roster-uploads", tags=["Roster Uploads"]
@@ -67,6 +66,7 @@ async def upload_roster_csv(
 
     assert course.id is not None
     job = roster_upload_svc.submit_upload(subject, course.id, csv_text, job_queue)
+    assert job.id is not None
     return RosterUploadResponse(id=job.id, status=job.status)
 
 
