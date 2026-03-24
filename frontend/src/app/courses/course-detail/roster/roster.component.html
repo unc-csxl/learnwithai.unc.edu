@@ -1,28 +1,57 @@
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
-} @else if (roster().length > 0) {
-  <div class="flex justify-end mb-4">
+} @else if (loaded()) {
+  <div class="flex justify-between items-center mb-4 gap-4">
+    <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Search roster</mat-label>
+      <input
+        matInput
+        type="text"
+        placeholder="Name, PID, or email (min 3 characters)"
+        aria-label="Search roster by name, PID, or email"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
     <a mat-flat-button routerLink="../add-member">
       <mat-icon>person_add</mat-icon>
       Add Member
     </a>
   </div>
-  <table mat-table [dataSource]="dataSource()" aria-label="Course roster">
-    <ng-container matColumnDef="user_pid">
-      <th mat-header-cell *matHeaderCellDef>PID</th>
-      <td mat-cell *matCellDef="let member">{{ member.user_pid }}</td>
-    </ng-container>
-    <ng-container matColumnDef="type">
-      <th mat-header-cell *matHeaderCellDef>Role</th>
-      <td mat-cell *matCellDef="let member">{{ member.type }}</td>
-    </ng-container>
-    <ng-container matColumnDef="state">
-      <th mat-header-cell *matHeaderCellDef>Status</th>
-      <td mat-cell *matCellDef="let member">{{ member.state }}</td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-  </table>
-} @else if (loaded()) {
-  <p>No members found for this course.</p>
+  @if (roster().length > 0) {
+    <table mat-table [dataSource]="dataSource()" aria-label="Course roster">
+      <ng-container matColumnDef="given_name">
+        <th mat-header-cell *matHeaderCellDef>Given Name</th>
+        <td mat-cell *matCellDef="let member">{{ member.given_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="family_name">
+        <th mat-header-cell *matHeaderCellDef>Family Name</th>
+        <td mat-cell *matCellDef="let member">{{ member.family_name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="user_pid">
+        <th mat-header-cell *matHeaderCellDef>PID</th>
+        <td mat-cell *matCellDef="let member">{{ member.user_pid }}</td>
+      </ng-container>
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let member">{{ member.email }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [class.inactive-row]="isInactive(row)"
+      ></tr>
+    </table>
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="page() - 1"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPage($event)"
+      aria-label="Roster pagination"
+    ></mat-paginator>
+  } @else {
+    <p>No members found for this course.</p>
+  }
 }

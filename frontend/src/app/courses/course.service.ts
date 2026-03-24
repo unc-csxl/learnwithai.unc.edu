@@ -5,7 +5,7 @@ import { createCourse as createCourseFn } from '../api/generated/fn/courses/crea
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember as addMemberFn } from '../api/generated/fn/courses/add-member';
 import { dropMember as dropMemberFn } from '../api/generated/fn/courses/drop-member';
-import { Course, CreateCourse, Membership, AddMember } from '../api/models';
+import { Course, CreateCourse, PaginatedRoster, Membership, AddMember } from '../api/models';
 
 /** Handles HTTP communication with the course management API. */
 @Injectable({ providedIn: 'root' })
@@ -22,9 +22,17 @@ export class CourseService {
     return this.api.invoke(createCourseFn, { body: request });
   }
 
-  /** Fetches the roster for a course. */
-  getRoster(courseId: number): Promise<Membership[]> {
-    return this.api.invoke(getCourseRoster, { course_id: courseId });
+  /** Fetches a paginated, optionally filtered roster for a course. */
+  getRoster(
+    courseId: number,
+    options: { page?: number; pageSize?: number; query?: string } = {},
+  ): Promise<PaginatedRoster> {
+    return this.api.invoke(getCourseRoster, {
+      course_id: courseId,
+      page: options.page,
+      page_size: options.pageSize,
+      q: options.query,
+    });
   }
 
   /** Adds a member to a course. */

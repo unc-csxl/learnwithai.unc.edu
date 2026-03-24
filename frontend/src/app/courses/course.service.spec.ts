@@ -6,7 +6,7 @@ import { createCourse } from '../api/generated/fn/courses/create-course';
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember } from '../api/generated/fn/courses/add-member';
 import { dropMember } from '../api/generated/fn/courses/drop-member';
-import { Course, Membership } from '../api/models';
+import { Course, PaginatedRoster, Membership } from '../api/models';
 
 describe('CourseService', () => {
   let service: CourseService;
@@ -64,13 +64,44 @@ describe('CourseService', () => {
   });
 
   it('fetches roster via getCourseRoster', async () => {
-    const members: Membership[] = [
-      { user_pid: 123, course_id: 1, type: 'instructor', state: 'enrolled' },
-    ];
-    api.invoke.mockResolvedValue(members);
+    const response: PaginatedRoster = {
+      items: [
+        {
+          user_pid: 123,
+          course_id: 1,
+          type: 'instructor',
+          state: 'enrolled',
+          given_name: 'Jane',
+          family_name: 'Doe',
+          email: 'jane@unc.edu',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 25,
+    };
+    api.invoke.mockResolvedValue(response);
     const result = await service.getRoster(1);
-    expect(result).toEqual(members);
-    expect(api.invoke).toHaveBeenCalledWith(getCourseRoster, { course_id: 1 });
+    expect(result).toEqual(response);
+    expect(api.invoke).toHaveBeenCalledWith(getCourseRoster, {
+      course_id: 1,
+      page: undefined,
+      page_size: undefined,
+      q: undefined,
+    });
+  });
+
+  it('passes pagination and query params to getCourseRoster', async () => {
+    const response: PaginatedRoster = { items: [], total: 0, page: 2, page_size: 10 };
+    api.invoke.mockResolvedValue(response);
+    const result = await service.getRoster(1, { page: 2, pageSize: 10, query: 'alice' });
+    expect(result).toEqual(response);
+    expect(api.invoke).toHaveBeenCalledWith(getCourseRoster, {
+      course_id: 1,
+      page: 2,
+      page_size: 10,
+      q: 'alice',
+    });
   });
 
   it('adds a member via addMember', async () => {

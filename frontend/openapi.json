@@ -252,7 +252,7 @@
           "Courses"
         ],
         "summary": "Get course roster",
-        "description": "Returns the full roster for a course.\n\nOnly instructors and TAs may view the roster.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id Path param.\n    course_svc: Service used to query the roster.\n\nReturns:\n    List of memberships for the course.",
+        "description": "Returns the paginated roster for a course.\n\nOnly instructors and TAs may view the roster.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id Path param.\n    course_svc: Service used to query the roster.\n    pagination: Pagination parameters from query string.\n    q: Optional search query to filter by name, PID, or email.\n\nReturns:\n    Paginated roster with user details.",
         "operationId": "get_course_roster",
         "security": [
           {
@@ -268,19 +268,48 @@
               "type": "integer",
               "title": "Course Id"
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "All memberships for the course.",
+            "description": "Paginated roster with user details.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MembershipResponse"
-                  },
-                  "title": "Response Get Course Roster"
+                  "$ref": "#/components/schemas/PaginatedRosterResponse"
                 }
               }
             }
@@ -711,6 +740,80 @@
         ],
         "title": "MembershipType",
         "description": "Role a user holds within a course."
+      },
+      "PaginatedRosterResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RosterMemberResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "PaginatedRosterResponse",
+        "description": "Paginated wrapper around roster member entries."
+      },
+      "RosterMemberResponse": {
+        "properties": {
+          "user_pid": {
+            "type": "integer",
+            "title": "User Pid"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MembershipType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MembershipState"
+          },
+          "given_name": {
+            "type": "string",
+            "title": "Given Name"
+          },
+          "family_name": {
+            "type": "string",
+            "title": "Family Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_pid",
+          "course_id",
+          "type",
+          "state",
+          "given_name",
+          "family_name",
+          "email"
+        ],
+        "title": "RosterMemberResponse",
+        "description": "A roster entry combining membership and user details."
       },
       "Term": {
         "type": "string",

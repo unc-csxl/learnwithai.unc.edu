@@ -7,16 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { MembershipResponse } from '../../models/membership-response';
+import { PaginatedRosterResponse } from '../../models/paginated-roster-response';
 
 export interface GetCourseRoster$Params {
   course_id: number;
+  q?: string;
+  page?: number;
+  page_size?: number;
 }
 
-export function getCourseRoster(http: HttpClient, rootUrl: string, params: GetCourseRoster$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<MembershipResponse>>> {
+export function getCourseRoster(http: HttpClient, rootUrl: string, params: GetCourseRoster$Params, context?: HttpContext): Observable<StrictHttpResponse<PaginatedRosterResponse>> {
   const rb = new RequestBuilder(rootUrl, getCourseRoster.PATH, 'get');
   if (params) {
     rb.path('course_id', params.course_id, {});
+    rb.query('q', params.q, {});
+    rb.query('page', params.page, {});
+    rb.query('page_size', params.page_size, {});
   }
 
   return http.request(
@@ -24,7 +30,7 @@ export function getCourseRoster(http: HttpClient, rootUrl: string, params: GetCo
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<MembershipResponse>>;
+      return r as StrictHttpResponse<PaginatedRosterResponse>;
     })
   );
 }

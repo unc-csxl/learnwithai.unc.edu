@@ -9,6 +9,8 @@ export type { HttpValidationError } from './models/http-validation-error';
 export type { MembershipResponse } from './models/membership-response';
 export type { MembershipState } from './models/membership-state';
 export type { MembershipType } from './models/membership-type';
+export type { PaginatedRosterResponse } from './models/paginated-roster-response';
+export type { RosterMemberResponse } from './models/roster-member-response';
 export type { Term } from './models/term';
 export type { UserProfile } from './models/user-profile';
 export type { ValidationError } from './models/validation-error';

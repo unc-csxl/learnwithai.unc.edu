@@ -16,3 +16,5 @@ export type { AddMemberRequest as AddMember } from './generated/models/add-membe
 export type { UserProfile as User } from './generated/models/user-profile';
 export type { MembershipType } from './generated/models/membership-type';
 export type { MembershipState } from './generated/models/membership-state';
+export type { RosterMemberResponse as RosterMember } from './generated/models/roster-member-response';
+export type { PaginatedRosterResponse as PaginatedRoster } from './generated/models/paginated-roster-response';
