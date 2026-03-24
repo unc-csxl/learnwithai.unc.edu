@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { signal } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Settings } from './settings.component';
 import { CourseService } from '../../course.service';
 import { PageTitleService } from '../../../page-title.service';
 import { SuccessSnackbarService } from '../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { Course } from '../../../api/models';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -17,6 +19,13 @@ const fakeCourse: Course = {
   term: 'spring',
   year: 2026,
   membership: { type: 'instructor', state: 'enrolled' },
+};
+
+const fakeSection = {
+  label: 'Instructor view',
+  title: 'COMP423: Foundations of Software Engineering',
+  subtitle: 'Spring 2026',
+  items: [],
 };
 
 describe('Settings', () => {
@@ -39,6 +48,12 @@ describe('Settings', () => {
 
     const mockSuccessSnackbar = { open: vi.fn() };
 
+    const sectionSignal = signal<typeof fakeSection | null>(fakeSection);
+    const mockLayoutNavigation = {
+      section: sectionSignal.asReadonly(),
+      setSection: vi.fn(),
+    };
+
     TestBed.configureTestingModule({
       imports: [Settings, NoopAnimationsModule],
       providers: [
@@ -47,12 +62,20 @@ describe('Settings', () => {
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: Router, useValue: mockRouter },
         { provide: SuccessSnackbarService, useValue: mockSuccessSnackbar },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
       ],
     });
 
     const fixture = TestBed.createComponent(Settings);
     fixture.detectChanges();
-    return { fixture, mockCourseService, mockPageTitle, mockRouter, mockSuccessSnackbar };
+    return {
+      fixture,
+      mockCourseService,
+      mockPageTitle,
+      mockRouter,
+      mockSuccessSnackbar,
+      mockLayoutNavigation,
+    };
   }
 
   it('should set the page title', () => {
@@ -98,8 +121,9 @@ describe('Settings', () => {
     expect(el.querySelector('[role="alert"]')?.textContent).toContain('Failed to load course');
   });
 
-  it('should submit update, show snackbar, and navigate to dashboard', async () => {
-    const { fixture, mockCourseService, mockRouter, mockSuccessSnackbar } = setup();
+  it('should submit update, show snackbar, update sidebar, and navigate to dashboard', async () => {
+    const { fixture, mockCourseService, mockRouter, mockSuccessSnackbar, mockLayoutNavigation } =
+      setup();
     await flush();
     fixture.detectChanges();
 
@@ -117,6 +141,12 @@ describe('Settings', () => {
       term: 'spring',
       year: 2026,
     });
+    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'COMP423: Foundations of Software Engineering',
+        subtitle: 'Spring 2026',
+      }),
+    );
     expect(mockSuccessSnackbar.open).toHaveBeenCalledWith('Course settings updated.');
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/courses', 1, 'dashboard']);
   });
@@ -174,5 +204,18 @@ describe('Settings', () => {
 
     expect(mockSuccessSnackbar.open).toHaveBeenCalled();
     expect(mockRouter.navigate).toHaveBeenCalled();
+  });
+
+  it('should not call setSection when no section is active', async () => {
+    const { fixture, mockLayoutNavigation } = setup();
+    // Override the section signal to return null (no active nav section)
+    mockLayoutNavigation.section = signal<null>(null).asReadonly();
+    await flush();
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    await flush();
+
+    expect(mockLayoutNavigation.setSection).not.toHaveBeenCalled();
   });
 });

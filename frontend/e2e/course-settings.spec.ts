@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('course settings', () => {
-  test.beforeAll(async ({ request }) => {
+  test.beforeEach(async ({ request }) => {
     await request.post('/api/dev/reset-db');
   });
 
@@ -37,6 +37,37 @@ test.describe('course settings', () => {
 
     // Should show a success snackbar notification
     await expect(page.getByText('Course settings updated.')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('sidebar reflects updated course number and name after save', async ({ page }) => {
+    // Login as Ina Instructor
+    await page.goto('/api/auth/as/222222222');
+    await page.waitForURL('**/courses');
+
+    // Navigate to the course
+    await page.getByText('COMP423').click();
+    await page.waitForURL('**/courses/*/dashboard');
+
+    const sidenav = page.locator('mat-sidenav');
+
+    // Sidebar initially shows old course info
+    await expect(sidenav).toContainText('COMP423');
+
+    // Navigate to Course Settings and change course number and name
+    await page.getByRole('link', { name: 'Course Settings' }).click();
+    await page.waitForURL('**/courses/*/settings');
+
+    const courseNumberInput = page.locator('input[formControlName="course_number"]');
+    const nameInput = page.locator('input[formControlName="name"]');
+    await courseNumberInput.fill('COMP524');
+    await nameInput.fill('Advanced Software Engineering');
+
+    await page.getByRole('button', { name: 'Save' }).click();
+    await page.waitForURL('**/courses/*/dashboard');
+
+    // Sidebar should immediately reflect the updated course number and name
+    await expect(sidenav).toContainText('COMP524');
+    await expect(sidenav).toContainText('Advanced Software Engineering');
   });
 
   test('student cannot see course settings link', async ({ page }) => {

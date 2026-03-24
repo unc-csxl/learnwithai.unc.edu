@@ -7,6 +7,7 @@ import { CourseService } from '../../course.service';
 import { CourseFormFields } from '../../course-form-fields/course-form-fields.component';
 import { PageTitleService } from '../../../page-title.service';
 import { SuccessSnackbarService } from '../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { Course } from '../../../api/models';
 
 /** Editable course settings form for instructors. */
@@ -23,6 +24,7 @@ export class Settings {
   private fb = inject(FormBuilder);
   private titleService = inject(PageTitleService);
   private successSnackbar = inject(SuccessSnackbarService);
+  private layoutNavigation = inject(LayoutNavigationService);
 
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal('');
@@ -72,13 +74,22 @@ export class Settings {
     this.saving.set(true);
     const raw = this.form.getRawValue();
     try {
-      await this.courseService.updateCourse(this.courseId, {
+      const updated = await this.courseService.updateCourse(this.courseId, {
         course_number: raw.course_number,
         name: raw.name,
         description: raw.description,
         term: raw.term as 'fall' | 'winter' | 'spring' | 'summer',
         year: raw.year,
       });
+      const currentSection = this.layoutNavigation.section();
+      if (currentSection) {
+        const term = updated.term.charAt(0).toUpperCase() + updated.term.slice(1);
+        this.layoutNavigation.setSection({
+          ...currentSection,
+          title: `${updated.course_number}: ${updated.name}`,
+          subtitle: `${term} ${updated.year}`,
+        });
+      }
       this.successSnackbar.open('Course settings updated.');
       await this.router.navigate(['/courses', this.courseId, 'dashboard']);
     } catch {
