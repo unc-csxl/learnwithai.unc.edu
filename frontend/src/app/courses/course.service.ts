@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Api } from '../api/generated/api';
 import { listMyCourses } from '../api/generated/fn/courses/list-my-courses';
 import { createCourse as createCourseFn } from '../api/generated/fn/courses/create-course';
+import { updateCourse as updateCourseFn } from '../api/generated/fn/courses/update-course';
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember as addMemberFn } from '../api/generated/fn/courses/add-member';
 import { dropMember as dropMemberFn } from '../api/generated/fn/courses/drop-member';
@@ -10,6 +11,7 @@ import { getRosterUploadStatus as getRosterUploadStatusFn } from '../api/generat
 import {
   Course,
   CreateCourse,
+  UpdateCourse,
   PaginatedRoster,
   Membership,
   AddMember,
@@ -30,6 +32,11 @@ export class CourseService {
   /** Creates a new course. */
   createCourse(request: CreateCourse): Promise<Course> {
     return this.api.invoke(createCourseFn, { body: request });
+  }
+
+  /** Updates an existing course. */
+  updateCourse(courseId: number, request: UpdateCourse): Promise<Course> {
+    return this.api.invoke(updateCourseFn, { course_id: courseId, body: request });
   }
 
   /** Fetches a paginated, optionally filtered roster for a course. */

@@ -1,0 +1,26 @@
+<div [formGroup]="formGroup()">
+  <mat-form-field>
+    <mat-label>Course Number</mat-label>
+    <input matInput formControlName="course_number" type="text" placeholder="e.g. COMP423" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Course Name</mat-label>
+    <input matInput formControlName="name" type="text" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description" rows="3"></textarea>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Term</mat-label>
+    <mat-select formControlName="term">
+      @for (t of terms; track t) {
+        <mat-option [value]="t">{{ t | titlecase }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Year</mat-label>
+    <input matInput formControlName="year" type="number" />
+  </mat-form-field>
+</div>
