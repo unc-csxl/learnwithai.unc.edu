@@ -1,9 +1,11 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ProfileEditor } from './profile-editor.component';
 import { AuthService } from '../auth.service';
 import { PageTitleService } from '../page-title.service';
+import { SuccessSnackbarService } from '../success-snackbar.service';
 import { User } from '../api/models';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -36,17 +38,22 @@ describe('ProfileEditor', () => {
       setTitle: vi.fn(),
     };
 
+    const mockRouter = { navigate: vi.fn(() => Promise.resolve(true)) };
+    const mockSuccessSnackbar = { open: vi.fn() };
+
     TestBed.configureTestingModule({
       imports: [ProfileEditor, NoopAnimationsModule],
       providers: [
         { provide: AuthService, useValue: mockAuth },
         { provide: PageTitleService, useValue: mockPageTitle },
+        { provide: Router, useValue: mockRouter },
+        { provide: SuccessSnackbarService, useValue: mockSuccessSnackbar },
       ],
     });
 
     const fixture = TestBed.createComponent(ProfileEditor);
     fixture.detectChanges();
-    return { fixture, mockAuth, mockPageTitle };
+    return { fixture, mockAuth, mockPageTitle, mockRouter, mockSuccessSnackbar };
   }
 
   it('should create', () => {
@@ -54,23 +61,24 @@ describe('ProfileEditor', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render with null user', () => {
-    const { fixture } = setup(null);
-    const el: HTMLElement = fixture.nativeElement;
-    const readonlyInputs = el.querySelectorAll('input[readonly]');
-    expect(readonlyInputs.length).toBe(4);
-  });
-
   it('should set the page title to Profile', () => {
     const { mockPageTitle } = setup();
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Profile');
   });
 
-  it('should render readonly fields for PID, Onyen, Email, and Full Name', () => {
+  it('should display account info (PID, onyen, email, name) as text', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
-    const readonlyInputs = el.querySelectorAll('input[readonly]');
-    expect(readonlyInputs.length).toBe(4);
+    expect(el.textContent).toContain('999999999');
+    expect(el.textContent).toContain('testuser');
+    expect(el.textContent).toContain('test@example.com');
+    expect(el.textContent).toContain('Test User');
+  });
+
+  it('should not render readonly form inputs for non-editable fields', () => {
+    const { fixture } = setup();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('input[readonly]').length).toBe(0);
   });
 
   it('should render editable fields for given name and family name', () => {
@@ -100,8 +108,16 @@ describe('ProfileEditor', () => {
     expect(button.disabled).toBe(true);
   });
 
-  it('should submit the form and call updateProfile', async () => {
+  it('should not submit when form is invalid', () => {
     const { fixture, mockAuth } = setup();
+    const component = fixture.componentInstance;
+    component['form'].patchValue({ given_name: '' });
+    component['onSubmit']();
+    expect(mockAuth.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('should submit form, show snackbar, and navigate to /courses', async () => {
+    const { fixture, mockAuth, mockRouter, mockSuccessSnackbar } = setup();
     const component = fixture.componentInstance;
     component['form'].setValue({ given_name: 'Updated', family_name: 'Name' });
     fixture.detectChanges();
@@ -117,10 +133,14 @@ describe('ProfileEditor', () => {
       given_name: 'Updated',
       family_name: 'Name',
     });
+    expect(mockSuccessSnackbar.open).toHaveBeenCalledWith('Profile updated.');
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/courses']);
   });
 
-  it('should show saved message after successful submit', async () => {
-    const { fixture } = setup();
+  it('should show error message when save fails', async () => {
+    const { fixture, mockAuth } = setup();
+    mockAuth.updateProfile.mockRejectedValueOnce(new Error('fail'));
+
     const component = fixture.componentInstance;
     component['form'].setValue({ given_name: 'Updated', family_name: 'Name' });
     fixture.detectChanges();
@@ -132,21 +152,13 @@ describe('ProfileEditor', () => {
     await flush();
     fixture.detectChanges();
 
-    const status = fixture.nativeElement.querySelector('[role="status"]');
-    expect(status?.textContent).toContain('Profile updated');
-  });
-
-  it('should not submit when form is invalid', () => {
-    const { fixture, mockAuth } = setup();
-    const component = fixture.componentInstance;
-    component['form'].patchValue({ given_name: '' });
-    component['onSubmit']();
-    expect(mockAuth.updateProfile).not.toHaveBeenCalled();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[role="alert"]')?.textContent).toContain('Failed to save profile');
   });
 
   it('should show saving state during submission', async () => {
     let resolveUpdate!: (value: User) => void;
-    const { fixture, mockAuth } = setup();
+    const { fixture, mockAuth, mockRouter, mockSuccessSnackbar } = setup();
     mockAuth.updateProfile.mockReturnValue(
       new Promise<User>((r) => {
         resolveUpdate = r;
@@ -171,9 +183,16 @@ describe('ProfileEditor', () => {
       family_name: 'Name',
       name: 'Updated Name',
     });
-    await new Promise((r) => setTimeout(r));
-    fixture.detectChanges();
+    await flush();
 
-    expect(button.textContent).toContain('Save');
+    expect(mockSuccessSnackbar.open).toHaveBeenCalled();
+    expect(mockRouter.navigate).toHaveBeenCalled();
+  });
+
+  it('should render with null user without crashing', () => {
+    const { fixture } = setup(null);
+    const el: HTMLElement = fixture.nativeElement;
+    // No crash; account info rows just show empty values
+    expect(el.querySelector('input[formControlName="given_name"]')).toBeTruthy();
   });
 });

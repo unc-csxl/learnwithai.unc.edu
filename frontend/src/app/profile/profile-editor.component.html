@@ -1,36 +1,46 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 max-w-md">
-  <mat-form-field>
-    <mat-label>PID</mat-label>
-    <input matInput [value]="user()?.pid" readonly />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Onyen</mat-label>
-    <input matInput [value]="user()?.onyen" readonly />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Email</mat-label>
-    <input matInput [value]="user()?.email" readonly />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Full Name</mat-label>
-    <input matInput [value]="fullName()" readonly />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Given Name</mat-label>
-    <input matInput formControlName="given_name" type="text" />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Family Name</mat-label>
-    <input matInput formControlName="family_name" type="text" />
-  </mat-form-field>
-  <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">
-    @if (saving()) {
-      Saving…
-    } @else {
-      Save
+<div class="flex flex-col gap-6 max-w-md">
+  <section aria-label="Account information">
+    <dl class="flex flex-col gap-2">
+      <div class="flex gap-3 items-baseline">
+        <dt class="text-sm w-20 shrink-0" style="color: var(--mat-sys-on-surface-variant)">PID</dt>
+        <dd class="text-sm font-medium m-0">{{ user()?.pid }}</dd>
+      </div>
+      <div class="flex gap-3 items-baseline">
+        <dt class="text-sm w-20 shrink-0" style="color: var(--mat-sys-on-surface-variant)">
+          Onyen
+        </dt>
+        <dd class="text-sm font-medium m-0">{{ user()?.onyen }}</dd>
+      </div>
+      <div class="flex gap-3 items-baseline">
+        <dt class="text-sm w-20 shrink-0" style="color: var(--mat-sys-on-surface-variant)">
+          Email
+        </dt>
+        <dd class="text-sm font-medium m-0">{{ user()?.email }}</dd>
+      </div>
+      <div class="flex gap-3 items-baseline">
+        <dt class="text-sm w-20 shrink-0" style="color: var(--mat-sys-on-surface-variant)">Name</dt>
+        <dd class="text-sm font-medium m-0">{{ user()?.name }}</dd>
+      </div>
+    </dl>
+  </section>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <mat-form-field>
+      <mat-label>Given Name</mat-label>
+      <input matInput formControlName="given_name" type="text" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Family Name</mat-label>
+      <input matInput formControlName="family_name" type="text" />
+    </mat-form-field>
+    @if (errorMessage()) {
+      <p class="text-red-600 text-sm" role="alert">{{ errorMessage() }}</p>
     }
-  </button>
-  @if (saved()) {
-    <p class="text-sm text-green-600" role="status">Profile updated.</p>
-  }
-</form>
+    <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">
+      @if (saving()) {
+        Saving…
+      } @else {
+        Save
+      }
+    </button>
+  </form>
+</div>

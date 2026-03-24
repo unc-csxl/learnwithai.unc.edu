@@ -19,9 +19,9 @@ test.describe('profile editor', () => {
     await profileLink.click();
     await page.waitForURL('**/profile');
 
-    // Readonly fields should display correct values
-    const pidInput = page.locator('input[readonly]').first();
-    await expect(pidInput).toHaveValue('222222222');
+    // Non-editable account info should be shown as readable text (not form inputs)
+    await expect(page.getByText('222222222')).toBeVisible();
+    expect(await page.locator('input[readonly]').count()).toBe(0);
 
     // Editable fields should be pre-populated
     const givenNameInput = page.locator('input[formControlName="given_name"]');
@@ -36,8 +36,11 @@ test.describe('profile editor', () => {
     // Submit the form
     await page.getByRole('button', { name: 'Save' }).click();
 
-    // Should show success message
-    await expect(page.getByRole('status')).toContainText('Profile updated');
+    // Should navigate to courses list
+    await page.waitForURL('**/courses');
+
+    // Should show a success snackbar notification
+    await expect(page.getByText('Profile updated.')).toBeVisible({ timeout: 5000 });
 
     // The sidenav should reflect the updated name
     await expect(page.getByRole('link', { name: 'Edit profile' })).toContainText(

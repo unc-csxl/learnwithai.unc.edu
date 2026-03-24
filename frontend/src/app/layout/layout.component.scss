@@ -32,6 +32,12 @@
   /* remove any platform or theme-imposed rounding */
 }
 
+.sidenav-content-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
 .sidenav-mobile {
   width: 100vw;
   border-radius: 0 !important;

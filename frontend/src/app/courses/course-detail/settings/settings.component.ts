@@ -1,27 +1,30 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { CourseService } from '../../course.service';
 import { CourseFormFields } from '../../course-form-fields/course-form-fields.component';
 import { PageTitleService } from '../../../page-title.service';
+import { SuccessSnackbarService } from '../../../success-snackbar.service';
 import { Course } from '../../../api/models';
 
 /** Editable course settings form for instructors. */
 @Component({
   selector: 'app-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, MatButtonModule, CourseFormFields],
+  imports: [ReactiveFormsModule, MatButtonModule, MatSnackBarModule, CourseFormFields],
   templateUrl: './settings.component.html',
 })
 export class Settings {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private fb = inject(FormBuilder);
   private titleService = inject(PageTitleService);
+  private successSnackbar = inject(SuccessSnackbarService);
 
   protected readonly saving = signal(false);
-  protected readonly saved = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly loaded = signal(false);
 
@@ -67,7 +70,6 @@ export class Settings {
       return;
     }
     this.saving.set(true);
-    this.saved.set(false);
     const raw = this.form.getRawValue();
     try {
       await this.courseService.updateCourse(this.courseId, {
@@ -77,8 +79,8 @@ export class Settings {
         term: raw.term as 'fall' | 'winter' | 'spring' | 'summer',
         year: raw.year,
       });
-      this.saving.set(false);
-      this.saved.set(true);
+      this.successSnackbar.open('Course settings updated.');
+      await this.router.navigate(['/courses', this.courseId, 'dashboard']);
     } catch {
       this.saving.set(false);
       this.errorMessage.set('Failed to save course settings.');

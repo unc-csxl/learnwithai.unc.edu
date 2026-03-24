@@ -32,8 +32,11 @@ test.describe('course settings', () => {
     // Submit the form
     await page.getByRole('button', { name: 'Save' }).click();
 
-    // Should show success message
-    await expect(page.getByRole('status')).toContainText('Course settings updated');
+    // Should navigate back to the course dashboard
+    await page.waitForURL('**/courses/*/dashboard');
+
+    // Should show a success snackbar notification
+    await expect(page.getByText('Course settings updated.')).toBeVisible({ timeout: 5000 });
   });
 
   test('student cannot see course settings link', async ({ page }) => {

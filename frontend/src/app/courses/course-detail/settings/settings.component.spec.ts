@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Settings } from './settings.component';
 import { CourseService } from '../../course.service';
 import { PageTitleService } from '../../../page-title.service';
+import { SuccessSnackbarService } from '../../../success-snackbar.service';
 import { Course } from '../../../api/models';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -34,18 +35,24 @@ describe('Settings', () => {
       parent: { snapshot: { paramMap: { get: () => '1' } } },
     };
 
+    const mockRouter = { navigate: vi.fn(() => Promise.resolve(true)) };
+
+    const mockSuccessSnackbar = { open: vi.fn() };
+
     TestBed.configureTestingModule({
       imports: [Settings, NoopAnimationsModule],
       providers: [
         { provide: CourseService, useValue: mockCourseService },
         { provide: PageTitleService, useValue: mockPageTitle },
         { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: Router, useValue: mockRouter },
+        { provide: SuccessSnackbarService, useValue: mockSuccessSnackbar },
       ],
     });
 
     const fixture = TestBed.createComponent(Settings);
     fixture.detectChanges();
-    return { fixture, mockCourseService, mockPageTitle };
+    return { fixture, mockCourseService, mockPageTitle, mockRouter, mockSuccessSnackbar };
   }
 
   it('should set the page title', () => {
@@ -91,8 +98,8 @@ describe('Settings', () => {
     expect(el.querySelector('[role="alert"]')?.textContent).toContain('Failed to load course');
   });
 
-  it('should submit update and show success message', async () => {
-    const { fixture, mockCourseService } = setup();
+  it('should submit update, show snackbar, and navigate to dashboard', async () => {
+    const { fixture, mockCourseService, mockRouter, mockSuccessSnackbar } = setup();
     await flush();
     fixture.detectChanges();
 
@@ -110,8 +117,8 @@ describe('Settings', () => {
       term: 'spring',
       year: 2026,
     });
-    const status = fixture.nativeElement.querySelector('[role="status"]');
-    expect(status?.textContent).toContain('Course settings updated');
+    expect(mockSuccessSnackbar.open).toHaveBeenCalledWith('Course settings updated.');
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/courses', 1, 'dashboard']);
   });
 
   it('should not submit when form is invalid', async () => {
@@ -143,7 +150,7 @@ describe('Settings', () => {
 
   it('should show saving state during submission', async () => {
     let resolveUpdate!: (value: Course) => void;
-    const { fixture, mockCourseService } = setup();
+    const { fixture, mockCourseService, mockRouter, mockSuccessSnackbar } = setup();
     await flush();
     fixture.detectChanges();
 
@@ -164,8 +171,8 @@ describe('Settings', () => {
 
     resolveUpdate(fakeCourse);
     await flush();
-    fixture.detectChanges();
 
-    expect(button.textContent).toContain('Save');
+    expect(mockSuccessSnackbar.open).toHaveBeenCalled();
+    expect(mockRouter.navigate).toHaveBeenCalled();
   });
 });

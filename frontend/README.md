@@ -60,7 +60,17 @@ Routes are declared in `src/app/app.routes.ts`. The default (`/`) redirects to `
 - `ThemeService` — light / dark / system theme toggle
 - `PageTitleService` — reactive toolbar title and browser tab title
 - `CourseService` — course API calls via generated client
+- `SuccessSnackbarService` — shared helper that shows a success snackbar for 5 seconds. Use this instead of injecting `MatSnackBar` directly in components that save forms.
 - `AuthTokenInterceptor` — attaches auth headers to `/api/*` requests
+
+### Post-Save UX Pattern
+
+After a form saves successfully, always:
+
+1. Call `SuccessSnackbarService.open(message)` to show a 5-second success notification.
+2. Navigate the user to the next useful destination (e.g. course dashboard after saving course settings, courses list after saving a profile).
+
+Do **not** leave the user on the same page with an inline "saved" message.
 
 ## How To Run The Frontend
 
