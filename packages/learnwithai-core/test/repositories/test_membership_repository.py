@@ -115,6 +115,46 @@ def test_get_by_user_and_course_raises_for_unpersisted_course(session: Session) 
         repo.get_by_user_and_course(_make_user(123456789), missing_id_course)
 
 
+# --- get_by_user_and_course_ids ---
+
+
+@pytest.mark.integration
+def test_get_by_user_and_course_ids_returns_membership(session: Session) -> None:
+    # Arrange
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+    repo.create(
+        Membership(
+            user_pid=123456789,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+
+    # Act
+    result = repo.get_by_user_and_course_ids(123456789, course.id)  # type: ignore[arg-type]
+
+    # Assert
+    assert result is not None
+    assert result.user_pid == 123456789
+    assert result.type == MembershipType.STUDENT
+
+
+@pytest.mark.integration
+def test_get_by_user_and_course_ids_returns_none_when_not_found(
+    session: Session,
+) -> None:
+    # Arrange
+    repo = MembershipRepository(session)
+
+    # Act
+    result = repo.get_by_user_and_course_ids(999999999, 999999)
+
+    # Assert
+    assert result is None
+
+
 # --- create with pending default ---
 
 

@@ -19,6 +19,7 @@ from learnwithai.tables.course import Course
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.repositories.roster_upload_repository import RosterUploadRepository
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 
 SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
@@ -243,4 +244,23 @@ def get_pagination_params(
 
 PaginationParamsDI: TypeAlias = Annotated[
     PaginationParams, Depends(get_pagination_params)
+]
+
+
+def roster_upload_repository_factory(
+    session: SessionDI,
+) -> RosterUploadRepository:
+    """Constructs a roster upload repository bound to the current request session.
+
+    Args:
+        session: Database session scoped to the request.
+
+    Returns:
+        A repository backed by the provided database session.
+    """
+    return RosterUploadRepository(session)
+
+
+RosterUploadRepositoryDI: TypeAlias = Annotated[
+    RosterUploadRepository, Depends(roster_upload_repository_factory)
 ]

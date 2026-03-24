@@ -84,6 +84,52 @@ def test_create_course_creates_and_enrolls_instructor() -> None:
     assert created_membership.state == MembershipState.ENROLLED
 
 
+# --- authorize_instructor ---
+
+
+def test_authorize_instructor_returns_membership_for_instructor() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    instructor = _make_membership(type=MembershipType.INSTRUCTOR)
+    membership_repo.get_by_user_and_course.return_value = instructor
+    svc = _build_service(membership_repo=membership_repo)
+    subject = _make_user()
+    course = _make_course()
+
+    # Act
+    result = svc.authorize_instructor(subject, course)
+
+    # Assert
+    assert result is instructor
+
+
+def test_authorize_instructor_raises_for_non_instructor() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    student = _make_membership(type=MembershipType.STUDENT)
+    membership_repo.get_by_user_and_course.return_value = student
+    svc = _build_service(membership_repo=membership_repo)
+    subject = _make_user()
+    course = _make_course()
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError):
+        svc.authorize_instructor(subject, course)
+
+
+def test_authorize_instructor_raises_for_non_member() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    membership_repo.get_by_user_and_course.return_value = None
+    svc = _build_service(membership_repo=membership_repo)
+    subject = _make_user()
+    course = _make_course()
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError):
+        svc.authorize_instructor(subject, course)
+
+
 # --- get_my_courses ---
 
 
