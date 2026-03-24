@@ -8,7 +8,7 @@ from .course import (
     RosterMemberResponse,
 )
 from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
-from .user_profile import UserProfile
+from .user_profile import UpdateProfileRequest, UserProfile
 
 __all__ = [
     "AddMemberRequest",
@@ -20,5 +20,6 @@ __all__ = [
     "RosterMemberResponse",
     "RosterUploadResponse",
     "RosterUploadStatusResponse",
+    "UpdateProfileRequest",
     "UserProfile",
 ]

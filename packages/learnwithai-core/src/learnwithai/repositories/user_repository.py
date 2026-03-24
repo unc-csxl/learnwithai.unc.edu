@@ -49,3 +49,17 @@ class UserRepository:
         self._session.flush()
         self._session.refresh(new_user)
         return new_user
+
+    def update_user(self, user: User) -> User:
+        """Merges changes to an existing user and refreshes state.
+
+        Args:
+            user: User instance with updated fields.
+
+        Returns:
+            The updated user with refreshed database state.
+        """
+        merged = self._session.merge(user)
+        self._session.flush()
+        self._session.refresh(merged)
+        return merged

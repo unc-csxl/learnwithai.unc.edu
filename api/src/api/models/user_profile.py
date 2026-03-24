@@ -13,3 +13,10 @@ class UserProfile(BaseModel):
     given_name: str
     family_name: str
     email: str
+
+
+class UpdateProfileRequest(BaseModel):
+    """Payload for updating the authenticated user's profile."""
+
+    given_name: str
+    family_name: str

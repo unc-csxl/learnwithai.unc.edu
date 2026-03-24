@@ -83,3 +83,29 @@ def test_list_all_returns_all_users(session: Session) -> None:
     assert len(result) == 2
     pids = {u.pid for u in result}
     assert pids == {100000001, 100000002}
+
+
+# --- update_user ---
+
+
+@pytest.mark.integration
+def test_update_user_persists_changes(session: Session) -> None:
+    # Arrange
+    repo = UserRepository(session)
+    user = User(pid=123456789, name="Old Name", onyen="testuser")
+    session.add(user)
+    session.flush()
+
+    # Act
+    user.name = "New Name"
+    user.given_name = "New"
+    user.family_name = "Name"
+    result = repo.update_user(user)
+
+    # Assert
+    assert result.name == "New Name"
+    assert result.given_name == "New"
+    assert result.family_name == "Name"
+    fetched = repo.get_by_pid(123456789)
+    assert fetched is not None
+    assert fetched.name == "New Name"
