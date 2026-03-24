@@ -68,9 +68,16 @@ test.describe('authenticated course and roster flow', () => {
     await page.getByRole('link', { name: /Roster/i }).click();
     await page.waitForURL('**/courses/*/roster');
 
-    // The roster screen should show all three members
+    // The roster screen should show names, PIDs, and emails for all three members
+    await expect(page.getByRole('cell', { name: 'Ina' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Instructor', exact: true })).toBeVisible();
     await expect(page.getByText('222222222')).toBeVisible();
+    await expect(page.getByText('instructor@unc.edu')).toBeVisible();
+
+    await expect(page.getByRole('cell', { name: 'Sally' })).toBeVisible();
     await expect(page.getByText('111111111')).toBeVisible();
+
+    await expect(page.getByRole('cell', { name: 'Tatum' })).toBeVisible();
     await expect(page.getByText('333333333')).toBeVisible();
   });
 });
