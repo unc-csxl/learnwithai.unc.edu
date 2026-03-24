@@ -20,6 +20,7 @@ from ..models import (
     MembershipResponse,
     PaginatedRosterResponse,
     RosterMemberResponse,
+    UpdateCourseRequest,
 )
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType
@@ -87,6 +88,49 @@ def list_my_courses(
         _build_course_response(membership.course, membership)
         for membership in memberships
     ]
+
+
+@router.put(
+    "/{course_id}",
+    response_model=CourseResponse,
+    summary="Update a course",
+    response_description="The updated course.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Only instructors can update courses."},
+        404: {"description": "Course not found."},
+    },
+)
+def update_course(
+    subject: AuthenticatedUserDI,
+    course: CourseByCourseIDPathDI,
+    body: Annotated[UpdateCourseRequest, Body()],
+    course_svc: CourseServiceDI,
+) -> CourseResponse:
+    """Updates an existing course's details.
+
+    Only the instructor of the course may update it.
+
+    Args:
+        subject: Authenticated subject.
+        course: Course loaded via DI and course_id path param.
+        body: Course update payload.
+        course_svc: Service used to update the course.
+
+    Returns:
+        The updated course with the caller's membership.
+    """
+    updated = course_svc.update_course(
+        subject,
+        course,
+        body.course_number,
+        body.name,
+        body.term,
+        body.year,
+        body.description,
+    )
+    membership = course_svc.authorize_instructor(subject, updated)
+    return _build_course_response(updated, membership)
 
 
 @router.get(

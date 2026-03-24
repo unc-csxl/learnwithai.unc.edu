@@ -39,6 +39,16 @@ class CreateCourseRequest(BaseModel):
     year: int
 
 
+class UpdateCourseRequest(BaseModel):
+    """Payload for updating an existing course."""
+
+    course_number: str
+    name: str
+    description: str = ""
+    term: Term
+    year: int
+
+
 class AddMemberRequest(BaseModel):
     """Payload for adding a member to a course."""
 
