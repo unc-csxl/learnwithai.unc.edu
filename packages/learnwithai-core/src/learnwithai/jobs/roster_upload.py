@@ -3,13 +3,7 @@
 from typing import Literal
 
 from ..interfaces import Job, JobHandler
-
-
-class _NoopJobQueue:
-    """Null job queue used when submitting new jobs is not needed."""
-
-    def enqueue(self, job: Job) -> None:
-        pass
+from .noop_job_queue import NoopJobQueue
 
 
 class RosterUploadJob(Job):
@@ -46,7 +40,7 @@ class RosterUploadJobHandler(JobHandler["RosterUploadJob"]):
             user_repo = UserRepository(session)
             membership_repo = MembershipRepository(session)
             svc = RosterUploadService(
-                upload_repo, user_repo, membership_repo, _NoopJobQueue()
+                upload_repo, user_repo, membership_repo, NoopJobQueue()
             )
             try:
                 svc.process_upload(job.job_id)

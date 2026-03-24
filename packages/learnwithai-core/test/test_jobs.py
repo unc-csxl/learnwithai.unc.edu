@@ -8,13 +8,14 @@ from pydantic import ValidationError
 from learnwithai.jobs import (
     EchoJob,
     JobPayload,
+    NoopJobQueue,
     RosterUploadJob,
     job_adapter,
     job_handler_map,
     job_payload_adapter,
 )
 from learnwithai.jobs.echo import EchoJobHandler
-from learnwithai.jobs.roster_upload import RosterUploadJobHandler, _NoopJobQueue
+from learnwithai.jobs.roster_upload import RosterUploadJobHandler
 
 
 def test_jobs_package_exports_expected_symbols() -> None:
@@ -25,7 +26,13 @@ def test_jobs_package_exports_expected_symbols() -> None:
     exported_names = jobs.__all__
 
     # Assert
-    assert exported_names == ["Job", "EchoJob", "RosterUploadJob", "JobPayload"]
+    assert exported_names == [
+        "Job",
+        "EchoJob",
+        "NoopJobQueue",
+        "RosterUploadJob",
+        "JobPayload",
+    ]
 
 
 def test_job_payload_alias_is_annotated_union() -> None:
@@ -135,11 +142,17 @@ def test_job_handler_map_points_roster_upload_to_handler() -> None:
 
 def test_noop_job_queue_enqueue_does_nothing() -> None:
     # Arrange
-    queue = _NoopJobQueue()
+    queue = NoopJobQueue()
     job = RosterUploadJob(job_id=1)
 
     # Act / Assert — must not raise
     queue.enqueue(job)
+
+
+def test_noop_job_queue_satisfies_job_queue_protocol() -> None:
+    from learnwithai.interfaces import JobQueue
+
+    assert isinstance(NoopJobQueue(), JobQueue)
 
 
 def test_roster_upload_job_handler_commits_on_success() -> None:

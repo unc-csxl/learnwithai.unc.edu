@@ -62,6 +62,8 @@ Services are classes whose dependencies (repositories and infrastructure like `J
 
 Methods are ordered in **literate code style**: public methods (the big picture) come first, private helpers come last.
 
+The `JobQueue` interface (`learnwithai.interfaces.JobQueue`) is defined in this package so services can accept it without importing `learnwithai-jobqueue`. When a context (such as a job handler) constructs a service that never needs to enqueue new jobs, pass `NoopJobQueue()` from `learnwithai.jobs` to satisfy the constructor. Do not make the dependency optional.
+
 ## Parameter Ordering Convention
 
 Any service method that accepts a `subject` parameter (the authenticated user performing the action) must list `subject` **first**. Subsequent domain model parameters follow in order from most generic to most specific. Repositories and other infrastructure parameters come last.
