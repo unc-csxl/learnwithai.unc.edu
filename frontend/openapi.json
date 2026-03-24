@@ -446,7 +446,7 @@
           "Development"
         ],
         "summary": "List all registered users (dev only)",
-        "description": "Returns all registered users for the development login chooser.",
+        "description": "Returns all registered users for the development login chooser.\n\nArgs:\n    user_repo: Repository used to load users.\n\nReturns:\n    A list of all registered user profiles.",
         "operationId": "dev_list_users",
         "responses": {
           "200": {
@@ -583,17 +583,24 @@
             "type": "integer",
             "title": "Id"
           },
+          "course_number": {
+            "type": "string",
+            "title": "Course Number"
+          },
           "name": {
             "type": "string",
             "title": "Name"
           },
-          "term": {
+          "description": {
             "type": "string",
-            "title": "Term"
+            "title": "Description"
           },
-          "section": {
-            "type": "string",
-            "title": "Section"
+          "term": {
+            "$ref": "#/components/schemas/Term"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
           },
           "membership": {
             "$ref": "#/components/schemas/CourseMembership"
@@ -602,9 +609,11 @@
         "type": "object",
         "required": [
           "id",
+          "course_number",
           "name",
+          "description",
           "term",
-          "section",
+          "year",
           "membership"
         ],
         "title": "CourseResponse",
@@ -612,24 +621,33 @@
       },
       "CreateCourseRequest": {
         "properties": {
+          "course_number": {
+            "type": "string",
+            "title": "Course Number"
+          },
           "name": {
             "type": "string",
             "title": "Name"
           },
-          "term": {
+          "description": {
             "type": "string",
-            "title": "Term"
+            "title": "Description",
+            "default": ""
           },
-          "section": {
-            "type": "string",
-            "title": "Section"
+          "term": {
+            "$ref": "#/components/schemas/Term"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
           }
         },
         "type": "object",
         "required": [
+          "course_number",
           "name",
           "term",
-          "section"
+          "year"
         ],
         "title": "CreateCourseRequest",
         "description": "Payload for creating a new course."
@@ -693,6 +711,17 @@
         ],
         "title": "MembershipType",
         "description": "Role a user holds within a course."
+      },
+      "Term": {
+        "type": "string",
+        "enum": [
+          "fall",
+          "winter",
+          "spring",
+          "summer"
+        ],
+        "title": "Term",
+        "description": "Academic term within a year."
       },
       "UserProfile": {
         "properties": {

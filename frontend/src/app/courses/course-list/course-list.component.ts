@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +12,7 @@ import { PageTitleService } from '../../page-title.service';
 @Component({
   selector: 'app-course-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatButtonModule, MatCardModule, MatIconModule],
+  imports: [RouterLink, TitleCasePipe, MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './course-list.component.html',
   styleUrl: './course-list.component.scss',
 })

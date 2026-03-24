@@ -41,7 +41,7 @@ export class CourseDetail implements OnDestroy {
       const course = courses.find((c) => c.id === this.courseId);
       if (course) {
         this.course.set(course);
-        this.titleService.setTitle(course.name);
+        this.titleService.setTitle(`${course.course_number}: ${course.name}`);
         this.layoutNavigation.setSection(this.buildNavigationSection(course));
         await this.redirectStudentFromDashboard(course);
       } else {
@@ -56,8 +56,8 @@ export class CourseDetail implements OnDestroy {
 
   private buildNavigationSection(course: Course): LayoutNavigationSection {
     const baseSection = {
-      title: course.name,
-      subtitle: `${course.term} - Section ${course.section}`,
+      title: `${course.course_number}: ${course.name}`,
+      subtitle: `${course.term.charAt(0).toUpperCase() + course.term.slice(1)} ${course.year}`,
     };
 
     if (course.membership.type === 'student') {

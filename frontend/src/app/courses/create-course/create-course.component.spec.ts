@@ -10,7 +10,14 @@ describe('CreateCourse', () => {
   function setup() {
     const mockService = {
       createCourse: vi.fn(() =>
-        Promise.resolve({ id: 5, name: 'Algo', term: 'Fall 2026', section: '001' }),
+        Promise.resolve({
+          id: 5,
+          course_number: 'COMP301',
+          name: 'Algo',
+          description: '',
+          term: 'fall',
+          year: 2026,
+        }),
       ),
     };
 
@@ -29,13 +36,23 @@ describe('CreateCourse', () => {
   it('should render the form', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('input[formControlName="course_number"]')).toBeTruthy();
     expect(el.querySelector('input[formControlName="name"]')).toBeTruthy();
-    expect(el.querySelector('input[formControlName="term"]')).toBeTruthy();
-    expect(el.querySelector('input[formControlName="section"]')).toBeTruthy();
+    expect(el.querySelector('textarea[formControlName="description"]')).toBeTruthy();
+    expect(el.querySelector('mat-select[formControlName="term"]')).toBeTruthy();
+    expect(el.querySelector('input[formControlName="year"]')).toBeTruthy();
   });
 
   it('should disable submit when form is empty', () => {
     const { fixture } = setup();
+    const component = fixture.componentInstance;
+    component['form'].patchValue({
+      course_number: '',
+      name: '',
+      term: '',
+      year: null as unknown as number,
+    });
+    fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
     const button = el.querySelector('button[type="submit"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
@@ -45,9 +62,11 @@ describe('CreateCourse', () => {
     const { fixture, mockService, router } = setup();
     const component = fixture.componentInstance;
     component['form'].setValue({
+      course_number: 'COMP301',
       name: 'Algo',
-      term: 'Fall 2026',
-      section: '001',
+      description: '',
+      term: 'fall',
+      year: 2026,
     });
     fixture.detectChanges();
 
@@ -60,9 +79,11 @@ describe('CreateCourse', () => {
     await flush();
 
     expect(mockService.createCourse).toHaveBeenCalledWith({
+      course_number: 'COMP301',
       name: 'Algo',
-      term: 'Fall 2026',
-      section: '001',
+      description: '',
+      term: 'fall',
+      year: 2026,
     });
     expect(router.navigate).toHaveBeenCalledWith(['/courses', 5]);
   });
@@ -70,6 +91,12 @@ describe('CreateCourse', () => {
   it('should not submit when form is invalid', () => {
     const { fixture, mockService } = setup();
     const component = fixture.componentInstance;
+    component['form'].patchValue({
+      course_number: '',
+      name: '',
+      term: '',
+      year: null as unknown as number,
+    });
     component['onSubmit']();
     expect(mockService.createCourse).not.toHaveBeenCalled();
   });
