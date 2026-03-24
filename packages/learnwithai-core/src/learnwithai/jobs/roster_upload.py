@@ -5,6 +5,13 @@ from typing import Literal
 from ..interfaces import Job, JobHandler
 
 
+class _NoopJobQueue:
+    """Null job queue used when submitting new jobs is not needed."""
+
+    def enqueue(self, job: Job) -> None:
+        pass
+
+
 class RosterUploadJob(Job):
     """Payload for a roster CSV upload background job."""
 
@@ -38,7 +45,9 @@ class RosterUploadJobHandler(JobHandler["RosterUploadJob"]):
             upload_repo = RosterUploadRepository(session)
             user_repo = UserRepository(session)
             membership_repo = MembershipRepository(session)
-            svc = RosterUploadService(upload_repo, user_repo, membership_repo)
+            svc = RosterUploadService(
+                upload_repo, user_repo, membership_repo, _NoopJobQueue()
+            )
             try:
                 svc.process_upload(job.job_id)
                 session.commit()

@@ -6,7 +6,6 @@ from ..dependency_injection import (
     AuthenticatedUserDI,
     CourseByCourseIDPathDI,
     CourseServiceDI,
-    JobQueueDI,
     RosterUploadRepositoryDI,
     RosterUploadServiceDI,
 )
@@ -35,7 +34,6 @@ async def upload_roster_csv(
     course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
     roster_upload_svc: RosterUploadServiceDI,
-    job_queue: JobQueueDI,
     file: UploadFile,
 ) -> RosterUploadResponse:
     """Accepts a Canvas gradebook CSV for asynchronous roster import.
@@ -47,7 +45,6 @@ async def upload_roster_csv(
         course: Course loaded via DI from the path.
         course_svc: Service used for authorization check.
         roster_upload_svc: Service that creates and enqueues the upload job.
-        job_queue: Queue implementation passed through to the service.
         file: Uploaded CSV file.
 
     Returns:
@@ -65,7 +62,7 @@ async def upload_roster_csv(
         raise HTTPException(status_code=400, detail="File must be UTF-8 encoded.")
 
     assert course.id is not None
-    job = roster_upload_svc.submit_upload(subject, course.id, csv_text, job_queue)
+    job = roster_upload_svc.submit_upload(subject, course.id, csv_text)
     assert job.id is not None
     return RosterUploadResponse(id=job.id, status=job.status)
 

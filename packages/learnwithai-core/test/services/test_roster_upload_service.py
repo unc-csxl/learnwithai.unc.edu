@@ -11,7 +11,6 @@ from learnwithai.services.roster_upload_service import (
     ImportResult,
     ParsedStudent,
     RosterUploadService,
-    parse_canvas_csv,
 )
 from learnwithai.tables.membership import MembershipState
 from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
@@ -19,15 +18,33 @@ from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadSt
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "rosters"
 
 
-# ---- parse_canvas_csv ----
+# ---- helpers ----
+
+
+def _make_service(
+    upload_repo: MagicMock | None = None,
+    user_repo: MagicMock | None = None,
+    membership_repo: MagicMock | None = None,
+    job_queue: MagicMock | None = None,
+) -> RosterUploadService:
+    return RosterUploadService(
+        upload_repo=upload_repo or MagicMock(),
+        user_repo=user_repo or MagicMock(),
+        membership_repo=membership_repo or MagicMock(),
+        job_queue=job_queue or MagicMock(),
+    )
+
+
+# ---- RosterUploadService._parse_canvas_csv ----
 
 
 def test_parse_canvas_csv_extracts_student_from_populated_gradesheet() -> None:
     # Arrange
     csv_text = (DATA_DIR / "sample_populated_canvas_gradesheet.csv").read_text()
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 1
@@ -40,9 +57,10 @@ def test_parse_canvas_csv_extracts_student_from_populated_gradesheet() -> None:
 def test_parse_canvas_csv_extracts_student_from_empty_gradesheet() -> None:
     # Arrange
     csv_text = (DATA_DIR / "sample_empty_canvas_gradesheet.csv").read_text()
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 1
@@ -55,9 +73,10 @@ def test_parse_canvas_csv_extracts_student_from_empty_gradesheet() -> None:
 def test_parse_canvas_csv_skips_rows_with_missing_sis_fields() -> None:
     # Arrange
     csv_text = "Student,ID,SIS User ID,SIS Login ID\nJohn Doe,1,,\n"
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 0
@@ -66,9 +85,10 @@ def test_parse_canvas_csv_skips_rows_with_missing_sis_fields() -> None:
 def test_parse_canvas_csv_skips_non_numeric_pid() -> None:
     # Arrange
     csv_text = 'Student,ID,SIS User ID,SIS Login ID\n"Doe, Jane",1,abc,jdoe\n'
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 0
@@ -77,18 +97,20 @@ def test_parse_canvas_csv_skips_non_numeric_pid() -> None:
 def test_parse_canvas_csv_raises_on_missing_columns() -> None:
     # Arrange
     csv_text = "Name,ID\nJohn,1\n"
+    svc = _make_service()
 
     # Act / Assert
     with pytest.raises(ValueError, match="CSV missing required columns"):
-        parse_canvas_csv(csv_text)
+        svc._parse_canvas_csv(csv_text)
 
 
 def test_parse_canvas_csv_handles_name_without_comma() -> None:
     # Arrange
     csv_text = "Student,ID,SIS User ID,SIS Login ID\nSingleName,1,999999999,sname\n"
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 1
@@ -99,27 +121,13 @@ def test_parse_canvas_csv_handles_name_without_comma() -> None:
 def test_parse_canvas_csv_returns_empty_for_headers_only() -> None:
     # Arrange
     csv_text = "Student,ID,SIS User ID,SIS Login ID\n"
+    svc = _make_service()
 
     # Act
-    students = parse_canvas_csv(csv_text)
+    students = svc._parse_canvas_csv(csv_text)
 
     # Assert
     assert len(students) == 0
-
-
-# ---- helpers ----
-
-
-def _make_service(
-    upload_repo: MagicMock | None = None,
-    user_repo: MagicMock | None = None,
-    membership_repo: MagicMock | None = None,
-) -> RosterUploadService:
-    return RosterUploadService(
-        upload_repo=upload_repo or MagicMock(),
-        user_repo=user_repo or MagicMock(),
-        membership_repo=membership_repo or MagicMock(),
-    )
 
 
 # ---- RosterUploadService.submit_upload ----
@@ -134,16 +142,14 @@ def test_submit_upload_creates_job_and_enqueues() -> None:
     upload_repo = MagicMock()
     upload_repo.create.return_value = created_job
     job_queue = MagicMock()
-    svc = _make_service(upload_repo=upload_repo)
+    svc = _make_service(upload_repo=upload_repo, job_queue=job_queue)
 
     # Act
     with patch(
         "learnwithai.services.roster_upload_service.RosterUploadJob"
     ) as mock_job_cls:
         mock_job_cls.return_value = MagicMock()
-        result = svc.submit_upload(
-            subject, course_id=1, csv_text="data", job_queue=job_queue
-        )
+        result = svc.submit_upload(subject, course_id=1, csv_text="data")
 
     # Assert
     assert result is created_job

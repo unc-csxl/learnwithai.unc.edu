@@ -271,6 +271,7 @@ def roster_upload_service_factory(
     upload_repo: RosterUploadRepositoryDI,
     user_repo: UserRepositoryDI,
     membership_repo: MembershipRepositoryDI,
+    job_queue: JobQueueDI,
 ) -> RosterUploadService:
     """Creates the roster upload service for the current request.
 
@@ -278,11 +279,12 @@ def roster_upload_service_factory(
         upload_repo: Repository for roster upload job records.
         user_repo: Repository for user persistence.
         membership_repo: Repository for membership persistence.
+        job_queue: Queue used to dispatch background jobs.
 
     Returns:
         A configured roster upload service.
     """
-    return RosterUploadService(upload_repo, user_repo, membership_repo)
+    return RosterUploadService(upload_repo, user_repo, membership_repo, job_queue)
 
 
 RosterUploadServiceDI: TypeAlias = Annotated[

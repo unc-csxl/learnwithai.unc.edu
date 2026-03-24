@@ -14,7 +14,7 @@ from learnwithai.jobs import (
     job_payload_adapter,
 )
 from learnwithai.jobs.echo import EchoJobHandler
-from learnwithai.jobs.roster_upload import RosterUploadJobHandler
+from learnwithai.jobs.roster_upload import RosterUploadJobHandler, _NoopJobQueue
 
 
 def test_jobs_package_exports_expected_symbols() -> None:
@@ -131,6 +131,15 @@ def test_job_handler_map_points_roster_upload_to_handler() -> None:
 
     # Assert
     assert isinstance(handler, RosterUploadJobHandler)
+
+
+def test_noop_job_queue_enqueue_does_nothing() -> None:
+    # Arrange
+    queue = _NoopJobQueue()
+    job = RosterUploadJob(job_id=1)
+
+    # Act / Assert — must not raise
+    queue.enqueue(job)
 
 
 def test_roster_upload_job_handler_commits_on_success() -> None:

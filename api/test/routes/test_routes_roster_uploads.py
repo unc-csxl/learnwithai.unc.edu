@@ -73,14 +73,13 @@ async def test_upload_roster_csv_returns_accepted_response() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     roster_upload_svc = MagicMock()
-    job_queue = MagicMock()
     created_job = _stub_job(job_id=42)
     roster_upload_svc.submit_upload.return_value = created_job
     file = _make_upload_file()
 
     # Act
     result = await upload_roster_csv(
-        subject, course, course_svc, roster_upload_svc, job_queue, file
+        subject, course, course_svc, roster_upload_svc, file
     )
 
     # Assert
@@ -89,7 +88,7 @@ async def test_upload_roster_csv_returns_accepted_response() -> None:
     assert result.status == RosterUploadStatus.PENDING
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
     roster_upload_svc.submit_upload.assert_called_once_with(
-        subject, course.id, "Student,ID,SIS User ID,SIS Login ID\n", job_queue
+        subject, course.id, "Student,ID,SIS User ID,SIS Login ID\n"
     )
 
 
@@ -100,14 +99,11 @@ async def test_upload_roster_csv_rejects_non_csv_content_type() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     roster_upload_svc = MagicMock()
-    job_queue = MagicMock()
     file = _make_upload_file(content_type="application/json")
 
     # Act / Assert
     with pytest.raises(HTTPException) as exc_info:
-        await upload_roster_csv(
-            subject, course, course_svc, roster_upload_svc, job_queue, file
-        )
+        await upload_roster_csv(subject, course, course_svc, roster_upload_svc, file)
     assert exc_info.value.status_code == 400
 
 
@@ -118,7 +114,6 @@ async def test_upload_roster_csv_rejects_non_utf8_file() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     roster_upload_svc = MagicMock()
-    job_queue = MagicMock()
     bad_bytes = b"\xff\xfe"
     file = UploadFile(
         file=BytesIO(bad_bytes),
@@ -128,9 +123,7 @@ async def test_upload_roster_csv_rejects_non_utf8_file() -> None:
 
     # Act / Assert
     with pytest.raises(HTTPException) as exc_info:
-        await upload_roster_csv(
-            subject, course, course_svc, roster_upload_svc, job_queue, file
-        )
+        await upload_roster_csv(subject, course, course_svc, roster_upload_svc, file)
     assert exc_info.value.status_code == 400
 
 
@@ -142,14 +135,11 @@ async def test_upload_roster_csv_raises_403_for_non_instructor() -> None:
     course_svc = MagicMock()
     course_svc.authorize_instructor.side_effect = AuthorizationError("nope")
     roster_upload_svc = MagicMock()
-    job_queue = MagicMock()
     file = _make_upload_file()
 
     # Act / Assert
     with pytest.raises(AuthorizationError):
-        await upload_roster_csv(
-            subject, course, course_svc, roster_upload_svc, job_queue, file
-        )
+        await upload_roster_csv(subject, course, course_svc, roster_upload_svc, file)
 
 
 # ---- get_roster_upload_status ----

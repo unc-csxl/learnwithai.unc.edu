@@ -56,6 +56,14 @@ test/
 - Raw scalar identifiers belong in explicit lookup methods such as `get_by_id()` and `get_by_pid()`.
 - Services should operate on loaded domain models for non-lookup behavior. If an HTTP route receives raw ids, resolve them in the API layer first so the route can return the right `404` before calling the service.
 
+## Service Design Conventions
+
+Services are classes whose dependencies (repositories and infrastructure like `JobQueue`) are all injected through `__init__`. There are no module-level helper functions — parsing, formatting, and other private logic live as `_private` methods on the class.
+
+Methods are ordered in **literate code style**: public methods (the big picture) come first, private helpers come last. This means a reader encounters `submit_upload` and `process_upload` before `_parse_canvas_csv` and `_import_students`.
+
+The `JobQueue` interface is defined in `learnwithai/interfaces/jobs.py` (this package) so services can accept it without importing from `learnwithai-jobqueue`. When a job handler constructs a service that never calls `submit_upload`, it passes `_NoopJobQueue` to satisfy the constructor without creating a real queue connection.
+
 ## Parameter Ordering Convention
 
 Any service method that accepts a `subject` parameter (the authenticated user performing the action) must list `subject` **first**. Subsequent domain model parameters follow in order from most generic to most specific. Repositories and other infrastructure parameters come last.
