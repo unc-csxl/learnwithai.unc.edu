@@ -18,3 +18,6 @@ export type { MembershipType } from './generated/models/membership-type';
 export type { MembershipState } from './generated/models/membership-state';
 export type { RosterMemberResponse as RosterMember } from './generated/models/roster-member-response';
 export type { PaginatedRosterResponse as PaginatedRoster } from './generated/models/paginated-roster-response';
+export type { RosterUploadResponse as RosterUpload } from './generated/models/roster-upload-response';
+export type { RosterUploadStatusResponse as RosterUploadStatus } from './generated/models/roster-upload-status-response';
+export type { BodyUploadRosterCsv as UploadRosterCsvBody } from './generated/models/body-upload-roster-csv';

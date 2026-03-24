@@ -8,7 +8,9 @@ from .echo import EchoJob, EchoJobHandler
 from .roster_upload import RosterUploadJob, RosterUploadJobHandler
 from ..interfaces import JobHandler, Job
 
-JobPayload: TypeAlias = Annotated[Union[EchoJob, RosterUploadJob], Discriminator("type")]
+JobPayload: TypeAlias = Annotated[
+    Union[EchoJob, RosterUploadJob], Discriminator("type")
+]
 
 job_payload_adapter: TypeAdapter[JobPayload] = TypeAdapter(JobPayload)
 

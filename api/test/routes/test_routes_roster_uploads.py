@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException, UploadFile
+from starlette.datastructures import Headers
 
 from api.routes.roster_uploads import get_roster_upload_status, upload_roster_csv
 from api.models import RosterUploadResponse, RosterUploadStatusResponse
@@ -38,7 +39,7 @@ def _make_upload_file(
     return UploadFile(
         file=BytesIO(content.encode("utf-8")),
         filename=filename,
-        headers={"content-type": content_type},
+        headers=Headers({"content-type": content_type}),
     )
 
 
@@ -121,7 +122,7 @@ async def test_upload_roster_csv_rejects_non_utf8_file() -> None:
     file = UploadFile(
         file=BytesIO(bad_bytes),
         filename="roster.csv",
-        headers={"content-type": "text/csv"},
+        headers=Headers({"content-type": "text/csv"}),
     )
 
     # Act / Assert

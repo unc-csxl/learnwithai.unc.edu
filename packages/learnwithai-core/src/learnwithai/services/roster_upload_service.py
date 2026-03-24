@@ -10,7 +10,7 @@ from ..repositories.roster_upload_repository import RosterUploadRepository
 from ..repositories.membership_repository import MembershipRepository
 from ..repositories.user_repository import UserRepository
 from ..tables.membership import Membership, MembershipState, MembershipType
-from ..tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
+from ..tables.roster_upload_job import RosterUploadStatus
 from ..tables.user import User
 
 

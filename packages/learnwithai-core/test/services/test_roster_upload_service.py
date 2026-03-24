@@ -16,7 +16,7 @@ from learnwithai.services.roster_upload_service import (
     parse_canvas_csv,
     process_roster_upload,
 )
-from learnwithai.tables.membership import MembershipState, MembershipType
+from learnwithai.tables.membership import MembershipState
 from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "rosters"
@@ -57,7 +57,7 @@ def test_parse_canvas_csv_extracts_student_from_empty_gradesheet() -> None:
 
 def test_parse_canvas_csv_skips_rows_with_missing_sis_fields() -> None:
     # Arrange
-    csv_text = "Student,ID,SIS User ID,SIS Login ID\n" "John Doe,1,,\n"
+    csv_text = "Student,ID,SIS User ID,SIS Login ID\nJohn Doe,1,,\n"
 
     # Act
     students = parse_canvas_csv(csv_text)
@@ -68,9 +68,7 @@ def test_parse_canvas_csv_skips_rows_with_missing_sis_fields() -> None:
 
 def test_parse_canvas_csv_skips_non_numeric_pid() -> None:
     # Arrange
-    csv_text = (
-        "Student,ID,SIS User ID,SIS Login ID\n" '"Doe, Jane",1,abc,jdoe\n'
-    )
+    csv_text = 'Student,ID,SIS User ID,SIS Login ID\n"Doe, Jane",1,abc,jdoe\n'
 
     # Act
     students = parse_canvas_csv(csv_text)
@@ -90,9 +88,7 @@ def test_parse_canvas_csv_raises_on_missing_columns() -> None:
 
 def test_parse_canvas_csv_handles_name_without_comma() -> None:
     # Arrange
-    csv_text = (
-        "Student,ID,SIS User ID,SIS Login ID\n" "SingleName,1,999999999,sname\n"
-    )
+    csv_text = "Student,ID,SIS User ID,SIS Login ID\nSingleName,1,999999999,sname\n"
 
     # Act
     students = parse_canvas_csv(csv_text)

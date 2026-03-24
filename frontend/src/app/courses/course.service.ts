@@ -5,7 +5,17 @@ import { createCourse as createCourseFn } from '../api/generated/fn/courses/crea
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember as addMemberFn } from '../api/generated/fn/courses/add-member';
 import { dropMember as dropMemberFn } from '../api/generated/fn/courses/drop-member';
-import { Course, CreateCourse, PaginatedRoster, Membership, AddMember } from '../api/models';
+import { uploadRosterCsv } from '../api/generated/fn/roster-uploads/upload-roster-csv';
+import { getRosterUploadStatus as getRosterUploadStatusFn } from '../api/generated/fn/roster-uploads/get-roster-upload-status';
+import {
+  Course,
+  CreateCourse,
+  PaginatedRoster,
+  Membership,
+  AddMember,
+  RosterUpload,
+  RosterUploadStatus,
+} from '../api/models';
 
 /** Handles HTTP communication with the course management API. */
 @Injectable({ providedIn: 'root' })
@@ -43,5 +53,21 @@ export class CourseService {
   /** Drops a member from a course. */
   dropMember(courseId: number, pid: number): Promise<Membership> {
     return this.api.invoke(dropMemberFn, { course_id: courseId, pid });
+  }
+
+  /** Uploads a Canvas gradebook CSV for asynchronous roster import. */
+  uploadRoster(courseId: number, file: Blob): Promise<RosterUpload> {
+    return this.api.invoke(uploadRosterCsv, {
+      course_id: courseId,
+      body: { file: file as unknown as string },
+    });
+  }
+
+  /** Polls the status of a roster upload job. */
+  getRosterUploadStatus(courseId: number, jobId: number): Promise<RosterUploadStatus> {
+    return this.api.invoke(getRosterUploadStatusFn, {
+      course_id: courseId,
+      job_id: jobId,
+    });
   }
 }

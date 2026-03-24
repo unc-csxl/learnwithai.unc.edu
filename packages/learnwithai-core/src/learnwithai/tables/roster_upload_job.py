@@ -28,7 +28,7 @@ class RosterUploadStatus(str, enum.Enum):
 class RosterUploadJob(SQLModel, table=True):
     """Tracks the state and results of an asynchronous roster CSV upload."""
 
-    __tablename__ = "roster_upload_job"
+    __tablename__ = "roster_upload_job"  # pyright: ignore[reportAssignmentType]
 
     id: int | None = Field(default=None, sa_column=Column(Integer, primary_key=True))
     course_id: int = Field(

@@ -94,14 +94,10 @@ def test_list_by_course_returns_all_jobs_for_course(
     repo = RosterUploadRepository(session)
     assert course.id is not None
     repo.create(
-        RosterUploadJob(
-            course_id=course.id, uploaded_by_pid=111, csv_data="first"
-        )
+        RosterUploadJob(course_id=course.id, uploaded_by_pid=111, csv_data="first")
     )
     repo.create(
-        RosterUploadJob(
-            course_id=course.id, uploaded_by_pid=222, csv_data="second"
-        )
+        RosterUploadJob(course_id=course.id, uploaded_by_pid=222, csv_data="second")
     )
 
     # Act

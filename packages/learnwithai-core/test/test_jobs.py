@@ -139,9 +139,7 @@ def test_roster_upload_job_handler_calls_process_roster_upload() -> None:
     handler = RosterUploadJobHandler()
 
     # Act
-    with patch(
-        "learnwithai.jobs.roster_upload.process_roster_upload"
-    ) as mock_process:
+    with patch("learnwithai.jobs.roster_upload.process_roster_upload") as mock_process:
         handler.handle(job)
 
     # Assert

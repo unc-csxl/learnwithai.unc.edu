@@ -13,7 +13,9 @@ from ..models import RosterUploadResponse, RosterUploadStatusResponse
 from learnwithai.jobs.roster_upload import RosterUploadJob as RosterUploadJobPayload
 from learnwithai.tables.roster_upload_job import RosterUploadJob
 
-router = APIRouter(prefix="/courses/{course_id}/roster-uploads", tags=["Roster Uploads"])
+router = APIRouter(
+    prefix="/courses/{course_id}/roster-uploads", tags=["Roster Uploads"]
+)
 
 
 @router.post(
