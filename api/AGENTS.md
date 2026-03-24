@@ -19,17 +19,7 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 
 ## Service Factory Conventions
 
-Service DI factories in `dependency_injection.py` are responsible for constructing services with all their dependencies, including `JobQueue`. Route handlers must not receive `JobQueueDI` as a parameter only to forward it to a service method — wire the queue through the service factory instead.
-
-```python
-# Correct — job_queue injected into the service via the factory
-def roster_upload_service_factory(upload_repo, user_repo, membership_repo, job_queue):
-    return RosterUploadService(upload_repo, user_repo, membership_repo, job_queue)
-
-# Wrong — job_queue threaded through the route into the service method
-async def upload_roster_csv(..., job_queue: JobQueueDI) -> ...:
-    roster_upload_svc.submit_upload(subject, course.id, csv_text, job_queue)
-```
+Service DI factories in `dependency_injection.py` are responsible for constructing services with all their dependencies, including `JobQueue`. Route handlers must not receive `JobQueueDI` as a parameter.
 
 ## Parameter Ordering Convention
 

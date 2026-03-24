@@ -29,7 +29,7 @@ Services in `learnwithai-core` are classes that declare all their dependencies (
 
 Write services in **literate code style**: public methods first (big picture), private helpers last (details). This means readers encounter the entry points before the implementation details.
 
-The `JobQueue` protocol lives in `learnwithai/interfaces/jobs.py` so core services can accept it without importing from `learnwithai-jobqueue`. When a job handler constructs a service that does not need to submit jobs, it passes `_NoopJobQueue` to satisfy the constructor. Never make infrastructure dependencies optional in the constructor to work around this — provide an explicit no-op instead.
+The `JobQueue` protocol lives in `learnwithai/interfaces/jobs.py` so core services can accept it without importing from `learnwithai-jobqueue`. When a job handler constructs a service that does not need to submit jobs, it should use the `_NoopJobQueue` to satisfy the constructor. Never make infrastructure dependencies optional in the constructor to work around this, provide an explicit no-op instead.
 
 ## Parameter Ordering Convention
 

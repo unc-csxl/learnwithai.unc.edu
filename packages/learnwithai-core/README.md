@@ -60,9 +60,7 @@ test/
 
 Services are classes whose dependencies (repositories and infrastructure like `JobQueue`) are all injected through `__init__`. There are no module-level helper functions — parsing, formatting, and other private logic live as `_private` methods on the class.
 
-Methods are ordered in **literate code style**: public methods (the big picture) come first, private helpers come last. This means a reader encounters `submit_upload` and `process_upload` before `_parse_canvas_csv` and `_import_students`.
-
-The `JobQueue` interface is defined in `learnwithai/interfaces/jobs.py` (this package) so services can accept it without importing from `learnwithai-jobqueue`. When a job handler constructs a service that never calls `submit_upload`, it passes `_NoopJobQueue` to satisfy the constructor without creating a real queue connection.
+Methods are ordered in **literate code style**: public methods (the big picture) come first, private helpers come last.
 
 ## Parameter Ordering Convention
 
