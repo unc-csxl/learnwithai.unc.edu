@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from learnwithai.jobs import (
     EchoJob,
+    ForbiddenJobQueue,
     JobPayload,
-    NoopJobQueue,
     RosterUploadJob,
     job_adapter,
     job_handler_map,
@@ -29,7 +29,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
     assert exported_names == [
         "Job",
         "EchoJob",
-        "NoopJobQueue",
+        "ForbiddenJobQueue",
         "RosterUploadJob",
         "JobPayload",
     ]
@@ -140,19 +140,20 @@ def test_job_handler_map_points_roster_upload_to_handler() -> None:
     assert isinstance(handler, RosterUploadJobHandler)
 
 
-def test_noop_job_queue_enqueue_does_nothing() -> None:
+def test_forbidden_job_queue_enqueue_raises() -> None:
     # Arrange
-    queue = NoopJobQueue()
+    queue = ForbiddenJobQueue()
     job = RosterUploadJob(job_id=1)
 
-    # Act / Assert — must not raise
-    queue.enqueue(job)
+    # Act / Assert — enqueue must always raise
+    with pytest.raises(RuntimeError, match="ForbiddenJobQueue.enqueue"):
+        queue.enqueue(job)
 
 
-def test_noop_job_queue_satisfies_job_queue_protocol() -> None:
+def test_forbidden_job_queue_satisfies_job_queue_protocol() -> None:
     from learnwithai.interfaces import JobQueue
 
-    assert isinstance(NoopJobQueue(), JobQueue)
+    assert isinstance(ForbiddenJobQueue(), JobQueue)
 
 
 def test_roster_upload_job_handler_commits_on_success() -> None:

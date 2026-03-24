@@ -3,7 +3,7 @@
 from typing import Literal
 
 from ..interfaces import Job, JobHandler
-from .noop_job_queue import NoopJobQueue
+from .forbidden_job_queue import ForbiddenJobQueue
 
 
 class RosterUploadJob(Job):
@@ -40,7 +40,7 @@ class RosterUploadJobHandler(JobHandler["RosterUploadJob"]):
             user_repo = UserRepository(session)
             membership_repo = MembershipRepository(session)
             svc = RosterUploadService(
-                upload_repo, user_repo, membership_repo, NoopJobQueue()
+                upload_repo, user_repo, membership_repo, ForbiddenJobQueue()
             )
             try:
                 svc.process_upload(job.job_id)

@@ -5,7 +5,7 @@ from typing import Annotated, Any, TypeAlias, Union
 from pydantic import Discriminator, TypeAdapter
 
 from .echo import EchoJob, EchoJobHandler
-from .noop_job_queue import NoopJobQueue
+from .forbidden_job_queue import ForbiddenJobQueue
 from .roster_upload import RosterUploadJob, RosterUploadJobHandler
 from ..interfaces import JobHandler, Job
 
@@ -34,4 +34,4 @@ job_handler_map: dict[type[Job], type[JobHandler[Any]]] = {
 }
 
 
-__all__ = ["Job", "EchoJob", "NoopJobQueue", "RosterUploadJob", "JobPayload"]
+__all__ = ["Job", "EchoJob", "ForbiddenJobQueue", "RosterUploadJob", "JobPayload"]
