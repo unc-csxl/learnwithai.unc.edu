@@ -6,7 +6,7 @@ users, a course, and memberships into an open database session.
 
 from sqlmodel import Session
 
-from .tables.course import Course
+from .tables.course import Course, Term
 from .tables.membership import Membership, MembershipState, MembershipType
 from .tables.user import User
 
@@ -47,7 +47,12 @@ def seed(session: Session) -> None:
     session.add_all([instructor, student, ta])
     session.flush()
 
-    course = Course(name="COMP423", term="Spring 2026", section="001")
+    course = Course(
+        course_number="COMP423",
+        name="Foundations of Software Engineering",
+        term=Term.SPRING,
+        year=2026,
+    )
     session.add(course)
     session.flush()
     assert course.id is not None

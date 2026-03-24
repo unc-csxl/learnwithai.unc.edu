@@ -1,9 +1,19 @@
 """Database-backed course models."""
 
 from datetime import datetime
+from enum import StrEnum
 
 from sqlalchemy import Column, DateTime, Integer, func
 from sqlmodel import Field, SQLModel
+
+
+class Term(StrEnum):
+    """Academic term within a year."""
+
+    FALL = "fall"
+    WINTER = "winter"
+    SPRING = "spring"
+    SUMMER = "summer"
 
 
 class Course(SQLModel, table=True):
@@ -13,9 +23,11 @@ class Course(SQLModel, table=True):
         default=None,
         sa_column=Column(Integer, primary_key=True, autoincrement=True),
     )
+    course_number: str = Field()
     name: str = Field()
-    term: str = Field()
-    section: str = Field()
+    description: str = Field(default="")
+    term: Term = Field()
+    year: int = Field()
     created_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),
