@@ -8,9 +8,9 @@ from ..dependency_injection import (
     CourseServiceDI,
     JobQueueDI,
     RosterUploadRepositoryDI,
+    RosterUploadServiceDI,
 )
 from ..models import RosterUploadResponse, RosterUploadStatusResponse
-from learnwithai.jobs.roster_upload import RosterUploadJob as RosterUploadJobPayload
 from learnwithai.tables.roster_upload_job import RosterUploadJob
 
 router = APIRouter(
@@ -35,7 +35,7 @@ async def upload_roster_csv(
     subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
-    upload_repo: RosterUploadRepositoryDI,
+    roster_upload_svc: RosterUploadServiceDI,
     job_queue: JobQueueDI,
     file: UploadFile,
 ) -> RosterUploadResponse:
@@ -47,8 +47,8 @@ async def upload_roster_csv(
         subject: Authenticated subject.
         course: Course loaded via DI from the path.
         course_svc: Service used for authorization check.
-        upload_repo: Repository for persisting the upload job.
-        job_queue: Queue for dispatching background work.
+        roster_upload_svc: Service that creates and enqueues the upload job.
+        job_queue: Queue implementation passed through to the service.
         file: Uploaded CSV file.
 
     Returns:
@@ -66,18 +66,7 @@ async def upload_roster_csv(
         raise HTTPException(status_code=400, detail="File must be UTF-8 encoded.")
 
     assert course.id is not None
-
-    job = upload_repo.create(
-        RosterUploadJob(
-            course_id=course.id,
-            uploaded_by_pid=subject.pid,
-            csv_data=csv_text,
-        )
-    )
-
-    assert job.id is not None
-    job_queue.enqueue(RosterUploadJobPayload(job_id=job.id))
-
+    job = roster_upload_svc.submit_upload(subject, course.id, csv_text, job_queue)
     return RosterUploadResponse(id=job.id, status=job.status)
 
 

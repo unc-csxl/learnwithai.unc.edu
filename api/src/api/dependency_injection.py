@@ -12,6 +12,7 @@ from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
 )
 from learnwithai.services.course_service import CourseService
+from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.db import get_session, Session
 from learnwithai.interfaces import JobQueue
 from learnwithai.tables.user import User
@@ -263,4 +264,27 @@ def roster_upload_repository_factory(
 
 RosterUploadRepositoryDI: TypeAlias = Annotated[
     RosterUploadRepository, Depends(roster_upload_repository_factory)
+]
+
+
+def roster_upload_service_factory(
+    upload_repo: RosterUploadRepositoryDI,
+    user_repo: UserRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> RosterUploadService:
+    """Creates the roster upload service for the current request.
+
+    Args:
+        upload_repo: Repository for roster upload job records.
+        user_repo: Repository for user persistence.
+        membership_repo: Repository for membership persistence.
+
+    Returns:
+        A configured roster upload service.
+    """
+    return RosterUploadService(upload_repo, user_repo, membership_repo)
+
+
+RosterUploadServiceDI: TypeAlias = Annotated[
+    RosterUploadService, Depends(roster_upload_service_factory)
 ]
