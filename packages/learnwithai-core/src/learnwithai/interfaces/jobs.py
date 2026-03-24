@@ -23,6 +23,7 @@ class SupportsJobType(Protocol):
 JobT = TypeVar("JobT", bound=Job, contravariant=True)
 
 
+@runtime_checkable
 class JobQueue(Protocol):
     """Queue interface for submitting jobs for asynchronous execution."""
 

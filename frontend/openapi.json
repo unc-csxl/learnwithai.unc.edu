@@ -469,6 +469,142 @@
         }
       }
     },
+    "/api/courses/{course_id}/roster-uploads": {
+      "post": {
+        "tags": [
+          "Roster Uploads"
+        ],
+        "summary": "Upload a roster CSV",
+        "description": "Accepts a Canvas gradebook CSV for asynchronous roster import.\n\nOnly instructors may upload a roster CSV.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    upload_repo: Repository for persisting the upload job.\n    job_queue: Queue for dispatching background work.\n    file: Uploaded CSV file.\n\nReturns:\n    The accepted upload job ID and status.",
+        "operationId": "upload_roster_csv",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_roster_csv"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The accepted upload job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RosterUploadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course not found."
+          },
+          "400": {
+            "description": "Invalid file."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/roster-uploads/{job_id}": {
+      "get": {
+        "tags": [
+          "Roster Uploads"
+        ],
+        "summary": "Get roster upload status",
+        "description": "Returns the current status and results of a roster upload job.\n\nOnly instructors may check upload status.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    upload_repo: Repository for loading the upload job.\n    job_id: Primary key of the upload job.\n\nReturns:\n    The upload job status and result counts.",
+        "operationId": "get_roster_upload_status",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current status of the upload job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RosterUploadStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course or job not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dev/users": {
       "get": {
         "tags": [
@@ -588,6 +724,20 @@
         ],
         "title": "AddMemberRequest",
         "description": "Payload for adding a member to a course."
+      },
+      "Body_upload_roster_csv": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_roster_csv"
       },
       "CourseMembership": {
         "properties": {
@@ -814,6 +964,99 @@
         ],
         "title": "RosterMemberResponse",
         "description": "A roster entry combining membership and user details."
+      },
+      "RosterUploadResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RosterUploadStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "RosterUploadResponse",
+        "description": "Response returned when a roster CSV upload is accepted."
+      },
+      "RosterUploadStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "processing",
+          "completed",
+          "failed"
+        ],
+        "title": "RosterUploadStatus",
+        "description": "Lifecycle state of a roster CSV upload job."
+      },
+      "RosterUploadStatusResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RosterUploadStatus"
+          },
+          "created_count": {
+            "type": "integer",
+            "title": "Created Count"
+          },
+          "updated_count": {
+            "type": "integer",
+            "title": "Updated Count"
+          },
+          "error_count": {
+            "type": "integer",
+            "title": "Error Count"
+          },
+          "error_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Details"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "created_count",
+          "updated_count",
+          "error_count",
+          "error_details",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "RosterUploadStatusResponse",
+        "description": "Detailed status of a roster upload job."
       },
       "Term": {
         "type": "string",

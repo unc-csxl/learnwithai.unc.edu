@@ -21,6 +21,10 @@ export type { AddMember$Params as AddMember$Params } from './fn/courses/add-memb
 export { addMember as addMember } from './fn/courses/add-member';
 export type { DropMember$Params as DropMember$Params } from './fn/courses/drop-member';
 export { dropMember as dropMember } from './fn/courses/drop-member';
+export type { UploadRosterCsv$Params as UploadRosterCsv$Params } from './fn/roster-uploads/upload-roster-csv';
+export { uploadRosterCsv as uploadRosterCsv } from './fn/roster-uploads/upload-roster-csv';
+export type { GetRosterUploadStatus$Params as GetRosterUploadStatus$Params } from './fn/roster-uploads/get-roster-upload-status';
+export { getRosterUploadStatus as getRosterUploadStatus } from './fn/roster-uploads/get-roster-upload-status';
 export type { DevListUsers$Params as DevListUsers$Params } from './fn/development/dev-list-users';
 export { devListUsers as devListUsers } from './fn/development/dev-list-users';
 export type { DevLoginAs$Params as DevLoginAs$Params } from './fn/development/dev-login-as';

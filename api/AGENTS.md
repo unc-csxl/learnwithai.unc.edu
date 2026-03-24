@@ -17,6 +17,10 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 - Add Google-style docstrings to maintained Python modules and public functions.
 - Keep type annotations explicit on public APIs.
 
+## Service Factory Conventions
+
+Service DI factories in `dependency_injection.py` are responsible for constructing services with all their dependencies, including `JobQueue`. Route handlers must not receive `JobQueueDI` as a parameter.
+
 ## Parameter Ordering Convention
 
 In every route handler and service method that takes a `subject` parameter (the authenticated user), `subject` must be the **first** parameter. After `subject`, list additional domain model parameters in order from most generic to most specific (for example, `course` before `target_user`). Body inputs come after domain models. Service and repository parameters come last.

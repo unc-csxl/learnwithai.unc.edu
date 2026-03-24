@@ -6,7 +6,15 @@ import { createCourse } from '../api/generated/fn/courses/create-course';
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember } from '../api/generated/fn/courses/add-member';
 import { dropMember } from '../api/generated/fn/courses/drop-member';
-import { Course, PaginatedRoster, Membership } from '../api/models';
+import { uploadRosterCsv } from '../api/generated/fn/roster-uploads/upload-roster-csv';
+import { getRosterUploadStatus as getRosterUploadStatusFn } from '../api/generated/fn/roster-uploads/get-roster-upload-status';
+import {
+  Course,
+  PaginatedRoster,
+  Membership,
+  RosterUpload,
+  RosterUploadStatus,
+} from '../api/models';
 
 describe('CourseService', () => {
   let service: CourseService;
@@ -121,5 +129,37 @@ describe('CourseService', () => {
     const result = await service.dropMember(1, 999);
     expect(result).toEqual(member);
     expect(api.invoke).toHaveBeenCalledWith(dropMember, { course_id: 1, pid: 999 });
+  });
+
+  it('uploads a roster CSV via uploadRosterCsv', async () => {
+    const upload: RosterUpload = { id: 10, status: 'pending' };
+    api.invoke.mockResolvedValue(upload);
+    const file = new Blob(['csv'], { type: 'text/csv' });
+    const result = await service.uploadRoster(1, file);
+    expect(result).toEqual(upload);
+    expect(api.invoke).toHaveBeenCalledWith(uploadRosterCsv, {
+      course_id: 1,
+      body: { file: file as unknown as string },
+    });
+  });
+
+  it('fetches roster upload status via getRosterUploadStatus', async () => {
+    const status: RosterUploadStatus = {
+      id: 10,
+      status: 'completed',
+      created_count: 5,
+      updated_count: 2,
+      error_count: 0,
+      error_details: null,
+      created_at: '2025-01-01T00:00:00',
+      completed_at: '2025-01-01T00:00:05',
+    };
+    api.invoke.mockResolvedValue(status);
+    const result = await service.getRosterUploadStatus(1, 10);
+    expect(result).toEqual(status);
+    expect(api.invoke).toHaveBeenCalledWith(getRosterUploadStatusFn, {
+      course_id: 1,
+      job_id: 10,
+    });
   });
 });

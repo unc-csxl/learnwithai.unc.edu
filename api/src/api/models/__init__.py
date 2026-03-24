@@ -7,6 +7,7 @@ from .course import (
     PaginatedRosterResponse,
     RosterMemberResponse,
 )
+from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
 from .user_profile import UserProfile
 
 __all__ = [
@@ -17,5 +18,7 @@ __all__ = [
     "MembershipResponse",
     "PaginatedRosterResponse",
     "RosterMemberResponse",
+    "RosterUploadResponse",
+    "RosterUploadStatusResponse",
     "UserProfile",
 ]

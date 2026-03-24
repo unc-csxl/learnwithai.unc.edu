@@ -8,6 +8,8 @@ from fastapi import HTTPException
 from api.dependency_injection import (
     get_course_by_path_id,
     get_user_by_pid,
+    roster_upload_repository_factory,
+    roster_upload_service_factory,
 )
 
 
@@ -63,3 +65,27 @@ def test_get_user_by_pid_raises_for_missing_user() -> None:
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "User not found."
+
+
+def test_roster_upload_repository_factory_returns_repository() -> None:
+    session = MagicMock()
+    result = roster_upload_repository_factory(session)
+    from learnwithai.repositories.roster_upload_repository import (
+        RosterUploadRepository,
+    )
+
+    assert isinstance(result, RosterUploadRepository)
+
+
+def test_roster_upload_service_factory_returns_service() -> None:
+    from learnwithai.services.roster_upload_service import RosterUploadService
+
+    upload_repo = MagicMock()
+    user_repo = MagicMock()
+    membership_repo = MagicMock()
+    job_queue = MagicMock()
+    result = roster_upload_service_factory(
+        upload_repo, user_repo, membership_repo, job_queue
+    )
+
+    assert isinstance(result, RosterUploadService)

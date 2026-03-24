@@ -51,6 +51,20 @@ class MembershipRepository:
 
         return self._session.get(Membership, (user.pid, course.id))
 
+    def get_by_user_and_course_ids(
+        self, user_pid: int, course_id: int
+    ) -> Membership | None:
+        """Looks up a membership by user PID and course ID.
+
+        Args:
+            user_pid: PID of the user.
+            course_id: Primary key of the course.
+
+        Returns:
+            The matching membership when found; otherwise, ``None``.
+        """
+        return self._session.get(Membership, (user_pid, course_id))
+
     def update(self, membership: Membership) -> Membership:
         """Merges changes to an existing membership and refreshes state.
 

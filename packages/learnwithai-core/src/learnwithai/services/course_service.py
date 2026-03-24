@@ -113,6 +113,22 @@ class CourseService:
             pagination = PaginationParams()
         return self._membership_repo.get_roster_page(course, pagination, query)
 
+    def authorize_instructor(self, subject: User, course: Course) -> Membership:
+        """Verifies the subject is an active instructor of the course.
+
+        Args:
+            subject: Authenticated subject to authorize.
+            course: Course the subject must be an instructor of.
+
+        Returns:
+            The verified instructor membership.
+
+        Raises:
+            AuthorizationError: If the subject is not an active instructor.
+        """
+        membership = self._membership_repo.get_by_user_and_course(subject, course)
+        return self._require_membership(membership, {MembershipType.INSTRUCTOR})
+
     def add_member(
         self,
         subject: User,

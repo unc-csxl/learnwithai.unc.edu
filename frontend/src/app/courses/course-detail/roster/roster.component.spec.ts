@@ -4,8 +4,9 @@ import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Roster } from './roster.component';
 import { CourseService } from '../../course.service';
-import { PaginatedRoster, RosterMember } from '../../../api/models';
+import { PaginatedRoster, RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
+import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const fakeMembers: RosterMember[] = [
   {
@@ -38,11 +39,17 @@ const fakeResponse: PaginatedRoster = {
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('Roster', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   async function setup(options: { response?: PaginatedRoster; error?: { status: number } } = {}) {
     const mockService = {
       getRoster: options.error
         ? vi.fn(() => Promise.reject(options.error))
         : vi.fn(() => Promise.resolve(options.response ?? fakeResponse)),
+      uploadRoster: vi.fn(() => Promise.resolve({ id: 42, status: 'pending' })),
+      getRosterUploadStatus: vi.fn(),
     };
 
     const mockRoute = {
@@ -66,10 +73,17 @@ describe('Roster', () => {
     });
 
     const fixture = TestBed.createComponent(Roster);
+    const component = fixture.componentInstance;
+    const snackBarOpen = vi.spyOn(component['snackBar'], 'open');
+    const snackBarDismiss = vi.spyOn(component['snackBar'], 'dismiss');
+    const dialogOpen = vi.spyOn(component['dialog'], 'open').mockReturnValue({
+      afterClosed: () => ({ subscribe: vi.fn() }),
+    } as never);
+
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
-    return { fixture, mockService };
+    return { fixture, mockService, snackBarOpen, snackBarDismiss, dialogOpen };
   }
 
   it('should display roster members with name columns', async () => {
@@ -281,5 +295,183 @@ describe('Roster', () => {
     // Start a pending debounce, then destroy — should not throw
     component['onSearchInput']('alice');
     fixture.destroy();
+  });
+
+  it('should show upload CSV button', async () => {
+    const { fixture } = await setup();
+    const el: HTMLElement = fixture.nativeElement;
+    const buttons = Array.from(el.querySelectorAll('button'));
+    const uploadBtn = buttons.find((b) => b.textContent?.includes('Upload CSV'));
+    expect(uploadBtn).toBeTruthy();
+  });
+
+  it('should click hidden file input when upload button is clicked', async () => {
+    const { fixture } = await setup();
+    const el: HTMLElement = fixture.nativeElement;
+    const fileInput = el.querySelector('input[type="file"]') as HTMLInputElement;
+    const clickSpy = vi.spyOn(fileInput, 'click');
+    const buttons = Array.from(el.querySelectorAll('button'));
+    const uploadBtn = buttons.find((b) => b.textContent?.includes('Upload CSV'))!;
+    uploadBtn.click();
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('should call onFileSelected when file input change event fires', async () => {
+    const { fixture, mockService, snackBarOpen } = await setup();
+    const el: HTMLElement = fixture.nativeElement;
+    const fileInput = el.querySelector('input[type="file"]') as HTMLInputElement;
+
+    // Simulate a file being added by spying, then dispatching the DOM change event
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    Object.defineProperty(fileInput, 'files', { value: [file], writable: false });
+
+    fileInput.dispatchEvent(new Event('change'));
+    await flush();
+    fixture.detectChanges();
+
+    expect(mockService.uploadRoster).toHaveBeenCalledWith(1, file);
+    expect(snackBarOpen).toHaveBeenCalledWith('Roster upload processing\u2026', undefined, {
+      duration: 0,
+    });
+  });
+
+  it('should upload file and show snackbar on file selection', async () => {
+    const { fixture, mockService, snackBarOpen } = await setup();
+    const component = fixture.componentInstance;
+    mockService.getRosterUploadStatus.mockResolvedValue({
+      id: 42,
+      status: 'processing',
+    });
+
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    const event = { target: { files: [file], value: 'C:\\roster.csv' } } as unknown as Event;
+
+    await component['onFileSelected'](event);
+    fixture.detectChanges();
+
+    expect(mockService.uploadRoster).toHaveBeenCalledWith(1, file);
+    expect(snackBarOpen).toHaveBeenCalledWith('Roster upload processing…', undefined, {
+      duration: 0,
+    });
+  });
+
+  it('should show error snackbar when upload fails', async () => {
+    const { fixture, mockService, snackBarOpen } = await setup();
+    const component = fixture.componentInstance;
+    mockService.uploadRoster.mockRejectedValue(new Error('fail'));
+
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    const event = { target: { files: [file], value: '' } } as unknown as Event;
+
+    await component['onFileSelected'](event);
+    fixture.detectChanges();
+
+    expect(snackBarOpen).toHaveBeenCalledWith('Failed to upload roster CSV.', 'Dismiss', {
+      duration: 5000,
+    });
+  });
+
+  it('should poll and show dialog when upload completes', async () => {
+    const { fixture, mockService, snackBarDismiss, dialogOpen } = await setup();
+    const component = fixture.componentInstance;
+
+    const completedStatus: RosterUploadStatus = {
+      id: 42,
+      status: 'completed',
+      created_count: 5,
+      updated_count: 2,
+      error_count: 0,
+      error_details: null,
+      created_at: '2025-01-01T00:00:00',
+      completed_at: '2025-01-01T00:00:05',
+    };
+    mockService.getRosterUploadStatus.mockResolvedValue(completedStatus);
+
+    vi.useFakeTimers();
+    component['pollUploadStatus'](42);
+    await vi.advanceTimersByTimeAsync(2000);
+    vi.useRealTimers();
+    fixture.detectChanges();
+
+    expect(mockService.getRosterUploadStatus).toHaveBeenCalledWith(1, 42);
+    expect(snackBarDismiss).toHaveBeenCalled();
+    expect(dialogOpen).toHaveBeenCalledWith(RosterUploadResultDialog, {
+      data: completedStatus,
+      width: '400px',
+    });
+  });
+
+  it('should continue polling when status is processing', async () => {
+    const { fixture, mockService, snackBarDismiss } = await setup();
+    const component = fixture.componentInstance;
+
+    const processingStatus = { id: 42, status: 'processing' as const };
+    const completedStatus: RosterUploadStatus = {
+      id: 42,
+      status: 'completed',
+      created_count: 3,
+      updated_count: 1,
+      error_count: 0,
+      error_details: null,
+      created_at: '2025-01-01T00:00:00',
+      completed_at: '2025-01-01T00:00:05',
+    };
+    mockService.getRosterUploadStatus
+      .mockResolvedValueOnce(processingStatus)
+      .mockResolvedValueOnce(completedStatus);
+
+    // First poll returns processing, which schedules another poll
+    vi.useFakeTimers();
+    component['pollUploadStatus'](42);
+    await vi.advanceTimersByTimeAsync(2000);
+
+    expect(mockService.getRosterUploadStatus).toHaveBeenCalledTimes(1);
+    expect(snackBarDismiss).not.toHaveBeenCalled();
+
+    // Second poll returns completed
+    await vi.advanceTimersByTimeAsync(2000);
+    vi.useRealTimers();
+    fixture.detectChanges();
+
+    expect(mockService.getRosterUploadStatus).toHaveBeenCalledTimes(2);
+    expect(snackBarDismiss).toHaveBeenCalled();
+  });
+
+  it('should show error snackbar when polling fails', async () => {
+    const { fixture, mockService, snackBarOpen } = await setup();
+    const component = fixture.componentInstance;
+
+    mockService.getRosterUploadStatus.mockRejectedValue(new Error('network'));
+
+    vi.useFakeTimers();
+    component['pollUploadStatus'](42);
+    await vi.advanceTimersByTimeAsync(2000);
+    vi.useRealTimers();
+    fixture.detectChanges();
+
+    expect(snackBarOpen).toHaveBeenCalledWith('Failed to check upload status.', 'Dismiss', {
+      duration: 5000,
+    });
+  });
+
+  it('should not call upload when no file is selected', async () => {
+    const { fixture, mockService } = await setup();
+    const component = fixture.componentInstance;
+    const event = { target: { files: [] } } as unknown as Event;
+    await component['onFileSelected'](event);
+    expect(mockService.uploadRoster).not.toHaveBeenCalled();
+  });
+
+  it('should clean up poll timer on destroy', async () => {
+    const { fixture, mockService } = await setup();
+    const component = fixture.componentInstance;
+    mockService.getRosterUploadStatus.mockResolvedValue({ id: 42, status: 'processing' });
+
+    vi.useFakeTimers();
+    component['pollUploadStatus'](42);
+    fixture.destroy();
+    // Advance time — should not throw after destroy
+    vi.advanceTimersByTime(5000);
+    vi.useRealTimers();
   });
 });

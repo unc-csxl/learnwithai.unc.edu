@@ -17,6 +17,11 @@
       <mat-icon>person_add</mat-icon>
       Add Member
     </a>
+    <button mat-flat-button (click)="fileInput.click()" [disabled]="uploading()">
+      <mat-icon>upload_file</mat-icon>
+      Upload CSV
+    </button>
+    <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
   </div>
   @if (roster().length > 0) {
     <table mat-table [dataSource]="dataSource()" aria-label="Course roster">

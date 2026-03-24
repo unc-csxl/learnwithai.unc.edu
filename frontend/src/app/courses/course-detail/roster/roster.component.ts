@@ -13,12 +13,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CourseService } from '../../course.service';
-import { RosterMember } from '../../../api/models';
+import { RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
+import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 3;
+const POLL_INTERVAL_MS = 2000;
 
 /** Displays the roster for a course. */
 @Component({
@@ -32,6 +36,8 @@ const MIN_SEARCH_LENGTH = 3;
     MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSnackBarModule,
+    MatDialogModule,
   ],
   templateUrl: './roster.component.html',
   styleUrl: './roster.component.scss',
@@ -40,7 +46,10 @@ export class Roster implements OnDestroy {
   private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
   private titleService = inject(PageTitleService);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly roster = signal<RosterMember[]>([]);
   protected readonly total = signal(0);
@@ -49,6 +58,7 @@ export class Roster implements OnDestroy {
   protected readonly searchQuery = signal('');
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
+  protected readonly uploading = signal(false);
   protected readonly courseId: number;
   protected readonly displayedColumns = ['given_name', 'family_name', 'user_pid', 'email'];
   protected readonly dataSource = computed(() => this.roster());
@@ -62,6 +72,9 @@ export class Roster implements OnDestroy {
   ngOnDestroy(): void {
     if (this.debounceTimer !== null) {
       clearTimeout(this.debounceTimer);
+    }
+    if (this.pollTimer !== null) {
+      clearTimeout(this.pollTimer);
     }
   }
 
@@ -87,6 +100,54 @@ export class Roster implements OnDestroy {
 
   protected isInactive(member: RosterMember): boolean {
     return member.state !== 'enrolled';
+  }
+
+  protected async onFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.uploading.set(true);
+    try {
+      const result = await this.courseService.uploadRoster(this.courseId, file);
+      this.snackBar.open('Roster upload processing…', undefined, {
+        duration: 0,
+      });
+      this.pollUploadStatus(result.id);
+    } catch {
+      this.snackBar.open('Failed to upload roster CSV.', 'Dismiss', {
+        duration: 5000,
+      });
+    } finally {
+      this.uploading.set(false);
+      input.value = '';
+    }
+  }
+
+  private pollUploadStatus(jobId: number): void {
+    this.pollTimer = setTimeout(async () => {
+      try {
+        const status = await this.courseService.getRosterUploadStatus(this.courseId, jobId);
+        if (status.status === 'completed' || status.status === 'failed') {
+          this.snackBar.dismiss();
+          this.showUploadResult(status);
+          await this.loadRoster();
+        } else {
+          this.pollUploadStatus(jobId);
+        }
+      } catch {
+        this.snackBar.open('Failed to check upload status.', 'Dismiss', {
+          duration: 5000,
+        });
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  private showUploadResult(status: RosterUploadStatus): void {
+    this.dialog.open(RosterUploadResultDialog, {
+      data: status,
+      width: '400px',
+    });
   }
 
   private async loadRoster(): Promise<void> {
