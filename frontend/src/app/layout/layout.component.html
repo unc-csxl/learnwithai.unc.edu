@@ -67,6 +67,31 @@
         </mat-nav-list>
       </section>
     }
+
+    <div class="sidenav-spacer"></div>
+
+    <div class="sidenav-footer">
+      @if (auth.isAuthenticated()) {
+        <a
+          class="user-profile-link"
+          routerLink="/profile"
+          (click)="closeMobileSidenav()"
+          aria-label="Edit profile"
+        >
+          <mat-icon>person</mat-icon>
+          <span class="user-name">{{ auth.user()!.name }}</span>
+        </a>
+        <button
+          mat-icon-button
+          aria-label="Logout"
+          (click)="auth.logout()"
+        >
+          <mat-icon>logout</mat-icon>
+        </button>
+      } @else {
+        <button mat-button (click)="auth.login()">Login</button>
+      }
+    </div>
   </mat-sidenav>
 
   <mat-sidenav-content>
@@ -86,11 +111,6 @@
       >
         <mat-icon>{{ themeIcon() }}</mat-icon>
       </button>
-      @if (auth.isAuthenticated()) {
-        <button mat-button (click)="auth.logout()">Logout</button>
-      } @else {
-        <button mat-button (click)="auth.login()">Login</button>
-      }
     </mat-toolbar>
     <main class="content">
       <router-outlet />

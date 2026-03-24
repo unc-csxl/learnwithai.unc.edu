@@ -73,6 +73,11 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('./profile/profile-editor.component').then((m) => m.ProfileEditor),
+      },
+      {
         path: 'courses',
         loadComponent: () =>
           import('./courses/course-list/course-list.component').then((m) => m.CourseList),

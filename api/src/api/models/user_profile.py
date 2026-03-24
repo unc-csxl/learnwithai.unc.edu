@@ -9,6 +9,7 @@ class UserProfile(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     pid: int
+    onyen: str
     name: str
     given_name: str
     family_name: str

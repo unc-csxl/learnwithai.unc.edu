@@ -12,6 +12,7 @@ const fakeUser: User = {
   given_name: 'Test',
   family_name: 'User',
   email: 'test@example.com',
+  onyen: 'testuser',
 };
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -133,5 +134,20 @@ describe('AuthService', () => {
 
     expect(newService.user()).toEqual(fakeUser);
     newHttpTesting.verify();
+  });
+
+  it('updateProfile should PUT to /api/me and update the user signal', async () => {
+    localStorage.setItem(AUTH_TOKEN_KEY, 'my-token');
+    const updatedUser = { ...fakeUser, given_name: 'New', family_name: 'Name', name: 'New Name' };
+    const promise = service.updateProfile({ given_name: 'New', family_name: 'Name' });
+
+    const req = httpTesting.expectOne('/api/me');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ given_name: 'New', family_name: 'Name' });
+    req.flush(updatedUser);
+    const result = await promise;
+
+    expect(result).toEqual(updatedUser);
+    expect(service.user()).toEqual(updatedUser);
   });
 });

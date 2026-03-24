@@ -10,5 +10,6 @@ export interface UserProfile {
   family_name: string;
   given_name: string;
   name: string;
+  onyen: string;
   pid: number;
 }

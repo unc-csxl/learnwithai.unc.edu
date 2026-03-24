@@ -2,7 +2,8 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Api } from './api/generated/api';
 import { getCurrentSubjectProfile } from './api/generated/fn/authentication/get-current-subject-profile';
-import { User } from './api/models';
+import { updateCurrentSubjectProfile } from './api/generated/fn/authentication/update-current-subject-profile';
+import { User, UpdateProfile } from './api/models';
 import { AuthTokenService } from './auth-token.service';
 
 /** Manages login state and the current authenticated user profile. */
@@ -62,5 +63,14 @@ export class AuthService {
       this.tokenService.clearToken();
       this._user.set(null);
     }
+  }
+
+  /** Updates the authenticated user's profile and refreshes the local state. */
+  async updateProfile(request: UpdateProfile): Promise<User> {
+    const updated = await this.api.invoke(updateCurrentSubjectProfile, {
+      body: request,
+    });
+    this._user.set(updated);
+    return updated;
   }
 }

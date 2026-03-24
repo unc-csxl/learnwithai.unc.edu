@@ -45,6 +45,7 @@ def test_get_current_subject_profile_returns_user_profile() -> None:
     # Assert
     assert result == UserProfile(
         pid=user.pid,
+        onyen="testuser",
         name="Test User",
         given_name="Test",
         family_name="User",

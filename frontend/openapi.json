@@ -1242,6 +1242,10 @@
             "type": "integer",
             "title": "Pid"
           },
+          "onyen": {
+            "type": "string",
+            "title": "Onyen"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -1262,6 +1266,7 @@
         "type": "object",
         "required": [
           "pid",
+          "onyen",
           "name",
           "given_name",
           "family_name",
