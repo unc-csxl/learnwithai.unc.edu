@@ -78,7 +78,7 @@ test.describe('roster features', () => {
 
     const rows = page.locator('tr[mat-row]');
     await expect(rows).toHaveCount(1);
-    await expect(page.getByText('Ina')).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Ina' })).toBeVisible();
   });
 
   test('shows no results message for unmatched search', async ({ page }) => {

@@ -162,6 +162,54 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Update the authenticated user profile",
+        "description": "Updates the authenticated subject's given and family name.\n\nThe full display name is recomputed as ``given_name + \" \" + family_name``.\n\nArgs:\n    subject: Authenticated subject resolved from the bearer token.\n    body: Profile update payload.\n    user_repo: Repository used to persist the change.\n\nReturns:\n    The updated user profile.",
+        "operationId": "update_current_subject_profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token is missing, invalid, or expired."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/courses": {
@@ -244,6 +292,73 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/courses/{course_id}": {
+      "put": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Update a course",
+        "description": "Updates an existing course's details.\n\nOnly the instructor of the course may update it.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id path param.\n    body: Course update payload.\n    course_svc: Service used to update the course.\n\nReturns:\n    The updated course with the caller's membership.",
+        "operationId": "update_course",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCourseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Only instructors can update courses."
+          },
+          "404": {
+            "description": "Course not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/courses/{course_id}/roster": {
@@ -475,7 +590,7 @@
           "Roster Uploads"
         ],
         "summary": "Upload a roster CSV",
-        "description": "Accepts a Canvas gradebook CSV for asynchronous roster import.\n\nOnly instructors may upload a roster CSV.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    upload_repo: Repository for persisting the upload job.\n    job_queue: Queue for dispatching background work.\n    file: Uploaded CSV file.\n\nReturns:\n    The accepted upload job ID and status.",
+        "description": "Accepts a Canvas gradebook CSV for asynchronous roster import.\n\nOnly instructors may upload a roster CSV.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    roster_upload_svc: Service that creates and enqueues the upload job.\n    file: Uploaded CSV file.\n\nReturns:\n    The accepted upload job ID and status.",
         "operationId": "upload_roster_csv",
         "security": [
           {
@@ -1069,11 +1184,67 @@
         "title": "Term",
         "description": "Academic term within a year."
       },
+      "UpdateCourseRequest": {
+        "properties": {
+          "course_number": {
+            "type": "string",
+            "title": "Course Number"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "term": {
+            "$ref": "#/components/schemas/Term"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_number",
+          "name",
+          "term",
+          "year"
+        ],
+        "title": "UpdateCourseRequest",
+        "description": "Payload for updating an existing course."
+      },
+      "UpdateProfileRequest": {
+        "properties": {
+          "given_name": {
+            "type": "string",
+            "title": "Given Name"
+          },
+          "family_name": {
+            "type": "string",
+            "title": "Family Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "given_name",
+          "family_name"
+        ],
+        "title": "UpdateProfileRequest",
+        "description": "Payload for updating the authenticated user's profile."
+      },
       "UserProfile": {
         "properties": {
           "pid": {
             "type": "integer",
             "title": "Pid"
+          },
+          "onyen": {
+            "type": "string",
+            "title": "Onyen"
           },
           "name": {
             "type": "string",
@@ -1095,6 +1266,7 @@
         "type": "object",
         "required": [
           "pid",
+          "onyen",
           "name",
           "given_name",
           "family_name",

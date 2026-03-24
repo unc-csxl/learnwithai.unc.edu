@@ -25,9 +25,17 @@
 }
 
 .sidenav {
+  display: flex;
+  flex-direction: column;
   width: 240px;
   border-radius: 0 !important;
   /* remove any platform or theme-imposed rounding */
+}
+
+.sidenav-content-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 .sidenav-mobile {
@@ -132,4 +140,43 @@
 
 .content {
   padding: 24px;
+}
+
+.sidenav-spacer {
+  flex: 1;
+}
+
+.sidenav-footer {
+  align-items: center;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  display: flex;
+  gap: 4px;
+  min-height: 56px;
+  padding: 8px 12px;
+}
+
+.user-profile-link {
+  align-items: center;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  text-decoration: none;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-variant);
+  }
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

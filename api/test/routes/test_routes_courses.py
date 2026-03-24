@@ -19,6 +19,7 @@ from api.models import (
     CreateCourseRequest,
     MembershipResponse,
     RosterMemberResponse,
+    UpdateCourseRequest,
 )
 from api.routes.courses import (
     add_member,
@@ -26,6 +27,7 @@ from api.routes.courses import (
     drop_member,
     get_course_roster,
     list_my_courses,
+    update_course,
 )
 from learnwithai.errors import AuthorizationError
 from learnwithai.pagination import PaginatedResult, PaginationParams
@@ -498,3 +500,81 @@ def test_courses_returns_401_without_token(client: TestClient) -> None:
 
     # Assert
     assert response.status_code == 401
+
+
+# ---- update_course ----
+
+
+def test_update_course_returns_updated_course() -> None:
+    # Arrange
+    subject = _stub_user()
+    course = _stub_course()
+    course_svc = MagicMock()
+    updated_course = _stub_course(
+        course_number="COMP999",
+        name="Advanced CS",
+        description="Updated",
+        term="spring",
+        year=2027,
+    )
+    course_svc.update_course.return_value = updated_course
+    instructor_m = _stub_membership(type=MembershipType.INSTRUCTOR)
+    course_svc.authorize_instructor.return_value = instructor_m
+    body = UpdateCourseRequest(
+        course_number="COMP999",
+        name="Advanced CS",
+        term=Term.SPRING,
+        year=2027,
+        description="Updated",
+    )
+
+    # Act
+    result = update_course(subject, course, body, course_svc)
+
+    # Assert
+    assert isinstance(result, CourseResponse)
+    assert result.course_number == "COMP999"
+    assert result.name == "Advanced CS"
+    course_svc.update_course.assert_called_once_with(
+        subject, course, "COMP999", "Advanced CS", Term.SPRING, 2027, "Updated"
+    )
+
+
+@pytest.mark.integration
+def test_put_course_returns_updated_response(client: TestClient) -> None:
+    # Arrange
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = _stub_course()
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_course_svc = MagicMock()
+    updated = _stub_course(
+        course_number="COMP999",
+        name="Advanced CS",
+        description="Updated",
+        term="spring",
+        year=2027,
+    )
+    mock_course_svc.update_course.return_value = updated
+    instructor_m = _stub_membership(type=MembershipType.INSTRUCTOR)
+    mock_course_svc.authorize_instructor.return_value = instructor_m
+    app.dependency_overrides[course_service_factory] = lambda: mock_course_svc
+
+    # Act
+    response = client.put(
+        "/api/courses/1",
+        json={
+            "course_number": "COMP999",
+            "name": "Advanced CS",
+            "term": "spring",
+            "year": 2027,
+            "description": "Updated",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["course_number"] == "COMP999"
+    assert body["name"] == "Advanced CS"

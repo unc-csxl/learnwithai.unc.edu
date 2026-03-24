@@ -21,3 +21,5 @@ export type { PaginatedRosterResponse as PaginatedRoster } from './generated/mod
 export type { RosterUploadResponse as RosterUpload } from './generated/models/roster-upload-response';
 export type { RosterUploadStatusResponse as RosterUploadStatus } from './generated/models/roster-upload-status-response';
 export type { BodyUploadRosterCsv as UploadRosterCsvBody } from './generated/models/body-upload-roster-csv';
+export type { UpdateProfileRequest as UpdateProfile } from './generated/models/update-profile-request';
+export type { UpdateCourseRequest as UpdateCourse } from './generated/models/update-course-request';

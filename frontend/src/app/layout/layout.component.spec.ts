@@ -21,6 +21,7 @@ const fakeUser: User = {
   given_name: 'Test',
   family_name: 'User',
   email: 'test@example.com',
+  onyen: 'testuser',
 };
 
 describe('Layout', () => {
@@ -64,7 +65,10 @@ describe('Layout', () => {
     TestBed.configureTestingModule({
       imports: [Layout, NoopAnimationsModule],
       providers: [
-        provideRouter([{ path: 'courses', component: DummyComponent }]),
+        provideRouter([
+          { path: 'courses', component: DummyComponent },
+          { path: 'profile', component: DummyComponent },
+        ]),
         { provide: AuthService, useValue: mockAuth },
         { provide: ThemeService, useValue: mockTheme },
         { provide: PageTitleService, useValue: mockPageTitle },
@@ -107,11 +111,9 @@ describe('Layout', () => {
   it('should show login button when unauthenticated', () => {
     const { fixture, mockAuth } = setup({ authenticated: false });
     const el: HTMLElement = fixture.nativeElement;
-    const buttons = el.querySelectorAll('mat-toolbar button');
-    const loginBtn = Array.from(buttons).find((b) =>
-      b.textContent?.includes('Login'),
-    ) as HTMLButtonElement;
-    expect(loginBtn).toBeTruthy();
+    const footer = el.querySelector('.sidenav-footer')!;
+    const loginBtn = footer.querySelector('button') as HTMLButtonElement;
+    expect(loginBtn?.textContent).toContain('Login');
     loginBtn.click();
     expect(mockAuth.login).toHaveBeenCalled();
   });
@@ -119,13 +121,20 @@ describe('Layout', () => {
   it('should show logout button when authenticated', () => {
     const { fixture, mockAuth } = setup({ authenticated: true });
     const el: HTMLElement = fixture.nativeElement;
-    const buttons = el.querySelectorAll('mat-toolbar button');
-    const logoutBtn = Array.from(buttons).find((b) =>
-      b.textContent?.includes('Logout'),
+    const logoutBtn = el.querySelector(
+      '.sidenav-footer button[aria-label="Logout"]',
     ) as HTMLButtonElement;
     expect(logoutBtn).toBeTruthy();
     logoutBtn.click();
     expect(mockAuth.logout).toHaveBeenCalled();
+  });
+
+  it('should show user profile link when authenticated', () => {
+    const { fixture } = setup({ authenticated: true });
+    const el: HTMLElement = fixture.nativeElement;
+    const profileLink = el.querySelector('.user-profile-link') as HTMLAnchorElement;
+    expect(profileLink).toBeTruthy();
+    expect(profileLink.textContent).toContain('Test User');
   });
 
   it('should have a theme toggle button', () => {
@@ -243,6 +252,15 @@ describe('Layout', () => {
     const contextualLink = navLists[1]?.querySelector('a') as HTMLElement | null;
     expect(contextualLink).toBeTruthy();
     contextualLink?.click();
+    fixture.detectChanges();
+  });
+
+  it('should close sidenav on profile link click in handset mode', () => {
+    const { fixture } = setup({ authenticated: true, handset: true });
+    const el: HTMLElement = fixture.nativeElement;
+    const profileLink = el.querySelector('.user-profile-link') as HTMLElement;
+    expect(profileLink).toBeTruthy();
+    profileLink.click();
     fixture.detectChanges();
   });
 });

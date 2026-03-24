@@ -15,6 +15,7 @@ const devUsers: User[] = [
     given_name: 'Ina',
     family_name: 'Instructor',
     email: 'instructor@unc.edu',
+    onyen: 'instructor',
   },
   {
     pid: 111111111,
@@ -22,6 +23,7 @@ const devUsers: User[] = [
     given_name: 'Sally',
     family_name: 'Student',
     email: 'student@unc.edu',
+    onyen: 'student',
   },
 ];
 

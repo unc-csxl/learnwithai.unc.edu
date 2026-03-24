@@ -217,6 +217,43 @@ class CourseService:
         target_membership.state = MembershipState.DROPPED
         return self._membership_repo.update(target_membership)
 
+    def update_course(
+        self,
+        subject: User,
+        course: Course,
+        course_number: str,
+        name: str,
+        term: Term,
+        year: int,
+        description: str = "",
+    ) -> Course:
+        """Updates an existing course's details.
+
+        Only instructors of the course may update it.
+
+        Args:
+            subject: Authenticated subject performing the action.
+            course: Course to update.
+            course_number: Updated short identifier.
+            name: Updated course name.
+            term: Updated academic term.
+            year: Updated academic year.
+            description: Updated course description.
+
+        Returns:
+            The updated course.
+
+        Raises:
+            AuthorizationError: If the subject is not an instructor.
+        """
+        self.authorize_instructor(subject, course)
+        course.course_number = course_number
+        course.name = name
+        course.term = term
+        course.year = year
+        course.description = description
+        return self._course_repo.update(course)
+
     def _require_membership(
         self,
         membership: Membership | None,

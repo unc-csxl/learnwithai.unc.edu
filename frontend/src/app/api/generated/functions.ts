@@ -11,10 +11,14 @@ export type { AuthenticateWithCsxlCallback$Params as AuthenticateWithCsxlCallbac
 export { authenticateWithCsxlCallback as authenticateWithCsxlCallback } from './fn/authentication/authenticate-with-csxl-callback';
 export type { GetCurrentSubjectProfile$Params as GetCurrentSubjectProfile$Params } from './fn/authentication/get-current-subject-profile';
 export { getCurrentSubjectProfile as getCurrentSubjectProfile } from './fn/authentication/get-current-subject-profile';
+export type { UpdateCurrentSubjectProfile$Params as UpdateCurrentSubjectProfile$Params } from './fn/authentication/update-current-subject-profile';
+export { updateCurrentSubjectProfile as updateCurrentSubjectProfile } from './fn/authentication/update-current-subject-profile';
 export type { ListMyCourses$Params as ListMyCourses$Params } from './fn/courses/list-my-courses';
 export { listMyCourses as listMyCourses } from './fn/courses/list-my-courses';
 export type { CreateCourse$Params as CreateCourse$Params } from './fn/courses/create-course';
 export { createCourse as createCourse } from './fn/courses/create-course';
+export type { UpdateCourse$Params as UpdateCourse$Params } from './fn/courses/update-course';
+export { updateCourse as updateCourse } from './fn/courses/update-course';
 export type { GetCourseRoster$Params as GetCourseRoster$Params } from './fn/courses/get-course-roster';
 export { getCourseRoster as getCourseRoster } from './fn/courses/get-course-roster';
 export type { AddMember$Params as AddMember$Params } from './fn/courses/add-member';

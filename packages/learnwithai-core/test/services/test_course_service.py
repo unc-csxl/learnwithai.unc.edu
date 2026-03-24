@@ -400,3 +400,54 @@ def test_drop_member_raises_when_target_not_found() -> None:
     # Act / Assert
     with pytest.raises(ValueError, match="Target membership does not exist"):
         svc.drop_member(_make_user(pid=100), _make_course(), _make_user(pid=200))
+
+
+# --- update_course ---
+
+
+def test_update_course_updates_fields() -> None:
+    # Arrange
+    course_repo = MagicMock(spec=CourseRepository)
+    membership_repo = MagicMock(spec=MembershipRepository)
+    course = MagicMock(spec=Course)
+    course.id = 1
+    instructor_m = _make_membership(user_pid=123456789, type=MembershipType.INSTRUCTOR)
+    membership_repo.get_by_user_and_course.return_value = instructor_m
+    updated_course = _make_course()
+    course_repo.update.return_value = updated_course
+    svc = _build_service(course_repo, membership_repo)
+    subject = _make_user()
+
+    # Act
+    result = svc.update_course(
+        subject, course, "COMP999", "New Name", Term.SPRING, 2027, "New desc"
+    )
+
+    # Assert
+    assert result is updated_course
+    course_repo.update.assert_called_once_with(course)
+
+
+def test_update_course_raises_when_not_instructor() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    student_m = _make_membership(type=MembershipType.STUDENT)
+    membership_repo.get_by_user_and_course.return_value = student_m
+    svc = _build_service(membership_repo=membership_repo)
+    course = MagicMock(spec=Course)
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError):
+        svc.update_course(_make_user(), course, "COMP999", "New", Term.FALL, 2027)
+
+
+def test_update_course_raises_when_not_member() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    membership_repo.get_by_user_and_course.return_value = None
+    svc = _build_service(membership_repo=membership_repo)
+    course = MagicMock(spec=Course)
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError):
+        svc.update_course(_make_user(), course, "COMP999", "New", Term.FALL, 2027)

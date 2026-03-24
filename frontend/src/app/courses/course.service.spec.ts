@@ -3,6 +3,7 @@ import { CourseService } from './course.service';
 import { Api } from '../api/generated/api';
 import { listMyCourses } from '../api/generated/fn/courses/list-my-courses';
 import { createCourse } from '../api/generated/fn/courses/create-course';
+import { updateCourse } from '../api/generated/fn/courses/update-course';
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember } from '../api/generated/fn/courses/add-member';
 import { dropMember } from '../api/generated/fn/courses/drop-member';
@@ -160,6 +161,37 @@ describe('CourseService', () => {
     expect(api.invoke).toHaveBeenCalledWith(getRosterUploadStatusFn, {
       course_id: 1,
       job_id: 10,
+    });
+  });
+
+  it('updates a course via updateCourse', async () => {
+    const updated: Course = {
+      id: 1,
+      course_number: 'COMP423',
+      name: 'Updated Name',
+      description: 'New desc',
+      term: 'fall',
+      year: 2026,
+      membership: { type: 'instructor', state: 'enrolled' },
+    };
+    api.invoke.mockResolvedValue(updated);
+    const result = await service.updateCourse(1, {
+      course_number: 'COMP423',
+      name: 'Updated Name',
+      description: 'New desc',
+      term: 'fall',
+      year: 2026,
+    });
+    expect(result).toEqual(updated);
+    expect(api.invoke).toHaveBeenCalledWith(updateCourse, {
+      course_id: 1,
+      body: {
+        course_number: 'COMP423',
+        name: 'Updated Name',
+        description: 'New desc',
+        term: 'fall',
+        year: 2026,
+      },
     });
   });
 });

@@ -84,3 +84,24 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Post-Save UX Pattern
+
+After any form successfully saves, the app must:
+
+1. Navigate the user to the next useful place (e.g. the course dashboard after updating course settings, the courses list after updating a profile).
+2. Show a success notification using `SuccessSnackbarService` (found at `src/app/success-snackbar.service.ts`). The snackbar auto-dismisses after 5 seconds.
+
+Do **not** show inline "saved" messages inside the form. Use `SuccessSnackbarService` instead of injecting `MatSnackBar` directly so that duration and dismiss behaviour stay consistent across the app.
+
+```typescript
+// In a component that saves data:
+private successSnackbar = inject(SuccessSnackbarService);
+private router = inject(Router);
+
+protected async onSubmit(): Promise<void> {
+  // ... validate and call API ...
+  this.successSnackbar.open('Thing saved.');
+  await this.router.navigate(['/next/useful/route']);
+}
+```

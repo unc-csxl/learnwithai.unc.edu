@@ -16,5 +16,7 @@ export type { RosterUploadResponse } from './models/roster-upload-response';
 export type { RosterUploadStatus } from './models/roster-upload-status';
 export type { RosterUploadStatusResponse } from './models/roster-upload-status-response';
 export type { Term } from './models/term';
+export type { UpdateCourseRequest } from './models/update-course-request';
+export type { UpdateProfileRequest } from './models/update-profile-request';
 export type { UserProfile } from './models/user-profile';
 export type { ValidationError } from './models/validation-error';

@@ -1,7 +1,14 @@
-<section class="rounded-2xl border border-[var(--mat-sys-outline-variant)] p-5 space-y-3">
-  <p class="text-sm opacity-75">Course Settings</p>
-  <p>
-    Course-level configuration will live here. This keeps administrative actions inside the same
-    course navigation flow as the roster and instructor tools.
-  </p>
-</section>
+@if (errorMessage()) {
+  <p class="text-red-600" role="alert">{{ errorMessage() }}</p>
+} @else if (loaded()) {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 max-w-md">
+    <app-course-form-fields [formGroup]="form" />
+    <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">
+      @if (saving()) {
+        Saving…
+      } @else {
+        Save
+      }
+    </button>
+  </form>
+}
