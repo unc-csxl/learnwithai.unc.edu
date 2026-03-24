@@ -3,7 +3,6 @@
 from typing import Literal
 
 from ..interfaces import Job, JobHandler
-from ..services.roster_upload_service import process_roster_upload
 
 
 class RosterUploadJob(Job):
@@ -14,12 +13,37 @@ class RosterUploadJob(Job):
 
 
 class RosterUploadJobHandler(JobHandler["RosterUploadJob"]):
-    """Processes a queued roster upload by delegating to the service layer."""
+    """Processes a queued roster upload by owning the session lifecycle."""
 
     def handle(self, job: RosterUploadJob) -> None:
-        """Handles a roster upload job.
+        """Opens a session, constructs the service, and processes the upload.
+
+        Mirrors how FastAPI's ``get_session`` dependency manages the session
+        lifecycle for HTTP request handlers: commits on success, rolls back
+        on failure, and always closes the session.
 
         Args:
             job: Job payload containing the upload job ID.
         """
-        process_roster_upload(job.job_id)
+        from sqlmodel import Session as _Session
+
+        from ..db import get_engine
+        from ..repositories.membership_repository import MembershipRepository
+        from ..repositories.roster_upload_repository import RosterUploadRepository
+        from ..repositories.user_repository import UserRepository
+        from ..services.roster_upload_service import RosterUploadService
+
+        engine = get_engine()
+        with _Session(engine) as session:
+            upload_repo = RosterUploadRepository(session)
+            user_repo = UserRepository(session)
+            membership_repo = MembershipRepository(session)
+            svc = RosterUploadService(upload_repo, user_repo, membership_repo)
+            try:
+                svc.process_upload(job.job_id)
+                session.commit()
+            except Exception:
+                session.rollback()
+                svc.mark_failed(job.job_id)
+                session.commit()
+                raise

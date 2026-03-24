@@ -5,7 +5,6 @@ import io
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from ..db import get_engine
 from ..interfaces import JobQueue
 from ..repositories.roster_upload_repository import RosterUploadRepository
 from ..repositories.membership_repository import MembershipRepository
@@ -249,32 +248,4 @@ class RosterUploadService:
                 result.errors.append(f"PID {student.pid}: {exc}")
 
         return result
-
-
-def process_roster_upload(job_id: int) -> None:
-    """Backward-compatibility shim used by the job handler.
-
-    Opens its own session and delegates to ``RosterUploadService``.
-    This function will be removed once ``RosterUploadJobHandler`` manages
-    its own session lifecycle directly.
-
-    Args:
-        job_id: Primary key of the RosterUploadJob to process.
-    """
-    from sqlmodel import Session as _Session
-
-    engine = get_engine()
-    with _Session(engine) as session:
-        upload_repo = RosterUploadRepository(session)
-        user_repo = UserRepository(session)
-        membership_repo = MembershipRepository(session)
-        svc = RosterUploadService(upload_repo, user_repo, membership_repo)
-        try:
-            svc.process_upload(job_id)
-            session.commit()
-        except Exception:
-            session.rollback()
-            svc.mark_failed(job_id)
-            session.commit()
-            raise
 

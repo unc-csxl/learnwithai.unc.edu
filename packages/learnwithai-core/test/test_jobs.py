@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
@@ -133,14 +133,59 @@ def test_job_handler_map_points_roster_upload_to_handler() -> None:
     assert isinstance(handler, RosterUploadJobHandler)
 
 
-def test_roster_upload_job_handler_calls_process_roster_upload() -> None:
+def test_roster_upload_job_handler_commits_on_success() -> None:
     # Arrange
-    job = RosterUploadJob(job_id=42)
+    job_payload = RosterUploadJob(job_id=42)
     handler = RosterUploadJobHandler()
+    mock_session = MagicMock()
+    mock_session.__enter__ = MagicMock(return_value=mock_session)
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_svc = MagicMock()
 
-    # Act
-    with patch("learnwithai.jobs.roster_upload.process_roster_upload") as mock_process:
-        handler.handle(job)
+    with (
+        patch("learnwithai.db.get_engine", return_value=MagicMock()),
+        patch("sqlmodel.Session", return_value=mock_session),
+        patch(
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=mock_svc,
+        ),
+        patch("learnwithai.repositories.roster_upload_repository.RosterUploadRepository"),
+        patch("learnwithai.repositories.user_repository.UserRepository"),
+        patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+    ):
+        handler.handle(job_payload)
 
     # Assert
-    mock_process.assert_called_once_with(42)
+    mock_svc.process_upload.assert_called_once_with(42)
+    mock_session.commit.assert_called_once()
+    mock_session.rollback.assert_not_called()
+    mock_svc.mark_failed.assert_not_called()
+
+
+def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> None:
+    # Arrange
+    job_payload = RosterUploadJob(job_id=42)
+    handler = RosterUploadJobHandler()
+    mock_session = MagicMock()
+    mock_session.__enter__ = MagicMock(return_value=mock_session)
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_svc = MagicMock()
+    mock_svc.process_upload.side_effect = RuntimeError("boom")
+
+    with (
+        patch("learnwithai.db.get_engine", return_value=MagicMock()),
+        patch("sqlmodel.Session", return_value=mock_session),
+        patch(
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=mock_svc,
+        ),
+        patch("learnwithai.repositories.roster_upload_repository.RosterUploadRepository"),
+        patch("learnwithai.repositories.user_repository.UserRepository"),
+        patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+        pytest.raises(RuntimeError, match="boom"),
+    ):
+        handler.handle(job_payload)
+
+    # Assert
+    mock_session.rollback.assert_called_once()
+    mock_svc.mark_failed.assert_called_once_with(42)

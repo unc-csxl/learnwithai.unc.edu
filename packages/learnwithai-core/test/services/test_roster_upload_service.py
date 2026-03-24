@@ -12,7 +12,6 @@ from learnwithai.services.roster_upload_service import (
     ParsedStudent,
     RosterUploadService,
     parse_canvas_csv,
-    process_roster_upload,
 )
 from learnwithai.tables.membership import MembershipState
 from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
@@ -338,64 +337,4 @@ def test_import_students_records_error_on_exception() -> None:
     # Assert
     assert len(result.errors) == 1
     assert "999999999" in result.errors[0]
-
-
-# ---- process_roster_upload (backward-compat shim) ----
-
-
-def test_process_roster_upload_commits_on_success() -> None:
-    # Arrange
-    mock_session = MagicMock()
-    mock_session.__enter__ = MagicMock(return_value=mock_session)
-    mock_session.__exit__ = MagicMock(return_value=False)
-    mock_engine = MagicMock()
-    mock_svc = MagicMock()
-
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.get_engine",
-            return_value=mock_engine,
-        ),
-        patch("sqlmodel.Session", return_value=mock_session),
-        patch(
-            "learnwithai.services.roster_upload_service.RosterUploadService",
-            return_value=mock_svc,
-        ),
-    ):
-        # Act
-        process_roster_upload(42)
-
-    # Assert
-    mock_svc.process_upload.assert_called_once_with(42)
-    mock_session.commit.assert_called_once()
-    mock_session.rollback.assert_not_called()
-
-
-def test_process_roster_upload_rolls_back_and_marks_failed_on_error() -> None:
-    # Arrange
-    mock_session = MagicMock()
-    mock_session.__enter__ = MagicMock(return_value=mock_session)
-    mock_session.__exit__ = MagicMock(return_value=False)
-    mock_engine = MagicMock()
-    mock_svc = MagicMock()
-    mock_svc.process_upload.side_effect = RuntimeError("boom")
-
-    with (
-        patch(
-            "learnwithai.services.roster_upload_service.get_engine",
-            return_value=mock_engine,
-        ),
-        patch("sqlmodel.Session", return_value=mock_session),
-        patch(
-            "learnwithai.services.roster_upload_service.RosterUploadService",
-            return_value=mock_svc,
-        ),
-        pytest.raises(RuntimeError, match="boom"),
-    ):
-        # Act
-        process_roster_upload(42)
-
-    # Assert
-    mock_session.rollback.assert_called_once()
-    mock_svc.mark_failed.assert_called_once_with(42)
 
