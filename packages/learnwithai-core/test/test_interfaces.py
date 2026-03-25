@@ -39,6 +39,7 @@ def test_interfaces_export_job_class() -> None:
         "JobQueue",
         "JobUpdate",
         "SupportsJobType",
+        "TrackedJob",
     ]
     assert issubclass(exported_job_class, BaseModel)
     assert exported_job_type_protocol is SupportsJobType

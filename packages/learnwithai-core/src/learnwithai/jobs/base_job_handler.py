@@ -10,15 +10,20 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime, timezone
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
-from ..interfaces import Job, JobHandler, JobNotifier, JobUpdate
+from ..interfaces import JobHandler, JobNotifier, JobUpdate, TrackedJob
 from ..repositories.async_job_repository import AsyncJobRepository
 from ..tables.async_job import AsyncJobStatus
 
+if TYPE_CHECKING:
+    from sqlmodel import Session
+
+    from ..config import Settings
+
 logger = logging.getLogger(__name__)
 
-JobT = TypeVar("JobT", bound=Job)
+JobT = TypeVar("JobT", bound=TrackedJob)
 
 
 class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
@@ -173,12 +178,3 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
                 )
         except Exception:
             pass
-
-
-# Use string annotation to avoid circular import at runtime.
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from sqlmodel import Session
-
-    from ..config import Settings

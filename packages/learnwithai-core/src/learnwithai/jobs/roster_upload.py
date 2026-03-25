@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from ..interfaces import Job
+from ..interfaces import TrackedJob
 from .base_job_handler import BaseJobHandler
 
 if TYPE_CHECKING:
     from sqlmodel import Session
 
 
-class RosterUploadJob(Job):
+class RosterUploadJob(TrackedJob):
     """Payload for a roster CSV upload background job."""
 
     type: Literal["roster_upload"] = "roster_upload"

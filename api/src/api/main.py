@@ -2,8 +2,6 @@
 
 Creates and configures the FastAPI application, wires up routes, and
 manages the application lifespan (background consumer startup/shutdown).
-Implementation details for the RabbitMQ consumer live in
-:mod:`api.job_update_consumer`.
 """
 
 from __future__ import annotations

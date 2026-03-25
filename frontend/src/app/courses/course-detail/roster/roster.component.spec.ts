@@ -96,7 +96,14 @@ describe('Roster', () => {
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
-    return { fixture, mockService, mockJobUpdateService, snackBarOpen, snackBarDismiss, dialogOpen };
+    return {
+      fixture,
+      mockService,
+      mockJobUpdateService,
+      snackBarOpen,
+      snackBarDismiss,
+      dialogOpen,
+    };
   }
 
   it('should display roster members with name columns', async () => {

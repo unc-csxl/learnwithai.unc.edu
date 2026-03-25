@@ -1,4 +1,12 @@
-from .jobs import Job, JobHandler, JobNotifier, JobQueue, JobUpdate, SupportsJobType
+from .jobs import (
+    Job,
+    JobHandler,
+    JobNotifier,
+    JobQueue,
+    JobUpdate,
+    SupportsJobType,
+    TrackedJob,
+)
 
 __all__ = [
     "Job",
@@ -7,4 +15,5 @@ __all__ = [
     "JobQueue",
     "JobUpdate",
     "SupportsJobType",
+    "TrackedJob",
 ]

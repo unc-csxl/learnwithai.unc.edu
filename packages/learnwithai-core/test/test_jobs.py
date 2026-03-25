@@ -6,7 +6,6 @@ import pytest
 from pydantic import ValidationError
 
 from learnwithai.jobs import (
-    BaseJobHandler,
     EchoJob,
     ForbiddenJobQueue,
     JobPayload,

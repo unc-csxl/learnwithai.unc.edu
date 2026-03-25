@@ -12,6 +12,16 @@ class Job(BaseModel, ABC):
     pass
 
 
+class TrackedJob(Job):
+    """A Job whose execution is tracked by a persistent ``AsyncJob`` row.
+
+    All jobs processed through :class:`BaseJobHandler` must extend this
+    so the handler can locate the corresponding database record.
+    """
+
+    job_id: int
+
+
 @runtime_checkable
 class SupportsJobType(Protocol):
     """Protocol for payloads that expose a stable job type string."""
