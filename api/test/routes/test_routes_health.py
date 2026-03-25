@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import job_queue_factory
+from api.di import job_queue_factory
 from api.main import app
 from api.routes.health import health, queue
 

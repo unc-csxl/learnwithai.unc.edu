@@ -2,7 +2,7 @@
 
 from typing import Annotated, TypeAlias
 from fastapi import Depends
-from .dependency_injection import SessionDI, JobQueueDI
+from .di import SessionDI, JobQueueDI
 
 
 class PublicContext:

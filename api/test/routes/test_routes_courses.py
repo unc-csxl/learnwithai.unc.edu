@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import (
+from api.di import (
     course_repository_factory,
     course_service_factory,
     get_authenticated_user,

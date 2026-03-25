@@ -10,7 +10,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from api.dependency_injection import csxl_auth_service_factory, user_repository_factory
+from api.di import csxl_auth_service_factory, user_repository_factory
 from api.main import create_app
 from api.routes.dev import dev_list_users, dev_login_as, dev_reset_db
 from learnwithai.config import Settings

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -9,11 +8,6 @@ from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
 import api.lifespan as lifespan_module
-from api.dependency_injection import (
-    course_repository_factory,
-    course_service_factory,
-    membership_repository_factory,
-)
 from api.main import app, create_app, settings
 from api.openapi import OPENAPI_TAGS
 from learnwithai.config import Settings
@@ -229,44 +223,6 @@ def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
 
     assert started.is_set()
     assert cancelled.is_set()
-
-
-# ---- DI factories ----
-
-
-def test_course_repository_factory_returns_repository() -> None:
-    # Arrange
-    session = MagicMock()
-
-    # Act
-    repo = course_repository_factory(session)
-
-    # Assert
-    assert repo._session is session
-
-
-def test_membership_repository_factory_returns_repository() -> None:
-    # Arrange
-    session = MagicMock()
-
-    # Act
-    repo = membership_repository_factory(session)
-
-    # Assert
-    assert repo._session is session
-
-
-def test_course_service_factory_returns_service() -> None:
-    # Arrange
-    course_repo = MagicMock()
-    membership_repo = MagicMock()
-
-    # Act
-    svc = course_service_factory(course_repo, membership_repo)
-
-    # Assert
-    assert svc._course_repo is course_repo
-    assert svc._membership_repo is membership_repo
 
 
 # ---- exception handler ----

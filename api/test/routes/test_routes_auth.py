@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from fastapi.security import HTTPAuthorizationCredentials
 
-from api.dependency_injection import (
+from api.di import (
     settings_factory,
     csxl_auth_service_factory,
     get_authenticated_user,

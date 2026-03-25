@@ -371,6 +371,7 @@ version = "0.1.0"
 source = { editable = "packages/learnwithai-core" }
 dependencies = [
     { name = "fast-depends" },
+    { name = "fastapi" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -388,6 +389,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fast-depends", specifier = ">=2.4,<3" },
+    { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3,<4" },
     { name = "pydantic", specifier = ">=2.8,<3" },
     { name = "pydantic-settings", specifier = ">=2.13.1,<3" },

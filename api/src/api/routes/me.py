@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body
 
-from ..dependency_injection import AuthenticatedUserDI, UserRepositoryDI
+from ..di import AuthenticatedUserDI, UserRepositoryDI
 from ..models import UpdateProfileRequest, UserProfile
 
 router = APIRouter(prefix="", tags=["Authentication"])

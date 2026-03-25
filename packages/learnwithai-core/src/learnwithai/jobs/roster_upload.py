@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 from fast_depends import Depends
 
-from ..di import roster_upload_svc_factory
+from ..di import roster_upload_service_handler_factory
 from ..interfaces import TrackedJob
 from .base_job_handler import BaseJobHandler
 
@@ -41,7 +41,7 @@ class RosterUploadJobHandler(BaseJobHandler[RosterUploadJob]):
     def _execute(  # type: ignore[override]
         self,
         job: RosterUploadJob,
-        svc: RosterUploadService = Depends(roster_upload_svc_factory),
+        svc: RosterUploadService = Depends(roster_upload_service_handler_factory),
     ) -> None:
         """Delegates to the roster upload service.
 

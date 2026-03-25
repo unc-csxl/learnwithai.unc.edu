@@ -11,7 +11,7 @@ from learnwithai.db import get_engine, reset_db_and_tables
 from learnwithai.dev_data import seed
 from sqlmodel import Session
 
-from ..dependency_injection import CSXLAuthServiceDI, UserRepositoryDI
+from ..di import CSXLAuthServiceDI, UserRepositoryDI
 from ..models.user_profile import UserProfile
 
 router = APIRouter(tags=["Development"])

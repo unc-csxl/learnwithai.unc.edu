@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, UploadFile
 
 from learnwithai.jobs.roster_upload import RosterUploadOutput
 
-from ..dependency_injection import (
+from ..di import (
     AsyncJobRepositoryDI,
     AuthenticatedUserDI,
     CourseByCourseIDPathDI,

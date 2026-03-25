@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException, Query
 
-from ..dependency_injection import (
+from ..di import (
     CourseByCourseIDPathDI,
     CourseServiceDI,
     AuthenticatedUserDI,

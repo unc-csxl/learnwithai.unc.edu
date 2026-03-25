@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from api.dependency_injection import get_authenticated_user, user_repository_factory
+from api.di import get_authenticated_user, user_repository_factory
 from api.main import app
 from api.models import UpdateProfileRequest, UserProfile
 from api.routes.me import get_current_subject_profile, update_current_subject_profile

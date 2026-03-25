@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
 
-from ..dependency_injection import (
+from ..di import (
     CSXLAuthServiceDI,
     SettingsDI,
 )
