@@ -1,8 +1,8 @@
 """Imports all SQLModel table modules so metadata registration is explicit."""
 
+from .async_job import AsyncJob, AsyncJobStatus
 from .course import Course
 from .membership import Membership
-from .roster_upload_job import RosterUploadJob
 from .user import User
 
-__all__ = ["Course", "Membership", "RosterUploadJob", "User"]
+__all__ = ["AsyncJob", "AsyncJobStatus", "Course", "Membership", "User"]
