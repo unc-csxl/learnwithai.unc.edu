@@ -39,41 +39,6 @@ def configure(manager: JobUpdateManager) -> None:
     _manager = manager
 
 
-def _get_manager() -> JobUpdateManager:
-    """Returns the configured manager, raising if not yet set."""
-    if _manager is None:
-        raise RuntimeError(
-            "JobUpdateManager not configured. Call configure() at startup."
-        )
-    return _manager
-
-
-def _authenticate_token(token: str) -> int:
-    """Validates a JWT and returns the user PID.
-
-    Args:
-        token: JWT from the query string.
-
-    Returns:
-        The user PID encoded in the token.
-
-    Raises:
-        AuthenticationException: If the token is invalid or expired.
-    """
-    settings = Settings()
-    import jwt as pyjwt
-
-    try:
-        payload = pyjwt.decode(
-            token,
-            settings.jwt_secret,
-            algorithms=[settings.jwt_algorithm],
-        )
-        return int(payload["sub"])
-    except (pyjwt.InvalidTokenError, KeyError, ValueError) as exc:
-        raise AuthenticationException() from exc
-
-
 @router.websocket("/ws/jobs")
 async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
     """WebSocket endpoint that streams job updates to authenticated clients.
@@ -138,3 +103,38 @@ async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
         pass
     finally:
         manager.unsubscribe_all(websocket)
+
+
+def _get_manager() -> JobUpdateManager:
+    """Returns the configured manager, raising if not yet set."""
+    if _manager is None:
+        raise RuntimeError(
+            "JobUpdateManager not configured. Call configure() at startup."
+        )
+    return _manager
+
+
+def _authenticate_token(token: str) -> int:
+    """Validates a JWT and returns the user PID.
+
+    Args:
+        token: JWT from the query string.
+
+    Returns:
+        The user PID encoded in the token.
+
+    Raises:
+        AuthenticationException: If the token is invalid or expired.
+    """
+    settings = Settings()
+    import jwt as pyjwt
+
+    try:
+        payload = pyjwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+        )
+        return int(payload["sub"])
+    except (pyjwt.InvalidTokenError, KeyError, ValueError) as exc:
+        raise AuthenticationException() from exc
