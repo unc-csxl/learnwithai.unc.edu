@@ -59,7 +59,7 @@ export class Roster implements OnDestroy {
   protected readonly roster = signal<RosterMember[]>([]);
   protected readonly total = signal(0);
   protected readonly page = signal(1);
-  protected readonly pageSize = signal(25);
+  protected readonly pageSize = signal(10);
   protected readonly searchQuery = signal('');
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
