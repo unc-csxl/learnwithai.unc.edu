@@ -6,12 +6,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from ..interfaces import JobQueue
+from ..repositories.async_job_repository import AsyncJobRepository
 from ..repositories.membership_repository import MembershipRepository
-from ..repositories.roster_upload_repository import RosterUploadRepository
 from ..repositories.user_repository import UserRepository
+from ..tables.async_job import AsyncJob, AsyncJobStatus
 from ..tables.membership import Membership, MembershipState, MembershipType
-from ..tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
 from ..tables.user import User
+
+ROSTER_UPLOAD_KIND = "roster_upload"
 
 
 @dataclass
@@ -38,7 +40,7 @@ class RosterUploadService:
 
     def __init__(
         self,
-        upload_repo: RosterUploadRepository,
+        async_job_repo: AsyncJobRepository,
         user_repo: UserRepository,
         membership_repo: MembershipRepository,
         job_queue: JobQueue,
@@ -46,12 +48,12 @@ class RosterUploadService:
         """Initializes the service with its dependencies.
 
         Args:
-            upload_repo: Repository for roster upload job records.
+            async_job_repo: Repository for unified async job records.
             user_repo: Repository for user persistence.
             membership_repo: Repository for membership persistence.
             job_queue: Queue used to dispatch background jobs.
         """
-        self._upload_repo = upload_repo
+        self._async_job_repo = async_job_repo
         self._user_repo = user_repo
         self._membership_repo = membership_repo
         self._job_queue = job_queue
@@ -61,7 +63,7 @@ class RosterUploadService:
         subject: User,
         course_id: int,
         csv_text: str,
-    ) -> RosterUploadJob:
+    ) -> AsyncJob:
         """Creates a roster upload job record and enqueues it for processing.
 
         Args:
@@ -70,15 +72,16 @@ class RosterUploadService:
             csv_text: Raw UTF-8 Canvas gradebook CSV content.
 
         Returns:
-            The persisted upload job with its assigned ID and PENDING status.
+            The persisted async job with its assigned ID and PENDING status.
         """
         from ..jobs.roster_upload import RosterUploadJob as RosterUploadJobPayload
 
-        job = self._upload_repo.create(
-            RosterUploadJob(
+        job = self._async_job_repo.create(
+            AsyncJob(
                 course_id=course_id,
-                uploaded_by_pid=subject.pid,
-                csv_data=csv_text,
+                created_by_pid=subject.pid,
+                kind=ROSTER_UPLOAD_KIND,
+                input_data={"csv_text": csv_text},
             )
         )
         assert job.id is not None
@@ -92,28 +95,31 @@ class RosterUploadService:
         responsible for committing or rolling back.
 
         Args:
-            job_id: Primary key of the RosterUploadJob to process.
+            job_id: Primary key of the AsyncJob to process.
 
         Raises:
             ValueError: If the job does not exist.
         """
-        job = self._upload_repo.get_by_id(job_id)
+        job = self._async_job_repo.get_by_id(job_id)
         if job is None:
-            raise ValueError(f"RosterUploadJob {job_id} not found")
+            raise ValueError(f"AsyncJob {job_id} not found")
 
-        job.status = RosterUploadStatus.PROCESSING
-        self._upload_repo.update(job)
+        job.status = AsyncJobStatus.PROCESSING
+        self._async_job_repo.update(job)
 
-        students = self._parse_canvas_csv(job.csv_data)
+        csv_text = job.input_data.get("csv_text", "")
+        students = self._parse_canvas_csv(csv_text)
         result = self._import_students(job.course_id, students)
 
-        job.status = RosterUploadStatus.COMPLETED
-        job.created_count = result.created
-        job.updated_count = result.updated
-        job.error_count = len(result.errors)
-        job.error_details = "\n".join(result.errors) if result.errors else None
+        job.status = AsyncJobStatus.COMPLETED
+        job.output_data = {
+            "created_count": result.created,
+            "updated_count": result.updated,
+            "error_count": len(result.errors),
+            "error_details": "\n".join(result.errors) if result.errors else None,
+        }
         job.completed_at = datetime.now(timezone.utc)
-        self._upload_repo.update(job)
+        self._async_job_repo.update(job)
 
     def mark_failed(self, job_id: int) -> None:
         """Marks a roster upload job as failed.
@@ -122,14 +128,14 @@ class RosterUploadService:
         error-marking does not hide the original exception.
 
         Args:
-            job_id: Primary key of the RosterUploadJob to mark failed.
+            job_id: Primary key of the AsyncJob to mark failed.
         """
         try:
-            job = self._upload_repo.get_by_id(job_id)
+            job = self._async_job_repo.get_by_id(job_id)
             if job is not None:
-                job.status = RosterUploadStatus.FAILED
+                job.status = AsyncJobStatus.FAILED
                 job.completed_at = datetime.now(timezone.utc)
-                self._upload_repo.update(job)
+                self._async_job_repo.update(job)
         except Exception:
             pass
 
