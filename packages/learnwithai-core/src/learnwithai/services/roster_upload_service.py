@@ -91,8 +91,9 @@ class RosterUploadService:
     def process_upload(self, job_id: int) -> None:
         """Processes a roster upload job: parses CSV and upserts users/memberships.
 
-        Does not manage the database session or transaction — the caller is
-        responsible for committing or rolling back.
+        The caller (:class:`BaseJobHandler`) is responsible for setting the
+        ``PROCESSING`` status before calling this method and for committing
+        or rolling back the session afterward.
 
         Args:
             job_id: Primary key of the AsyncJob to process.
@@ -103,9 +104,6 @@ class RosterUploadService:
         job = self._async_job_repo.get_by_id(job_id)
         if job is None:
             raise ValueError(f"AsyncJob {job_id} not found")
-
-        job.status = AsyncJobStatus.PROCESSING
-        self._async_job_repo.update(job)
 
         csv_text = job.input_data.get("csv_text", "")
         students = self._parse_canvas_csv(csv_text)

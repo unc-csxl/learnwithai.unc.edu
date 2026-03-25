@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from learnwithai.jobs import (
+    BaseJobHandler,
     EchoJob,
     ForbiddenJobQueue,
     JobPayload,
@@ -27,6 +28,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
 
     # Assert
     assert exported_names == [
+        "BaseJobHandler",
         "Job",
         "EchoJob",
         "ForbiddenJobQueue",
@@ -166,23 +168,27 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_svc = MagicMock()
     mock_notifier = MagicMock()
+    mock_async_job = MagicMock()
+    mock_async_job.course_id = 1
+    mock_async_job.kind = "roster_upload"
+    mock_async_job.status = MagicMock(value="completed")
+    mock_async_job_repo_cls = MagicMock()
+    mock_async_job_repo_instance = MagicMock()
+    mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
+    mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
 
-    # RabbitMQJobNotifier must be patched before get_settings, because
-    # importing learnwithai_jobqueue triggers configure_broker() which
-    # calls get_settings(). If get_settings is already mocked, the
-    # broker receives a MagicMock URL and crashes.
     with (
-        patch(
-            "learnwithai_jobqueue.rabbitmq_job_notifier.RabbitMQJobNotifier",
-            return_value=mock_notifier,
-        ),
+        patch.object(handler, "_build_notifier", return_value=mock_notifier),
         patch("learnwithai.db.get_engine", return_value=MagicMock()),
         patch("sqlmodel.Session", return_value=mock_session),
         patch(
             "learnwithai.services.roster_upload_service.RosterUploadService",
             return_value=mock_svc,
         ),
-        patch("learnwithai.repositories.async_job_repository.AsyncJobRepository"),
+        patch(
+            "learnwithai.jobs.base_job_handler.AsyncJobRepository",
+            mock_async_job_repo_cls,
+        ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
         patch("learnwithai.config.get_settings"),
@@ -193,7 +199,6 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
     mock_svc.process_upload.assert_called_once_with(42)
     mock_session.commit.assert_called_once()
     mock_session.rollback.assert_not_called()
-    mock_svc.mark_failed.assert_not_called()
 
 
 def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> None:
@@ -206,19 +211,27 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
     mock_svc = MagicMock()
     mock_svc.process_upload.side_effect = RuntimeError("boom")
     mock_notifier = MagicMock()
+    mock_async_job = MagicMock()
+    mock_async_job.course_id = 1
+    mock_async_job.kind = "roster_upload"
+    mock_async_job.status = MagicMock(value="failed")
+    mock_async_job_repo_cls = MagicMock()
+    mock_async_job_repo_instance = MagicMock()
+    mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
+    mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
 
     with (
-        patch(
-            "learnwithai_jobqueue.rabbitmq_job_notifier.RabbitMQJobNotifier",
-            return_value=mock_notifier,
-        ),
+        patch.object(handler, "_build_notifier", return_value=mock_notifier),
         patch("learnwithai.db.get_engine", return_value=MagicMock()),
         patch("sqlmodel.Session", return_value=mock_session),
         patch(
             "learnwithai.services.roster_upload_service.RosterUploadService",
             return_value=mock_svc,
         ),
-        patch("learnwithai.repositories.async_job_repository.AsyncJobRepository"),
+        patch(
+            "learnwithai.jobs.base_job_handler.AsyncJobRepository",
+            mock_async_job_repo_cls,
+        ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
         patch("learnwithai.config.get_settings"),
@@ -228,7 +241,8 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
 
     # Assert
     mock_session.rollback.assert_called_once()
-    mock_svc.mark_failed.assert_called_once_with(42)
+    # Base handler marks failed via AsyncJobRepository, not via the service
+    assert mock_async_job_repo_instance.update.call_count >= 1
 
 
 # ---- NoOpJobNotifier ----
@@ -264,3 +278,68 @@ def test_roster_upload_handler_notify_skips_when_job_not_found() -> None:
     handler._notify(mock_notifier, 999, mock_repo)
 
     mock_notifier.notify.assert_not_called()
+
+
+def test_base_handler_notify_swallows_exceptions() -> None:
+    """Covers the except branch in _notify."""
+    handler = RosterUploadJobHandler()
+    mock_notifier = MagicMock()
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.side_effect = RuntimeError("db down")
+
+    # Act — should not raise
+    handler._notify(mock_notifier, 999, mock_repo)
+
+    mock_notifier.notify.assert_not_called()
+
+
+def test_base_handler_mark_failed_swallows_exceptions() -> None:
+    """Covers the except branch in _mark_failed."""
+    handler = RosterUploadJobHandler()
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.side_effect = RuntimeError("db down")
+
+    # Act — should not raise
+    handler._mark_failed(999, mock_repo)
+
+
+def test_base_handler_mark_failed_skips_when_job_not_found() -> None:
+    """Covers the branch where _mark_failed's get_by_id returns None."""
+    handler = RosterUploadJobHandler()
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.return_value = None
+
+    # Act — should not raise
+    handler._mark_failed(999, mock_repo)
+
+    mock_repo.update.assert_not_called()
+
+
+def test_base_handler_set_processing_skips_when_job_not_found() -> None:
+    """Covers the branch where _set_processing's get_by_id returns None."""
+    handler = RosterUploadJobHandler()
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.return_value = None
+    mock_session = MagicMock()
+    mock_notifier = MagicMock()
+
+    # Act — should not raise
+    handler._set_processing(999, mock_repo, mock_session, mock_notifier)
+
+    mock_repo.update.assert_not_called()
+    mock_session.flush.assert_not_called()
+
+
+def test_base_handler_build_notifier_creates_rabbitmq_notifier() -> None:
+    """Covers the default _build_notifier implementation."""
+    handler = RosterUploadJobHandler()
+    mock_settings = MagicMock()
+    mock_settings.effective_rabbitmq_url = "amqp://test"
+
+    with patch(
+        "learnwithai_jobqueue.rabbitmq_job_notifier.RabbitMQJobNotifier",
+    ) as mock_cls:
+        notifier = handler._build_notifier(mock_settings)
+
+    mock_cls.assert_called_once_with("amqp://test")
+    assert notifier is mock_cls.return_value
