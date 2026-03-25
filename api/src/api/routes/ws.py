@@ -16,7 +16,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
-from api.job_update_manager import JobUpdateManager
+from api.realtime.manager import JobUpdateManager
 
 logger = logging.getLogger(__name__)
 

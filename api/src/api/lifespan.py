@@ -19,8 +19,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from api.job_update_consumer import consume_job_updates
-from api.job_update_manager import JobUpdateManager
+from api.realtime import JobUpdateManager, consume_job_updates
 from api.routes import ws as ws_route_module
 
 from learnwithai.config import Settings

@@ -1,7 +1,7 @@
 """RabbitMQ consumer that bridges job update messages to WebSocket clients.
 
 Connects to the ``job_updates`` fanout exchange via ``aio-pika`` and
-forwards each message to the :class:`~api.job_update_manager.JobUpdateManager`
+forwards each message to the :class:`~api.realtime.manager.JobUpdateManager`
 for delivery over open WebSocket connections.
 """
 
@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from api.job_update_manager import JobUpdateManager
+from api.realtime.manager import JobUpdateManager
 
 from learnwithai.config import Settings
 from learnwithai.interfaces.jobs import JobUpdate

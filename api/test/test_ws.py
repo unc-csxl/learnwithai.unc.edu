@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from api.job_update_manager import JobUpdateManager
+from api.realtime.manager import JobUpdateManager
 from api.main import app
 from api.routes import ws as ws_route_module
 
