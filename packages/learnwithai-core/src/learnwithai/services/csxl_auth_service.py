@@ -124,6 +124,8 @@ class CSXLAuthService:
     def verify_jwt(self, token: str) -> int:
         """Decodes a JWT and returns the user PID.
 
+        Delegates to :func:`learnwithai.auth.verify_jwt`.
+
         Args:
             token: Encoded JWT issued by this service.
 
@@ -133,16 +135,9 @@ class CSXLAuthService:
         Raises:
             AuthenticationException: If the token is invalid or expired.
         """
-        try:
-            payload = jwt.decode(
-                token,
-                self._settings.jwt_secret,
-                algorithms=[self._settings.jwt_algorithm],
-            )
-            pid = int(payload["sub"])
-            return pid
-        except (jwt.InvalidTokenError, KeyError, ValueError) as exc:
-            raise AuthenticationException() from exc
+        from ..auth import verify_jwt
+
+        return verify_jwt(token, self._settings)
 
     def get_user_by_pid(self, pid: int) -> User | None:
         """Looks up a user by PID.
