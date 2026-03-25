@@ -12,6 +12,7 @@ dependencies = [
   "learnwithai-core",
   "learnwithai-jobqueue",
   "httpx>=0.28.1",
+  "aio-pika>=9.5,<10",
 ]
 
 [tool.uv.sources]
