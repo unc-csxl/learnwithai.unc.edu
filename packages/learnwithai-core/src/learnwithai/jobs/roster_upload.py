@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from ..interfaces import TrackedJob
 from .base_job_handler import BaseJobHandler
 
 if TYPE_CHECKING:
     from sqlmodel import Session
+
+
+class RosterUploadOutput(TypedDict):
+    """Shape of ``AsyncJob.output_data`` written by roster upload jobs."""
+
+    created_count: int
+    updated_count: int
+    error_count: int
+    error_details: str | None
 
 
 class RosterUploadJob(TrackedJob):

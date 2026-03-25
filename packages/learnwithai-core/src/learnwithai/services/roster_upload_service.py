@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from ..interfaces import JobQueue
+from ..jobs.roster_upload import RosterUploadOutput
 from ..repositories.async_job_repository import AsyncJobRepository
 from ..repositories.membership_repository import MembershipRepository
 from ..repositories.user_repository import UserRepository
@@ -110,12 +111,12 @@ class RosterUploadService:
         result = self._import_students(job.course_id, students)
 
         job.status = AsyncJobStatus.COMPLETED
-        job.output_data = {
-            "created_count": result.created,
-            "updated_count": result.updated,
-            "error_count": len(result.errors),
-            "error_details": "\n".join(result.errors) if result.errors else None,
-        }
+        job.output_data = RosterUploadOutput(
+            created_count=result.created,
+            updated_count=result.updated,
+            error_count=len(result.errors),
+            error_details="\n".join(result.errors) if result.errors else None,
+        )
         job.completed_at = datetime.now(timezone.utc)
         self._async_job_repo.update(job)
 
