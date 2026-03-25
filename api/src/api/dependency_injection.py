@@ -20,7 +20,7 @@ from learnwithai.tables.course import Course
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
-from learnwithai.repositories.roster_upload_repository import RosterUploadRepository
+from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 
 SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
@@ -248,10 +248,10 @@ PaginationParamsDI: TypeAlias = Annotated[
 ]
 
 
-def roster_upload_repository_factory(
+def async_job_repository_factory(
     session: SessionDI,
-) -> RosterUploadRepository:
-    """Constructs a roster upload repository bound to the current request session.
+) -> AsyncJobRepository:
+    """Constructs an async job repository bound to the current request session.
 
     Args:
         session: Database session scoped to the request.
@@ -259,16 +259,16 @@ def roster_upload_repository_factory(
     Returns:
         A repository backed by the provided database session.
     """
-    return RosterUploadRepository(session)
+    return AsyncJobRepository(session)
 
 
-RosterUploadRepositoryDI: TypeAlias = Annotated[
-    RosterUploadRepository, Depends(roster_upload_repository_factory)
+AsyncJobRepositoryDI: TypeAlias = Annotated[
+    AsyncJobRepository, Depends(async_job_repository_factory)
 ]
 
 
 def roster_upload_service_factory(
-    upload_repo: RosterUploadRepositoryDI,
+    async_job_repo: AsyncJobRepositoryDI,
     user_repo: UserRepositoryDI,
     membership_repo: MembershipRepositoryDI,
     job_queue: JobQueueDI,
@@ -276,7 +276,7 @@ def roster_upload_service_factory(
     """Creates the roster upload service for the current request.
 
     Args:
-        upload_repo: Repository for roster upload job records.
+        async_job_repo: Repository for unified async job records.
         user_repo: Repository for user persistence.
         membership_repo: Repository for membership persistence.
         job_queue: Queue used to dispatch background jobs.
@@ -284,7 +284,7 @@ def roster_upload_service_factory(
     Returns:
         A configured roster upload service.
     """
-    return RosterUploadService(upload_repo, user_repo, membership_repo, job_queue)
+    return RosterUploadService(async_job_repo, user_repo, membership_repo, job_queue)
 
 
 RosterUploadServiceDI: TypeAlias = Annotated[

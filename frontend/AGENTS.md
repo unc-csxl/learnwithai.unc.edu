@@ -85,6 +85,17 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
+## Real-Time Job Updates
+
+`JobUpdateService` (`src/app/job-update.service.ts`) is a singleton service that manages a WebSocket connection to `/api/ws/jobs` for receiving real-time background job status updates.
+
+- Call `subscribe(courseId)` to start receiving updates for a course. The WebSocket opens lazily on the first subscription.
+- Call `unsubscribe(courseId)` when leaving a course context. The WebSocket closes automatically when no subscriptions remain.
+- Use `updatesForCourse(courseId)` to get a `computed` signal of all updates for a course.
+- Use `updateForJob(jobId)` to get a `computed` signal tracking a single job's latest status.
+- The connection runs outside `NgZone`; message handling runs inside `NgZone` to trigger change detection.
+- Reconnects automatically after 5 seconds on connection loss.
+
 ## Post-Save UX Pattern
 
 After any form successfully saves, the app must:

@@ -5,6 +5,9 @@ import {
   signal,
   computed,
   OnDestroy,
+  effect,
+  DestroyRef,
+  Injector,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -18,11 +21,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CourseService } from '../../course.service';
 import { RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
+import { JobUpdateService } from '../../../job-update.service';
 import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 3;
-const POLL_INTERVAL_MS = 2000;
 
 /** Displays the roster for a course. */
 @Component({
@@ -48,8 +51,10 @@ export class Roster implements OnDestroy {
   private titleService = inject(PageTitleService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private jobUpdateService = inject(JobUpdateService);
+  private injector = inject(Injector);
+  private destroyRef = inject(DestroyRef);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly roster = signal<RosterMember[]>([]);
   protected readonly total = signal(0);
@@ -66,6 +71,7 @@ export class Roster implements OnDestroy {
   constructor() {
     this.titleService.setTitle('Roster');
     this.courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
+    this.jobUpdateService.subscribe(this.courseId);
     this.loadRoster();
   }
 
@@ -73,9 +79,7 @@ export class Roster implements OnDestroy {
     if (this.debounceTimer !== null) {
       clearTimeout(this.debounceTimer);
     }
-    if (this.pollTimer !== null) {
-      clearTimeout(this.pollTimer);
-    }
+    this.jobUpdateService.unsubscribe(this.courseId);
   }
 
   protected onSearchInput(value: string): void {
@@ -113,7 +117,7 @@ export class Roster implements OnDestroy {
       this.snackBar.open('Roster upload processing…', undefined, {
         duration: 0,
       });
-      this.pollUploadStatus(result.id);
+      this.watchJobUpdate(result.id);
     } catch {
       this.snackBar.open('Failed to upload roster CSV.', 'Dismiss', {
         duration: 5000,
@@ -124,23 +128,37 @@ export class Roster implements OnDestroy {
     }
   }
 
-  private pollUploadStatus(jobId: number): void {
-    this.pollTimer = setTimeout(async () => {
-      try {
-        const status = await this.courseService.getRosterUploadStatus(this.courseId, jobId);
-        if (status.status === 'completed' || status.status === 'failed') {
-          this.snackBar.dismiss();
-          this.showUploadResult(status);
-          await this.loadRoster();
-        } else {
-          this.pollUploadStatus(jobId);
-        }
-      } catch {
-        this.snackBar.open('Failed to check upload status.', 'Dismiss', {
-          duration: 5000,
-        });
-      }
-    }, POLL_INTERVAL_MS);
+  // ------------------------------------------------------------------
+  // Private helpers
+  // ------------------------------------------------------------------
+
+  private watchJobUpdate(jobId: number): void {
+    const jobSignal = this.jobUpdateService.updateForJob(jobId);
+    const effectRef = effect(
+      async () => {
+        const update = jobSignal();
+        if (update === null) return;
+        if (update.status !== 'completed' && update.status !== 'failed') return;
+
+        effectRef.destroy();
+        await this.handleJobFinished(jobId);
+      },
+      { injector: this.injector },
+    );
+    this.destroyRef.onDestroy(() => effectRef.destroy());
+  }
+
+  private async handleJobFinished(jobId: number): Promise<void> {
+    this.snackBar.dismiss();
+    try {
+      const status = await this.courseService.getRosterUploadStatus(this.courseId, jobId);
+      this.showUploadResult(status);
+      await this.loadRoster();
+    } catch {
+      this.snackBar.open('Failed to check upload status.', 'Dismiss', {
+        duration: 5000,
+      });
+    }
   }
 
   private showUploadResult(status: RosterUploadStatus): void {

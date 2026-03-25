@@ -1,3 +1,19 @@
-from .jobs import JobQueue, JobHandler, Job, SupportsJobType
+from .jobs import (
+    Job,
+    JobHandler,
+    JobNotifier,
+    JobQueue,
+    JobUpdate,
+    SupportsJobType,
+    TrackedJob,
+)
 
-__all__ = ["JobQueue", "JobHandler", "Job", "SupportsJobType"]
+__all__ = [
+    "Job",
+    "JobHandler",
+    "JobNotifier",
+    "JobQueue",
+    "JobUpdate",
+    "SupportsJobType",
+    "TrackedJob",
+]

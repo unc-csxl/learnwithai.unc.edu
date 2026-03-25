@@ -13,7 +13,7 @@ from starlette.datastructures import Headers
 from api.routes.roster_uploads import get_roster_upload_status, upload_roster_csv
 from api.models import RosterUploadResponse, RosterUploadStatusResponse
 from learnwithai.errors import AuthorizationError
-from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
+from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 
 
 # ---- helpers ----
@@ -46,18 +46,18 @@ def _make_upload_file(
 def _stub_job(
     job_id: int = 1,
     course_id: int = 1,
-    status: RosterUploadStatus = RosterUploadStatus.PENDING,
+    status: AsyncJobStatus = AsyncJobStatus.PENDING,
+    output_data: dict | None = None,
 ) -> MagicMock:
-    mock = MagicMock(spec=RosterUploadJob)
+    mock = MagicMock(spec=AsyncJob)
     mock.id = job_id
     mock.course_id = course_id
     mock.status = status
-    mock.uploaded_by_pid = 123456789
-    mock.csv_data = "data"
-    mock.created_count = 0
-    mock.updated_count = 0
-    mock.error_count = 0
-    mock.error_details = None
+    mock.kind = "roster_upload"
+    mock.created_by_pid = 123456789
+    mock.input_data = {"csv_text": "data"}
+    mock.output_data = output_data
+    mock.error_message = None
     mock.created_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
     mock.completed_at = None
     return mock
@@ -85,7 +85,7 @@ async def test_upload_roster_csv_returns_accepted_response() -> None:
     # Assert
     assert isinstance(result, RosterUploadResponse)
     assert result.id == 42
-    assert result.status == RosterUploadStatus.PENDING
+    assert result.status == AsyncJobStatus.PENDING
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
     roster_upload_svc.submit_upload.assert_called_once_with(
         subject, course.id, "Student,ID,SIS User ID,SIS Login ID\n"
@@ -150,22 +150,28 @@ def test_get_roster_upload_status_returns_status() -> None:
     subject = _stub_user()
     course = _stub_course(course_id=1)
     course_svc = MagicMock()
-    upload_repo = MagicMock()
-    job = _stub_job(job_id=42, course_id=1, status=RosterUploadStatus.COMPLETED)
-    job.created_count = 5
-    job.updated_count = 2
-    job.error_count = 1
-    job.error_details = "PID 999: error"
+    async_job_repo = MagicMock()
+    job = _stub_job(
+        job_id=42,
+        course_id=1,
+        status=AsyncJobStatus.COMPLETED,
+        output_data={
+            "created_count": 5,
+            "updated_count": 2,
+            "error_count": 1,
+            "error_details": "PID 999: error",
+        },
+    )
     job.completed_at = datetime(2025, 1, 2, tzinfo=timezone.utc)
-    upload_repo.get_by_id.return_value = job
+    async_job_repo.get_by_id.return_value = job
 
     # Act
-    result = get_roster_upload_status(subject, course, course_svc, upload_repo, 42)
+    result = get_roster_upload_status(subject, course, course_svc, async_job_repo, 42)
 
     # Assert
     assert isinstance(result, RosterUploadStatusResponse)
     assert result.id == 42
-    assert result.status == RosterUploadStatus.COMPLETED
+    assert result.status == AsyncJobStatus.COMPLETED
     assert result.created_count == 5
     assert result.error_details == "PID 999: error"
 
@@ -175,12 +181,12 @@ def test_get_roster_upload_status_returns_404_when_not_found() -> None:
     subject = _stub_user()
     course = _stub_course()
     course_svc = MagicMock()
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = None
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = None
 
     # Act / Assert
     with pytest.raises(HTTPException) as exc_info:
-        get_roster_upload_status(subject, course, course_svc, upload_repo, 999)
+        get_roster_upload_status(subject, course, course_svc, async_job_repo, 999)
     assert exc_info.value.status_code == 404
 
 
@@ -189,13 +195,13 @@ def test_get_roster_upload_status_returns_404_for_wrong_course() -> None:
     subject = _stub_user()
     course = _stub_course(course_id=1)
     course_svc = MagicMock()
-    upload_repo = MagicMock()
+    async_job_repo = MagicMock()
     job = _stub_job(job_id=42, course_id=99)
-    upload_repo.get_by_id.return_value = job
+    async_job_repo.get_by_id.return_value = job
 
     # Act / Assert
     with pytest.raises(HTTPException) as exc_info:
-        get_roster_upload_status(subject, course, course_svc, upload_repo, 42)
+        get_roster_upload_status(subject, course, course_svc, async_job_repo, 42)
     assert exc_info.value.status_code == 404
 
 

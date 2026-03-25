@@ -2,10 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { signal, WritableSignal } from '@angular/core';
 import { Roster } from './roster.component';
 import { CourseService } from '../../course.service';
 import { PaginatedRoster, RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
+import { JobUpdateService, JobUpdate } from '../../../job-update.service';
 import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const fakeMembers: RosterMember[] = [
@@ -43,13 +45,23 @@ describe('Roster', () => {
     vi.useRealTimers();
   });
 
+  let jobUpdateSignal: WritableSignal<JobUpdate | null>;
+
   async function setup(options: { response?: PaginatedRoster; error?: { status: number } } = {}) {
+    jobUpdateSignal = signal<JobUpdate | null>(null);
+
     const mockService = {
       getRoster: options.error
         ? vi.fn(() => Promise.reject(options.error))
         : vi.fn(() => Promise.resolve(options.response ?? fakeResponse)),
       uploadRoster: vi.fn(() => Promise.resolve({ id: 42, status: 'pending' })),
       getRosterUploadStatus: vi.fn(),
+    };
+
+    const mockJobUpdateService = {
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      updateForJob: vi.fn(() => jobUpdateSignal.asReadonly()),
     };
 
     const mockRoute = {
@@ -61,6 +73,7 @@ describe('Roster', () => {
       providers: [
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
+        { provide: JobUpdateService, useValue: mockJobUpdateService },
         {
           provide: PageTitleService,
           useValue: {
@@ -83,7 +96,14 @@ describe('Roster', () => {
     fixture.detectChanges();
     await flush();
     fixture.detectChanges();
-    return { fixture, mockService, snackBarOpen, snackBarDismiss, dialogOpen };
+    return {
+      fixture,
+      mockService,
+      mockJobUpdateService,
+      snackBarOpen,
+      snackBarDismiss,
+      dialogOpen,
+    };
   }
 
   it('should display roster members with name columns', async () => {
@@ -338,10 +358,6 @@ describe('Roster', () => {
   it('should upload file and show snackbar on file selection', async () => {
     const { fixture, mockService, snackBarOpen } = await setup();
     const component = fixture.componentInstance;
-    mockService.getRosterUploadStatus.mockResolvedValue({
-      id: 42,
-      status: 'processing',
-    });
 
     const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
     const event = { target: { files: [file], value: 'C:\\roster.csv' } } as unknown as Event;
@@ -371,8 +387,9 @@ describe('Roster', () => {
     });
   });
 
-  it('should poll and show dialog when upload completes', async () => {
-    const { fixture, mockService, snackBarDismiss, dialogOpen } = await setup();
+  it('should show dialog when WebSocket signals job completed', async () => {
+    const { fixture, mockService, snackBarDismiss, dialogOpen, mockJobUpdateService } =
+      await setup();
     const component = fixture.componentInstance;
 
     const completedStatus: RosterUploadStatus = {
@@ -387,10 +404,24 @@ describe('Roster', () => {
     };
     mockService.getRosterUploadStatus.mockResolvedValue(completedStatus);
 
-    vi.useFakeTimers();
-    component['pollUploadStatus'](42);
-    await vi.advanceTimersByTimeAsync(2000);
-    vi.useRealTimers();
+    // Trigger file upload to start watching
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    const event = { target: { files: [file], value: '' } } as unknown as Event;
+    await component['onFileSelected'](event);
+    fixture.detectChanges();
+
+    expect(mockJobUpdateService.updateForJob).toHaveBeenCalledWith(42);
+
+    // Simulate WebSocket delivering a completed update
+    jobUpdateSignal.set({
+      job_id: 42,
+      course_id: 1,
+      user_id: 100,
+      kind: 'roster_upload',
+      status: 'completed',
+    });
+    fixture.detectChanges();
+    await flush();
     fixture.detectChanges();
 
     expect(mockService.getRosterUploadStatus).toHaveBeenCalledWith(1, 42);
@@ -401,52 +432,53 @@ describe('Roster', () => {
     });
   });
 
-  it('should continue polling when status is processing', async () => {
+  it('should ignore processing status updates from WebSocket', async () => {
     const { fixture, mockService, snackBarDismiss } = await setup();
     const component = fixture.componentInstance;
 
-    const processingStatus = { id: 42, status: 'processing' as const };
-    const completedStatus: RosterUploadStatus = {
-      id: 42,
-      status: 'completed',
-      created_count: 3,
-      updated_count: 1,
-      error_count: 0,
-      error_details: null,
-      created_at: '2025-01-01T00:00:00',
-      completed_at: '2025-01-01T00:00:05',
-    };
-    mockService.getRosterUploadStatus
-      .mockResolvedValueOnce(processingStatus)
-      .mockResolvedValueOnce(completedStatus);
-
-    // First poll returns processing, which schedules another poll
-    vi.useFakeTimers();
-    component['pollUploadStatus'](42);
-    await vi.advanceTimersByTimeAsync(2000);
-
-    expect(mockService.getRosterUploadStatus).toHaveBeenCalledTimes(1);
-    expect(snackBarDismiss).not.toHaveBeenCalled();
-
-    // Second poll returns completed
-    await vi.advanceTimersByTimeAsync(2000);
-    vi.useRealTimers();
+    // Trigger file upload to start watching
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    const event = { target: { files: [file], value: '' } } as unknown as Event;
+    await component['onFileSelected'](event);
     fixture.detectChanges();
 
-    expect(mockService.getRosterUploadStatus).toHaveBeenCalledTimes(2);
-    expect(snackBarDismiss).toHaveBeenCalled();
+    // Simulate WebSocket delivering a processing update — should not trigger fetch
+    jobUpdateSignal.set({
+      job_id: 42,
+      course_id: 1,
+      user_id: 100,
+      kind: 'roster_upload',
+      status: 'processing',
+    });
+    fixture.detectChanges();
+    await flush();
+
+    expect(snackBarDismiss).not.toHaveBeenCalled();
+    expect(mockService.getRosterUploadStatus).not.toHaveBeenCalled();
   });
 
-  it('should show error snackbar when polling fails', async () => {
+  it('should show error snackbar when status fetch fails after WS notification', async () => {
     const { fixture, mockService, snackBarOpen } = await setup();
     const component = fixture.componentInstance;
 
     mockService.getRosterUploadStatus.mockRejectedValue(new Error('network'));
 
-    vi.useFakeTimers();
-    component['pollUploadStatus'](42);
-    await vi.advanceTimersByTimeAsync(2000);
-    vi.useRealTimers();
+    // Trigger file upload
+    const file = new File(['csv'], 'roster.csv', { type: 'text/csv' });
+    const event = { target: { files: [file], value: '' } } as unknown as Event;
+    await component['onFileSelected'](event);
+    fixture.detectChanges();
+
+    // Simulate completed WS update
+    jobUpdateSignal.set({
+      job_id: 42,
+      course_id: 1,
+      user_id: 100,
+      kind: 'roster_upload',
+      status: 'completed',
+    });
+    fixture.detectChanges();
+    await flush();
     fixture.detectChanges();
 
     expect(snackBarOpen).toHaveBeenCalledWith('Failed to check upload status.', 'Dismiss', {
@@ -462,16 +494,21 @@ describe('Roster', () => {
     expect(mockService.uploadRoster).not.toHaveBeenCalled();
   });
 
-  it('should clean up poll timer on destroy', async () => {
-    const { fixture, mockService } = await setup();
-    const component = fixture.componentInstance;
-    mockService.getRosterUploadStatus.mockResolvedValue({ id: 42, status: 'processing' });
+  it('should subscribe and unsubscribe to job updates', async () => {
+    const { fixture, mockJobUpdateService } = await setup();
 
-    vi.useFakeTimers();
-    component['pollUploadStatus'](42);
+    expect(mockJobUpdateService.subscribe).toHaveBeenCalledWith(1);
+
     fixture.destroy();
-    // Advance time — should not throw after destroy
-    vi.advanceTimersByTime(5000);
-    vi.useRealTimers();
+
+    expect(mockJobUpdateService.unsubscribe).toHaveBeenCalledWith(1);
+  });
+
+  it('should clean up debounce timer on destroy', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+    // Start a pending debounce, then destroy — should not throw
+    component['onSearchInput']('alice');
+    fixture.destroy();
   });
 });

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
+import api.main as main_module
 from api.dependency_injection import (
     course_repository_factory,
     course_service_factory,
@@ -153,6 +156,75 @@ def test_operation_ids_use_function_names() -> None:
     assert "create_course" in operation_ids
     assert "list_my_courses" in operation_ids
     assert "get_course_roster" in operation_ids
+
+
+def test_lifespan_context_skips_consumer_in_test_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called = False
+
+    async def fake_consume_job_updates(*_args: object, **_kwargs: object) -> None:
+        nonlocal called
+        called = True
+
+    monkeypatch.setattr(main_module, "consume_job_updates", fake_consume_job_updates)
+    monkeypatch.setattr(
+        main_module,
+        "Settings",
+        lambda: Settings.model_construct(
+            _fields_set=None,
+            environment="test",
+            app_name="learnwithai",
+        ),
+    )
+
+    async def exercise() -> None:
+        lifespan = main_module._lifespan_context(FastAPI())
+        await anext(lifespan)
+        with pytest.raises(StopAsyncIteration):
+            await anext(lifespan)
+
+    asyncio.run(exercise())
+
+    assert called is False
+
+
+def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def fake_consume_job_updates(*_args: object, **_kwargs: object) -> None:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    monkeypatch.setattr(main_module, "consume_job_updates", fake_consume_job_updates)
+    monkeypatch.setattr(
+        main_module,
+        "Settings",
+        lambda: Settings.model_construct(
+            _fields_set=None,
+            environment="development",
+            app_name="learnwithai",
+        ),
+    )
+
+    async def exercise() -> None:
+        lifespan = main_module._lifespan_context(FastAPI())
+        await anext(lifespan)
+        await asyncio.wait_for(started.wait(), timeout=1)
+        with pytest.raises(StopAsyncIteration):
+            await anext(lifespan)
+
+    asyncio.run(exercise())
+
+    assert started.is_set()
+    assert cancelled.is_set()
 
 
 # ---- DI factories ----

@@ -1,16 +1,63 @@
-"""Application entrypoint for the FastAPI adapter."""
+"""Application entrypoint for the FastAPI adapter.
+
+Creates and configures the FastAPI application, wires up routes, and
+manages the application lifespan (background consumer startup/shutdown).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
+from api.job_update_consumer import consume_job_updates
+from api.job_update_manager import JobUpdateManager
 from api.openapi import API_DESCRIPTION, OPENAPI_TAGS
 from api.routes import API_ROUTERS
 from api.routes.dev import router as dev_router
+from api.routes import ws as ws_route_module
 from api.spa import configure_spa
 
 from learnwithai.config import Settings
 from learnwithai.errors import AuthorizationError
+
+logger = logging.getLogger(__name__)
+
+
+async def _lifespan_context(application: FastAPI) -> AsyncIterator[None]:
+    """Manages startup and shutdown of background resources.
+
+    Starts the RabbitMQ consumer background task on startup and
+    cancels it on shutdown.  Skips the consumer in test environments
+    where RabbitMQ is not available.
+    """
+    manager = JobUpdateManager()
+    ws_route_module.configure(manager)
+
+    current_settings = Settings()
+    consumer_task: asyncio.Task[None] | None = None
+
+    if not current_settings.is_test:
+        consumer_task = asyncio.create_task(
+            consume_job_updates(manager, current_settings)
+        )
+
+    yield
+
+    if consumer_task is not None:
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            pass
+
+
+_lifespan = asynccontextmanager(_lifespan_context)
 
 
 def _generate_operation_id(route: APIRoute) -> str:
@@ -30,6 +77,7 @@ def create_app(settings: Settings) -> FastAPI:
         description=API_DESCRIPTION,
         openapi_tags=OPENAPI_TAGS,
         generate_unique_id_function=_generate_operation_id,
+        lifespan=_lifespan,
     )
 
     @application.exception_handler(AuthorizationError)
@@ -40,6 +88,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     for router in API_ROUTERS:
         application.include_router(router, prefix="/api")
+
+    application.include_router(ws_route_module.router, prefix="/api")
 
     if settings.is_development:
         application.include_router(dev_router, prefix="/api")
