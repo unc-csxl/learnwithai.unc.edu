@@ -172,6 +172,7 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
                     JobUpdate(
                         job_id=job_id,
                         course_id=reloaded.course_id,
+                        user_id=reloaded.created_by_pid,
                         kind=reloaded.kind,
                         status=reloaded.status.value,
                     )

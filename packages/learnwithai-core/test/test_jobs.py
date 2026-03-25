@@ -169,6 +169,7 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
     mock_notifier = MagicMock()
     mock_async_job = MagicMock()
     mock_async_job.course_id = 1
+    mock_async_job.created_by_pid = 111
     mock_async_job.kind = "roster_upload"
     mock_async_job.status = MagicMock(value="completed")
     mock_async_job_repo_cls = MagicMock()
@@ -212,6 +213,7 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
     mock_notifier = MagicMock()
     mock_async_job = MagicMock()
     mock_async_job.course_id = 1
+    mock_async_job.created_by_pid = 111
     mock_async_job.kind = "roster_upload"
     mock_async_job.status = MagicMock(value="failed")
     mock_async_job_repo_cls = MagicMock()
@@ -260,7 +262,7 @@ def test_noop_job_notifier_discards_update_silently() -> None:
 
     # Arrange
     notifier = NoOpJobNotifier()
-    update = JobUpdate(job_id=1, course_id=1, kind="roster_upload", status="completed")
+    update = JobUpdate(job_id=1, course_id=1, user_id=111, kind="roster_upload", status="completed")
 
     # Act — should not raise
     notifier.notify(update)
@@ -342,3 +344,28 @@ def test_base_handler_build_notifier_creates_rabbitmq_notifier() -> None:
 
     mock_cls.assert_called_once_with("amqp://test")
     assert notifier is mock_cls.return_value
+
+
+def test_notify_includes_user_id_from_created_by_pid() -> None:
+    """Verifies _notify populates user_id from the AsyncJob's created_by_pid."""
+    from learnwithai.interfaces import JobUpdate
+
+    handler = RosterUploadJobHandler()
+    mock_notifier = MagicMock()
+    mock_async_job = MagicMock()
+    mock_async_job.course_id = 5
+    mock_async_job.created_by_pid = 999
+    mock_async_job.kind = "roster_upload"
+    mock_async_job.status = MagicMock(value="completed")
+    mock_repo = MagicMock()
+    mock_repo.get_by_id.return_value = mock_async_job
+
+    handler._notify(mock_notifier, 42, mock_repo)
+
+    mock_notifier.notify.assert_called_once()
+    update: JobUpdate = mock_notifier.notify.call_args[0][0]
+    assert update.job_id == 42
+    assert update.course_id == 5
+    assert update.user_id == 999
+    assert update.kind == "roster_upload"
+    assert update.status == "completed"

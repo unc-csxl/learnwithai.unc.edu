@@ -51,6 +51,7 @@ class JobUpdate(BaseModel):
 
     job_id: int
     course_id: int
+    user_id: int
     kind: str
     status: str
 

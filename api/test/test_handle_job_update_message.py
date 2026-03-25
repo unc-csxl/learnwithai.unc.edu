@@ -14,7 +14,7 @@ from api.job_update_consumer import handle_job_update_message
 
 def _valid_body() -> bytes:
     return json.dumps(
-        {"job_id": 1, "course_id": 10, "kind": "test", "status": "completed"}
+        {"job_id": 1, "course_id": 10, "user_id": 100, "kind": "test", "status": "completed"}
     ).encode()
 
 
@@ -29,6 +29,7 @@ class TestHandleJobUpdateMessage:
         update = manager.broadcast.call_args[0][0]
         assert update.job_id == 1
         assert update.course_id == 10
+        assert update.user_id == 100
         assert update.kind == "test"
         assert update.status == "completed"
 
