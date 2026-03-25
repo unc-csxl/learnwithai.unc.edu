@@ -34,3 +34,19 @@ class JobHandler(Protocol[JobT]):
     """Handler interface for executing a specific job type."""
 
     def handle(self, job: JobT) -> None: ...
+
+
+class JobUpdate(BaseModel):
+    """Lightweight notification published when a job's status changes."""
+
+    job_id: int
+    course_id: int
+    kind: str
+    status: str
+
+
+@runtime_checkable
+class JobNotifier(Protocol):
+    """Publishes job status changes to interested listeners."""
+
+    def notify(self, update: JobUpdate) -> None: ...

@@ -30,6 +30,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
         "Job",
         "EchoJob",
         "ForbiddenJobQueue",
+        "NoOpJobNotifier",
         "RosterUploadJob",
         "JobPayload",
     ]
@@ -216,3 +217,27 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
     # Assert
     mock_session.rollback.assert_called_once()
     mock_svc.mark_failed.assert_called_once_with(42)
+
+
+# ---- NoOpJobNotifier ----
+
+
+def test_noop_job_notifier_satisfies_job_notifier_protocol() -> None:
+    from learnwithai.interfaces import JobNotifier
+    from learnwithai.jobs import NoOpJobNotifier
+
+    assert isinstance(NoOpJobNotifier(), JobNotifier)
+
+
+def test_noop_job_notifier_discards_update_silently() -> None:
+    from learnwithai.interfaces import JobUpdate
+    from learnwithai.jobs import NoOpJobNotifier
+
+    # Arrange
+    notifier = NoOpJobNotifier()
+    update = JobUpdate(
+        job_id=1, course_id=1, kind="roster_upload", status="completed"
+    )
+
+    # Act — should not raise
+    notifier.notify(update)
