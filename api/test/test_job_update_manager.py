@@ -55,14 +55,42 @@ class TestSubscribeUnsubscribe:
         assert 10 not in manager._subscriptions
         assert 20 not in manager._subscriptions
 
+    def test_unsubscribe_all_clears_connection_identity(self) -> None:
+        """After unsubscribe_all, the identity record for the socket is removed."""
+        manager = JobUpdateManager()
+        ws = _make_ws()
+        manager.register_connection(ws, 100)
+        manager.subscribe(10, ws)
+
+        manager.unsubscribe_all(ws)
+
+        assert ws not in manager._connection_user
+
+    def test_register_and_unregister_connection(self) -> None:
+        """register_connection stores user_id; unregister_connection removes it."""
+        manager = JobUpdateManager()
+        ws = _make_ws()
+        manager.register_connection(ws, 42)
+        assert manager._connection_user[ws] == 42
+
+        manager.unregister_connection(ws)
+        assert ws not in manager._connection_user
+
+    def test_unregister_connection_is_safe_for_unknown_socket(self) -> None:
+        """unregister_connection does not raise for a socket that was never registered."""
+        manager = JobUpdateManager()
+        ws = _make_ws()
+        manager.unregister_connection(ws)  # should not raise
+
 
 class TestBroadcast:
     def test_broadcast_sends_to_subscribed(self) -> None:
         manager = JobUpdateManager()
         ws = _make_ws()
+        manager.register_connection(ws, 100)
         manager.subscribe(10, ws)
 
-        update = _make_update(course_id=10)
+        update = _make_update(course_id=10, user_id=100)
         asyncio.run(manager.broadcast(update))
 
         ws.send_text.assert_called_once_with(update.model_dump_json())
@@ -70,9 +98,10 @@ class TestBroadcast:
     def test_broadcast_skips_other_courses(self) -> None:
         manager = JobUpdateManager()
         ws = _make_ws()
+        manager.register_connection(ws, 100)
         manager.subscribe(20, ws)
 
-        update = _make_update(course_id=10)
+        update = _make_update(course_id=10, user_id=100)
         asyncio.run(manager.broadcast(update))
 
         ws.send_text.assert_not_called()
@@ -81,9 +110,10 @@ class TestBroadcast:
         manager = JobUpdateManager()
         ws = _make_ws()
         ws.send_text.side_effect = RuntimeError("connection closed")
+        manager.register_connection(ws, 100)
         manager.subscribe(10, ws)
 
-        update = _make_update(course_id=10)
+        update = _make_update(course_id=10, user_id=100)
         asyncio.run(manager.broadcast(update))
 
         assert 10 not in manager._subscriptions
@@ -92,14 +122,50 @@ class TestBroadcast:
         manager = JobUpdateManager()
         ws1 = _make_ws()
         ws2 = _make_ws()
+        manager.register_connection(ws1, 100)
+        manager.register_connection(ws2, 100)
         manager.subscribe(10, ws1)
         manager.subscribe(10, ws2)
 
-        update = _make_update(course_id=10)
+        update = _make_update(course_id=10, user_id=100)
         asyncio.run(manager.broadcast(update))
 
         ws1.send_text.assert_called_once()
         ws2.send_text.assert_called_once()
+
+    def test_broadcast_does_not_reach_other_users(self) -> None:
+        """A socket registered as user B does not receive updates for user A."""
+        manager = JobUpdateManager()
+        ws_a = _make_ws()
+        ws_b = _make_ws()
+        manager.register_connection(ws_a, 100)
+        manager.register_connection(ws_b, 200)
+        manager.subscribe(10, ws_a)
+        manager.subscribe(10, ws_b)
+
+        update = _make_update(course_id=10, user_id=100)
+        asyncio.run(manager.broadcast(update))
+
+        ws_a.send_text.assert_called_once()
+        ws_b.send_text.assert_not_called()
+
+    def test_broadcast_skips_unregistered_connections(self) -> None:
+        """Connections without a registered identity never receive updates."""
+        manager = JobUpdateManager()
+        ws = _make_ws()
+        # Deliberately omit register_connection
+        manager.subscribe(10, ws)
+
+        update = _make_update(course_id=10, user_id=100)
+        asyncio.run(manager.broadcast(update))
+
+        ws.send_text.assert_not_called()
+
+    def test_broadcast_no_subscribers_returns_early(self) -> None:
+        """No exception when broadcast is called with no subscribers."""
+        manager = JobUpdateManager()
+        update = _make_update(course_id=10, user_id=100)
+        asyncio.run(manager.broadcast(update))  # should not raise
 
 
 class TestUnsubscribeBranches:

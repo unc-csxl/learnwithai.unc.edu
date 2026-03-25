@@ -27,6 +27,27 @@ class JobUpdateManager:
 
     def __init__(self) -> None:
         self._subscriptions: defaultdict[int, set[WebSocket]] = defaultdict(set)
+        self._connection_user: dict[WebSocket, int] = {}
+
+    def register_connection(self, websocket: WebSocket, user_id: int) -> None:
+        """Records the authenticated user identity for a connected socket.
+
+        Must be called immediately after the WebSocket is accepted so
+        that :meth:`broadcast` can filter updates by owner.
+
+        Args:
+            websocket: The accepted WebSocket connection.
+            user_id: The ``pid`` of the authenticated user.
+        """
+        self._connection_user[websocket] = user_id
+
+    def unregister_connection(self, websocket: WebSocket) -> None:
+        """Removes the identity record when a connection closes.
+
+        Args:
+            websocket: The closing WebSocket connection.
+        """
+        self._connection_user.pop(websocket, None)
 
     def subscribe(self, course_id: int, websocket: WebSocket) -> None:
         """Registers a WebSocket to receive updates for a course.
@@ -51,7 +72,7 @@ class JobUpdateManager:
                 del self._subscriptions[course_id]
 
     def unsubscribe_all(self, websocket: WebSocket) -> None:
-        """Removes a WebSocket from every course subscription.
+        """Removes a WebSocket from every course subscription and clears its identity.
 
         Called when a connection closes so stale references are cleaned up.
 
@@ -65,11 +86,15 @@ class JobUpdateManager:
                 empty_courses.append(course_id)
         for course_id in empty_courses:
             del self._subscriptions[course_id]
+        self.unregister_connection(websocket)
 
     async def broadcast(self, update: JobUpdate) -> None:
-        """Sends a job update to all WebSockets subscribed to its course.
+        """Sends a job update only to WebSockets owned by the job's user.
 
-        Broken connections are silently removed during broadcast.
+        Each connection has a registered ``user_id`` set at accept time.
+        The update is delivered only to connections whose identity matches
+        ``update.user_id``, preventing one user from observing another's
+        job outcomes.  Broken connections are silently removed.
 
         Args:
             update: The job status change to distribute.
@@ -81,7 +106,11 @@ class JobUpdateManager:
         payload = update.model_dump_json()
         stale: list[WebSocket] = []
 
-        send_tasks = [self._safe_send(ws, payload, stale) for ws in subscribers]
+        send_tasks = [
+            self._safe_send(ws, payload, stale)
+            for ws in subscribers
+            if self._connection_user.get(ws) == update.user_id
+        ]
         await asyncio.gather(*send_tasks)
 
         for ws in stale:

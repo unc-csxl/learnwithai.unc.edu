@@ -59,13 +59,14 @@ async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
         return
 
     try:
-        _authenticate_token(token)
+        user_id = _authenticate_token(token)
     except AuthenticationException:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     manager = _get_manager()
     await websocket.accept()
+    manager.register_connection(websocket, user_id)
 
     try:
         while True:

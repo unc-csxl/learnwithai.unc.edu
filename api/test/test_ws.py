@@ -113,3 +113,22 @@ class TestWebSocketMessages:
             ws.send_text(json.dumps({"action": "subscribe", "course_id": "abc"}))
             data = json.loads(ws.receive_text())
             assert data == {"error": "course_id must be an integer."}
+
+
+class TestConnectionIdentity:
+    def test_manager_registers_user_id_on_connect(self) -> None:
+        """After accepting a connection, the manager records the user's pid."""
+        token = _valid_token()
+
+        with TestClient(app) as client:
+            manager = ws_route_module._get_manager()
+            with client.websocket_connect(f"/api/ws/jobs?token={token}") as ws:
+                ws.send_text(json.dumps({"action": "subscribe", "course_id": 1}))
+                ws.receive_text()
+                # Inside the context, the connection is registered
+                assert len(manager._connection_user) == 1
+                user_id = next(iter(manager._connection_user.values()))
+                assert user_id == 999999999  # sub from _valid_token
+
+        # After disconnect, identity is cleared
+        assert len(manager._connection_user) == 0
