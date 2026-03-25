@@ -29,8 +29,7 @@ from learnwithai.errors import AuthorizationError
 logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
+async def _lifespan_context(application: FastAPI) -> AsyncIterator[None]:
     """Manages startup and shutdown of background resources.
 
     Starts the RabbitMQ consumer background task on startup and
@@ -43,19 +42,22 @@ async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
     current_settings = Settings()
     consumer_task: asyncio.Task[None] | None = None
 
-    if not current_settings.is_test:  # pragma: no cover — no RabbitMQ in tests
+    if not current_settings.is_test:
         consumer_task = asyncio.create_task(
             consume_job_updates(manager, current_settings)
         )
 
     yield
 
-    if consumer_task is not None:  # pragma: no cover — only when consumer started
+    if consumer_task is not None:
         consumer_task.cancel()
         try:
             await consumer_task
         except asyncio.CancelledError:
             pass
+
+
+_lifespan = asynccontextmanager(_lifespan_context)
 
 
 def _generate_operation_id(route: APIRoute) -> str:
