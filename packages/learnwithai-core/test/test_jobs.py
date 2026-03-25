@@ -33,6 +33,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
         "ForbiddenJobQueue",
         "NoOpJobNotifier",
         "RosterUploadJob",
+        "RosterUploadOutput",
         "JobPayload",
     ]
 

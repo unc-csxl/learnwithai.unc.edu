@@ -3,6 +3,11 @@
 Owns session lifecycle (open, commit/rollback, close), PROCESSING
 status transition, and best-effort notification so that concrete
 handlers only implement domain-specific ``_execute`` logic.
+
+Subclass dependencies (repositories, services) are resolved
+automatically via ``fast-depends``.  Declare them as annotated
+parameters on ``_execute`` using the ``*Dep`` type aliases from
+:mod:`learnwithai.di`.
 """
 
 from __future__ import annotations
@@ -11,6 +16,8 @@ import logging
 from abc import abstractmethod
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Generic, TypeVar
+
+from fast_depends import Provider, inject
 
 from ..interfaces import JobHandler, JobNotifier, JobUpdate, TrackedJob
 from ..repositories.async_job_repository import AsyncJobRepository
@@ -37,6 +44,11 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
     * Committing on success and notifying the final status
     * Rolling back on failure, marking ``FAILED``, and notifying
 
+    Dependencies declared on ``_execute`` (e.g. services, repositories)
+    are resolved via ``fast-depends``.  The handler's own session is
+    injected into the chain so all dependencies share a single
+    transaction.
+
     The ``job`` payload must expose a ``job_id: int`` attribute that
     maps to an :class:`~learnwithai.tables.async_job.AsyncJob` row.
     """
@@ -44,13 +56,18 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
     def handle(self, job: JobT) -> None:
         """Runs the full handler lifecycle for a single job.
 
+        Opens a session, transitions to PROCESSING, resolves
+        ``_execute``'s declared dependencies via ``fast-depends``
+        (overriding ``get_session`` so every dependency receives this
+        handler's session), and manages commit/rollback.
+
         Args:
             job: Typed job payload containing at least ``job_id``.
         """
         from sqlmodel import Session as _Session
 
         from ..config import get_settings
-        from ..db import get_engine
+        from ..db import get_engine, get_session
 
         settings = get_settings()
         notifier = self._build_notifier(settings)
@@ -58,9 +75,24 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         engine = get_engine()
         with _Session(engine) as session:
             async_job_repo = AsyncJobRepository(session)
+
+            # All Depends(get_session) calls inside _execute's chain
+            # resolve to this handler's session.
+            provider = Provider()
+
+            def _session_override():  # type: ignore[no-untyped-def]
+                yield session
+
+            provider.dependency_overrides[get_session] = _session_override
+
             try:
                 self._set_processing(job.job_id, async_job_repo, session, notifier)
-                self._execute(session, job)
+                injected = inject(
+                    self._execute,
+                    dependency_overrides_provider=provider,
+                    cast=False,
+                )
+                injected(job)
                 session.commit()
                 self._notify(notifier, job.job_id, async_job_repo)
             except Exception:
@@ -71,16 +103,17 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
                 raise
 
     @abstractmethod
-    def _execute(self, session: "Session", job: JobT) -> None:
+    def _execute(self, job: JobT) -> None:
         """Subclasses implement domain-specific job logic here.
 
         The session is open and a ``PROCESSING`` status has already been
-        set.  Implementations should construct their services and
-        repositories using the provided session and perform their work.
-        Raising an exception triggers rollback and ``FAILED`` marking.
+        set.  Declare additional dependencies (repositories, services)
+        as annotated parameters with ``*Dep`` types from
+        :mod:`learnwithai.di` — they are resolved automatically by
+        ``fast-depends``.  Raising an exception triggers rollback and
+        ``FAILED`` marking.
 
         Args:
-            session: Open database session managed by the base handler.
             job: Typed job payload.
         """
 

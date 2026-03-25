@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import Literal, TypedDict
 
+from fast_depends import Depends
+
+from ..di import roster_upload_svc_factory
 from ..interfaces import TrackedJob
 from .base_job_handler import BaseJobHandler
-
-if TYPE_CHECKING:
-    from sqlmodel import Session
 
 
 class RosterUploadOutput(TypedDict):
@@ -31,28 +31,19 @@ class RosterUploadJobHandler(BaseJobHandler[RosterUploadJob]):
     """Processes a queued roster upload.
 
     Session lifecycle, commit/rollback, and notification are handled by
-    :class:`BaseJobHandler`.  This handler only implements the domain
-    logic: constructing the service and calling ``process_upload``.
+    :class:`BaseJobHandler`.  Dependencies are resolved via
+    ``fast-depends`` — see :mod:`learnwithai.di`.
     """
 
-    def _execute(self, session: "Session", job: RosterUploadJob) -> None:
-        """Constructs repositories and processes the roster CSV.
+    def _execute(  # type: ignore[override]
+        self,
+        job: RosterUploadJob,
+        svc: RosterUploadService = Depends(roster_upload_svc_factory),
+    ) -> None:
+        """Delegates to the roster upload service.
 
         Args:
-            session: Database session managed by the base handler.
             job: Job payload containing the upload job ID.
+            svc: Injected roster upload service.
         """
-        from ..repositories.async_job_repository import AsyncJobRepository
-        from ..repositories.membership_repository import MembershipRepository
-        from ..repositories.user_repository import UserRepository
-        from ..services.roster_upload_service import RosterUploadService
-
-        from .forbidden_job_queue import ForbiddenJobQueue
-
-        async_job_repo = AsyncJobRepository(session)
-        user_repo = UserRepository(session)
-        membership_repo = MembershipRepository(session)
-        svc = RosterUploadService(
-            async_job_repo, user_repo, membership_repo, ForbiddenJobQueue()
-        )
         svc.process_upload(job.job_id)
