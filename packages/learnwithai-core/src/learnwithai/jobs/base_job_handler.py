@@ -113,6 +113,14 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
     ) -> None:
         """Transitions the job to PROCESSING, flushes, and notifies.
 
+        The flush writes the status change to the database within the
+        current transaction so the subsequent ``_notify()`` reads the
+        correct state.  External database connections will not see
+        ``PROCESSING`` until the handler commits after ``_execute()``
+        returns.  This is intentional: the RabbitMQ notification
+        provides an early signal, but the database row is only durably
+        visible after the full operation succeeds.
+
         Args:
             job_id: Primary key of the AsyncJob to update.
             async_job_repo: Repository for job persistence.
