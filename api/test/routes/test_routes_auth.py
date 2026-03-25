@@ -29,7 +29,7 @@ def _stub_settings(**overrides) -> Settings:
     defaults = dict(
         host="localhost:8000",
         unc_auth_server_host="csxl.unc.edu",
-        jwt_secret="test-secret",
+        jwt_secret="test-secret-padded-to-32-bytes-min",
         jwt_algorithm="HS256",
     )
     defaults.update(overrides)
