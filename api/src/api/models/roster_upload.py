@@ -4,21 +4,21 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from learnwithai.tables.roster_upload_job import RosterUploadStatus
+from learnwithai.tables.async_job import AsyncJobStatus
 
 
 class RosterUploadResponse(BaseModel):
     """Response returned when a roster CSV upload is accepted."""
 
     id: int
-    status: RosterUploadStatus
+    status: AsyncJobStatus
 
 
 class RosterUploadStatusResponse(BaseModel):
     """Detailed status of a roster upload job."""
 
     id: int
-    status: RosterUploadStatus
+    status: AsyncJobStatus
     created_count: int
     updated_count: int
     error_count: int

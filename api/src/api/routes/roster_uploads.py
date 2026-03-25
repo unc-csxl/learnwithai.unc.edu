@@ -3,10 +3,10 @@
 from fastapi import APIRouter, HTTPException, UploadFile
 
 from ..dependency_injection import (
+    AsyncJobRepositoryDI,
     AuthenticatedUserDI,
     CourseByCourseIDPathDI,
     CourseServiceDI,
-    RosterUploadRepositoryDI,
     RosterUploadServiceDI,
 )
 from ..models import RosterUploadResponse, RosterUploadStatusResponse
@@ -82,7 +82,7 @@ def get_roster_upload_status(
     subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
-    upload_repo: RosterUploadRepositoryDI,
+    async_job_repo: AsyncJobRepositoryDI,
     job_id: int,
 ) -> RosterUploadStatusResponse:
     """Returns the current status and results of a roster upload job.
@@ -93,7 +93,7 @@ def get_roster_upload_status(
         subject: Authenticated subject.
         course: Course loaded via DI from the path.
         course_svc: Service used for authorization check.
-        upload_repo: Repository for loading the upload job.
+        async_job_repo: Repository for loading the async job.
         job_id: Primary key of the upload job.
 
     Returns:
@@ -101,7 +101,7 @@ def get_roster_upload_status(
     """
     course_svc.authorize_instructor(subject, course)
 
-    job = upload_repo.get_by_id(job_id)
+    job = async_job_repo.get_by_id(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Upload job not found.")
 
@@ -109,13 +109,14 @@ def get_roster_upload_status(
     if job.course_id != course.id:
         raise HTTPException(status_code=404, detail="Upload job not found.")
 
+    output = job.output_data or {}
     return RosterUploadStatusResponse(
         id=job.id,  # type: ignore[arg-type]
         status=job.status,
-        created_count=job.created_count,
-        updated_count=job.updated_count,
-        error_count=job.error_count,
-        error_details=job.error_details,
+        created_count=output.get("created_count", 0),
+        updated_count=output.get("updated_count", 0),
+        error_count=output.get("error_count", 0),
+        error_details=output.get("error_details"),
         created_at=job.created_at,
         completed_at=job.completed_at,
     )
