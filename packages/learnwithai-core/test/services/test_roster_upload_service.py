@@ -12,8 +12,8 @@ from learnwithai.services.roster_upload_service import (
     ParsedStudent,
     RosterUploadService,
 )
+from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.membership import MembershipState
-from learnwithai.tables.roster_upload_job import RosterUploadJob, RosterUploadStatus
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "rosters"
 
@@ -22,13 +22,13 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "rosters"
 
 
 def _make_service(
-    upload_repo: MagicMock | None = None,
+    async_job_repo: MagicMock | None = None,
     user_repo: MagicMock | None = None,
     membership_repo: MagicMock | None = None,
     job_queue: MagicMock | None = None,
 ) -> RosterUploadService:
     return RosterUploadService(
-        upload_repo=upload_repo or MagicMock(),
+        async_job_repo=async_job_repo or MagicMock(),
         user_repo=user_repo or MagicMock(),
         membership_repo=membership_repo or MagicMock(),
         job_queue=job_queue or MagicMock(),
@@ -137,23 +137,19 @@ def test_submit_upload_creates_job_and_enqueues() -> None:
     # Arrange
     subject = MagicMock()
     subject.pid = 123456789
-    created_job = MagicMock(spec=RosterUploadJob)
+    created_job = MagicMock(spec=AsyncJob)
     created_job.id = 42
-    upload_repo = MagicMock()
-    upload_repo.create.return_value = created_job
+    async_job_repo = MagicMock()
+    async_job_repo.create.return_value = created_job
     job_queue = MagicMock()
-    svc = _make_service(upload_repo=upload_repo, job_queue=job_queue)
+    svc = _make_service(async_job_repo=async_job_repo, job_queue=job_queue)
 
     # Act
-    with patch(
-        "learnwithai.services.roster_upload_service.RosterUploadJob"
-    ) as mock_job_cls:
-        mock_job_cls.return_value = MagicMock()
-        result = svc.submit_upload(subject, course_id=1, csv_text="data")
+    result = svc.submit_upload(subject, course_id=1, csv_text="data")
 
     # Assert
     assert result is created_job
-    upload_repo.create.assert_called_once()
+    async_job_repo.create.assert_called_once()
     job_queue.enqueue.assert_called_once()
 
 
@@ -162,12 +158,12 @@ def test_submit_upload_creates_job_and_enqueues() -> None:
 
 def test_process_upload_parses_csv_and_updates_job() -> None:
     # Arrange
-    job = MagicMock(spec=RosterUploadJob)
-    job.csv_data = "Student,ID,SIS User ID,SIS Login ID\n"
+    job = MagicMock(spec=AsyncJob)
+    job.input_data = {"csv_text": "Student,ID,SIS User ID,SIS Login ID\n"}
     job.course_id = 1
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = job
-    svc = _make_service(upload_repo=upload_repo)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = job
+    svc = _make_service(async_job_repo=async_job_repo)
 
     with patch.object(
         svc,
@@ -178,20 +174,22 @@ def test_process_upload_parses_csv_and_updates_job() -> None:
         svc.process_upload(42)
 
     # Assert
-    assert job.status == RosterUploadStatus.COMPLETED
-    assert job.created_count == 2
-    assert job.updated_count == 1
-    assert job.error_count == 1
-    assert job.error_details == "err"
+    assert job.status == AsyncJobStatus.COMPLETED
+    assert job.output_data == {
+        "created_count": 2,
+        "updated_count": 1,
+        "error_count": 1,
+        "error_details": "err",
+    }
     assert job.completed_at is not None
     mock_import.assert_called_once()
 
 
 def test_process_upload_raises_when_job_not_found() -> None:
     # Arrange
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = None
-    svc = _make_service(upload_repo=upload_repo)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = None
+    svc = _make_service(async_job_repo=async_job_repo)
 
     # Act / Assert
     with pytest.raises(ValueError, match="not found"):
@@ -200,12 +198,12 @@ def test_process_upload_raises_when_job_not_found() -> None:
 
 def test_process_upload_sets_no_error_details_when_no_errors() -> None:
     # Arrange
-    job = MagicMock(spec=RosterUploadJob)
-    job.csv_data = "Student,ID,SIS User ID,SIS Login ID\n"
+    job = MagicMock(spec=AsyncJob)
+    job.input_data = {"csv_text": "Student,ID,SIS User ID,SIS Login ID\n"}
     job.course_id = 1
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = job
-    svc = _make_service(upload_repo=upload_repo)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = job
+    svc = _make_service(async_job_repo=async_job_repo)
 
     with patch.object(
         svc,
@@ -216,7 +214,7 @@ def test_process_upload_sets_no_error_details_when_no_errors() -> None:
         svc.process_upload(1)
 
     # Assert
-    assert job.error_details is None
+    assert job.output_data["error_details"] is None
 
 
 # ---- RosterUploadService.mark_failed ----
@@ -224,37 +222,37 @@ def test_process_upload_sets_no_error_details_when_no_errors() -> None:
 
 def test_mark_failed_sets_status_to_failed() -> None:
     # Arrange
-    job = MagicMock(spec=RosterUploadJob)
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = job
-    svc = _make_service(upload_repo=upload_repo)
+    job = MagicMock(spec=AsyncJob)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = job
+    svc = _make_service(async_job_repo=async_job_repo)
 
     # Act
     svc.mark_failed(42)
 
     # Assert
-    assert job.status == RosterUploadStatus.FAILED
+    assert job.status == AsyncJobStatus.FAILED
     assert job.completed_at is not None
-    upload_repo.update.assert_called_once_with(job)
+    async_job_repo.update.assert_called_once_with(job)
 
 
 def test_mark_failed_does_nothing_when_job_not_found() -> None:
     # Arrange
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.return_value = None
-    svc = _make_service(upload_repo=upload_repo)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.return_value = None
+    svc = _make_service(async_job_repo=async_job_repo)
 
     # Act (should not raise)
     svc.mark_failed(999)
 
-    upload_repo.update.assert_not_called()
+    async_job_repo.update.assert_not_called()
 
 
 def test_mark_failed_swallows_exceptions() -> None:
     # Arrange
-    upload_repo = MagicMock()
-    upload_repo.get_by_id.side_effect = RuntimeError("db gone")
-    svc = _make_service(upload_repo=upload_repo)
+    async_job_repo = MagicMock()
+    async_job_repo.get_by_id.side_effect = RuntimeError("db gone")
+    svc = _make_service(async_job_repo=async_job_repo)
 
     # Act (should not raise)
     svc.mark_failed(42)

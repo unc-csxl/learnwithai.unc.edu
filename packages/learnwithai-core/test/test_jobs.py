@@ -165,6 +165,7 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
     mock_session.__enter__ = MagicMock(return_value=mock_session)
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_svc = MagicMock()
+    mock_notifier = MagicMock()
 
     with (
         patch("learnwithai.db.get_engine", return_value=MagicMock()),
@@ -174,10 +175,15 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
             return_value=mock_svc,
         ),
         patch(
-            "learnwithai.repositories.roster_upload_repository.RosterUploadRepository"
+            "learnwithai.repositories.async_job_repository.AsyncJobRepository"
         ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+        patch("learnwithai.config.get_settings"),
+        patch(
+            "learnwithai_jobqueue.rabbitmq_job_notifier.RabbitMQJobNotifier",
+            return_value=mock_notifier,
+        ),
     ):
         handler.handle(job_payload)
 
@@ -197,6 +203,7 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_svc = MagicMock()
     mock_svc.process_upload.side_effect = RuntimeError("boom")
+    mock_notifier = MagicMock()
 
     with (
         patch("learnwithai.db.get_engine", return_value=MagicMock()),
@@ -206,10 +213,15 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
             return_value=mock_svc,
         ),
         patch(
-            "learnwithai.repositories.roster_upload_repository.RosterUploadRepository"
+            "learnwithai.repositories.async_job_repository.AsyncJobRepository"
         ),
         patch("learnwithai.repositories.user_repository.UserRepository"),
         patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+        patch("learnwithai.config.get_settings"),
+        patch(
+            "learnwithai_jobqueue.rabbitmq_job_notifier.RabbitMQJobNotifier",
+            return_value=mock_notifier,
+        ),
         pytest.raises(RuntimeError, match="boom"),
     ):
         handler.handle(job_payload)
