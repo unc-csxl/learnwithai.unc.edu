@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from fast_depends import Depends
 
 from ..di import roster_upload_svc_factory
 from ..interfaces import TrackedJob
 from .base_job_handler import BaseJobHandler
+
+if TYPE_CHECKING:
+    from ..services.roster_upload_service import RosterUploadService
 
 
 class RosterUploadOutput(TypedDict):

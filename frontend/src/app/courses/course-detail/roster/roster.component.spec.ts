@@ -196,7 +196,7 @@ describe('Roster', () => {
   it('should debounce search input and call getRoster with query', async () => {
     const { fixture, mockService } = await setup();
     const component = fixture.componentInstance;
-    mockService.getRoster.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 25 });
+    mockService.getRoster.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 10 });
 
     vi.useFakeTimers();
     component['onSearchInput']('ali');
@@ -208,7 +208,7 @@ describe('Roster', () => {
 
     expect(mockService.getRoster).toHaveBeenCalledWith(1, {
       page: 1,
-      pageSize: 25,
+      pageSize: 10,
       query: 'ali',
     });
   });
@@ -220,7 +220,7 @@ describe('Roster', () => {
       items: fakeMembers,
       total: 2,
       page: 1,
-      page_size: 25,
+      page_size: 10,
     });
 
     vi.useFakeTimers();
@@ -235,7 +235,7 @@ describe('Roster', () => {
 
     expect(mockService.getRoster).toHaveBeenCalledWith(1, {
       page: 1,
-      pageSize: 25,
+      pageSize: 10,
       query: 'alice',
     });
   });
@@ -244,7 +244,7 @@ describe('Roster', () => {
     const { fixture, mockService } = await setup();
     const el: HTMLElement = fixture.nativeElement;
     const input = el.querySelector('input[matInput]') as HTMLInputElement;
-    mockService.getRoster.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 25 });
+    mockService.getRoster.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 10 });
 
     vi.useFakeTimers();
     input.value = 'bob';
@@ -257,7 +257,7 @@ describe('Roster', () => {
 
     expect(mockService.getRoster).toHaveBeenCalledWith(1, {
       page: 1,
-      pageSize: 25,
+      pageSize: 10,
       query: 'bob',
     });
   });
@@ -268,7 +268,7 @@ describe('Roster', () => {
       items: fakeMembers,
       total: 50,
       page: 1,
-      page_size: 25,
+      page_size: 10,
     };
     const { fixture, mockService } = await setup({ response: manyResponse });
     const el: HTMLElement = fixture.nativeElement;
@@ -276,7 +276,7 @@ describe('Roster', () => {
       items: fakeMembers,
       total: 50,
       page: 2,
-      page_size: 25,
+      page_size: 10,
     });
 
     // Click "next page" button on the paginator
@@ -288,7 +288,7 @@ describe('Roster', () => {
 
     expect(mockService.getRoster).toHaveBeenCalledWith(1, {
       page: 2,
-      pageSize: 25,
+      pageSize: 10,
       query: undefined,
     });
   });

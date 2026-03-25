@@ -217,7 +217,6 @@ def test_process_upload_sets_no_error_details_when_no_errors() -> None:
     assert job.output_data["error_details"] is None
 
 
-
 # ---- RosterUploadService._import_students ----
 
 

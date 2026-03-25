@@ -111,7 +111,7 @@ class RosterUploadService:
         result = self._import_students(job.course_id, students)
 
         job.status = AsyncJobStatus.COMPLETED
-        job.output_data = RosterUploadOutput(
+        job.output_data = RosterUploadOutput(  # type: ignore[assignment]
             created_count=result.created,
             updated_count=result.updated,
             error_count=len(result.errors),

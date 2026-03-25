@@ -10,6 +10,10 @@ repositories and services share the handler's own session.  See
 :meth:`BaseJobHandler.handle` for the override mechanism.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fast_depends import Depends
 from sqlmodel import Session
 
@@ -19,12 +23,17 @@ from .repositories.async_job_repository import AsyncJobRepository
 from .repositories.membership_repository import MembershipRepository
 from .repositories.user_repository import UserRepository
 
+if TYPE_CHECKING:
+    from .services.roster_upload_service import RosterUploadService
+
 # ---------------------------------------------------------------------------
 # Repositories
 # ---------------------------------------------------------------------------
 
 
-def async_job_repo_factory(session: Session = Depends(get_session)) -> AsyncJobRepository:
+def async_job_repo_factory(
+    session: Session = Depends(get_session),
+) -> AsyncJobRepository:
     """Creates an :class:`AsyncJobRepository` bound to *session*."""
     return AsyncJobRepository(session)
 
@@ -34,9 +43,12 @@ def user_repo_factory(session: Session = Depends(get_session)) -> UserRepository
     return UserRepository(session)
 
 
-def membership_repo_factory(session: Session = Depends(get_session)) -> MembershipRepository:
+def membership_repo_factory(
+    session: Session = Depends(get_session),
+) -> MembershipRepository:
     """Creates a :class:`MembershipRepository` bound to *session*."""
     return MembershipRepository(session)
+
 
 # ---------------------------------------------------------------------------
 # Job Queue (worker context always uses ForbiddenJobQueue)
@@ -48,6 +60,7 @@ def forbidden_job_queue_factory() -> JobQueue:
     from .jobs.forbidden_job_queue import ForbiddenJobQueue
 
     return ForbiddenJobQueue()
+
 
 # ---------------------------------------------------------------------------
 # Services
