@@ -17,7 +17,9 @@ def _make_update(
     kind: str = "test",
     status: str = "completed",
 ) -> JobUpdate:
-    return JobUpdate(job_id=job_id, course_id=course_id, user_id=user_id, kind=kind, status=status)
+    return JobUpdate(
+        job_id=job_id, course_id=course_id, user_id=user_id, kind=kind, status=status
+    )
 
 
 def _make_ws() -> AsyncMock:

@@ -14,7 +14,13 @@ from api.job_update_consumer import handle_job_update_message
 
 def _valid_body() -> bytes:
     return json.dumps(
-        {"job_id": 1, "course_id": 10, "user_id": 100, "kind": "test", "status": "completed"}
+        {
+            "job_id": 1,
+            "course_id": 10,
+            "user_id": 100,
+            "kind": "test",
+            "status": "completed",
+        }
     ).encode()
 
 
