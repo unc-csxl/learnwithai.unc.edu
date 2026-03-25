@@ -39,7 +39,6 @@ async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
     """
     manager = JobUpdateManager()
     ws_route_module.configure(manager)
-    application.include_router(ws_route_module.router, prefix="/api")
 
     current_settings = Settings()
     consumer_task: asyncio.Task[None] | None = None
@@ -87,6 +86,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     for router in API_ROUTERS:
         application.include_router(router, prefix="/api")
+
+    application.include_router(ws_route_module.router, prefix="/api")
 
     if settings.is_development:
         application.include_router(dev_router, prefix="/api")
