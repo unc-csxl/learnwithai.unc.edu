@@ -217,46 +217,6 @@ def test_process_upload_sets_no_error_details_when_no_errors() -> None:
     assert job.output_data["error_details"] is None
 
 
-# ---- RosterUploadService.mark_failed ----
-
-
-def test_mark_failed_sets_status_to_failed() -> None:
-    # Arrange
-    job = MagicMock(spec=AsyncJob)
-    async_job_repo = MagicMock()
-    async_job_repo.get_by_id.return_value = job
-    svc = _make_service(async_job_repo=async_job_repo)
-
-    # Act
-    svc.mark_failed(42)
-
-    # Assert
-    assert job.status == AsyncJobStatus.FAILED
-    assert job.completed_at is not None
-    async_job_repo.update.assert_called_once_with(job)
-
-
-def test_mark_failed_does_nothing_when_job_not_found() -> None:
-    # Arrange
-    async_job_repo = MagicMock()
-    async_job_repo.get_by_id.return_value = None
-    svc = _make_service(async_job_repo=async_job_repo)
-
-    # Act (should not raise)
-    svc.mark_failed(999)
-
-    async_job_repo.update.assert_not_called()
-
-
-def test_mark_failed_swallows_exceptions() -> None:
-    # Arrange
-    async_job_repo = MagicMock()
-    async_job_repo.get_by_id.side_effect = RuntimeError("db gone")
-    svc = _make_service(async_job_repo=async_job_repo)
-
-    # Act (should not raise)
-    svc.mark_failed(42)
-
 
 # ---- RosterUploadService._import_students ----
 

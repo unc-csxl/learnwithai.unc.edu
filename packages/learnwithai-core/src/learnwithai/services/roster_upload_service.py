@@ -119,24 +119,6 @@ class RosterUploadService:
         job.completed_at = datetime.now(timezone.utc)
         self._async_job_repo.update(job)
 
-    def mark_failed(self, job_id: int) -> None:
-        """Marks a roster upload job as failed.
-
-        Best-effort: all exceptions are swallowed so that a failure during
-        error-marking does not hide the original exception.
-
-        Args:
-            job_id: Primary key of the AsyncJob to mark failed.
-        """
-        try:
-            job = self._async_job_repo.get_by_id(job_id)
-            if job is not None:
-                job.status = AsyncJobStatus.FAILED
-                job.completed_at = datetime.now(timezone.utc)
-                self._async_job_repo.update(job)
-        except Exception:
-            pass
-
     def _parse_canvas_csv(self, csv_text: str) -> list[ParsedStudent]:
         """Parses a Canvas gradebook CSV and extracts student records.
 

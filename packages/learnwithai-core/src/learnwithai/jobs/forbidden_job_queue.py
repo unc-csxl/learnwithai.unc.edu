@@ -11,8 +11,8 @@ class ForbiddenJobQueue(JobQueue):
     ``enqueue`` is called anyway, the ``RuntimeError`` immediately surfaces
     the programming error rather than silently dropping the job.
 
-    The canonical example is a background job handler: it only calls
-    ``process_upload`` and ``mark_failed``, so it passes
+    The canonical example is a background job handler: it calls
+    ``process_upload`` but never submits new jobs, so it passes
     ``ForbiddenJobQueue()`` to the service constructor.  Any code path that
     unexpectedly reaches ``enqueue`` is caught at the earliest opportunity.
     """
