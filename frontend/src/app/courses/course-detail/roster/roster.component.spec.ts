@@ -416,6 +416,7 @@ describe('Roster', () => {
     jobUpdateSignal.set({
       job_id: 42,
       course_id: 1,
+      user_id: 100,
       kind: 'roster_upload',
       status: 'completed',
     });
@@ -445,6 +446,7 @@ describe('Roster', () => {
     jobUpdateSignal.set({
       job_id: 42,
       course_id: 1,
+      user_id: 100,
       kind: 'roster_upload',
       status: 'processing',
     });
@@ -471,6 +473,7 @@ describe('Roster', () => {
     jobUpdateSignal.set({
       job_id: 42,
       course_id: 1,
+      user_id: 100,
       kind: 'roster_upload',
       status: 'completed',
     });

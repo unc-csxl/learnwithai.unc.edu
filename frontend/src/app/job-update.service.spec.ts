@@ -195,6 +195,7 @@ describe('JobUpdateService', () => {
       const update: JobUpdate = {
         job_id: 1,
         course_id: 10,
+        user_id: 100,
         kind: 'roster_upload',
         status: 'completed',
       };
@@ -232,12 +233,14 @@ describe('JobUpdateService', () => {
       mockWebSocket.simulateMessage({
         job_id: 1,
         course_id: 10,
+        user_id: 100,
         kind: 'a',
         status: 'completed',
       });
       mockWebSocket.simulateMessage({
         job_id: 2,
         course_id: 20,
+        user_id: 100,
         kind: 'b',
         status: 'pending',
       });
@@ -257,6 +260,7 @@ describe('JobUpdateService', () => {
       mockWebSocket.simulateMessage({
         job_id: 42,
         course_id: 10,
+        user_id: 100,
         kind: 'test',
         status: 'processing',
       });
@@ -330,12 +334,14 @@ describe('JobUpdateService', () => {
       mockWebSocket.simulateMessage({
         job_id: 1,
         course_id: 10,
+        user_id: 100,
         kind: 'test',
         status: 'completed',
       });
       mockWebSocket.simulateMessage({
         job_id: 2,
         course_id: 20,
+        user_id: 100,
         kind: 'test',
         status: 'completed',
       });

@@ -5,6 +5,7 @@ import { AuthTokenService } from './auth-token.service';
 export interface JobUpdate {
   job_id: number;
   course_id: number;
+  user_id: number;
   kind: string;
   status: string;
 }
