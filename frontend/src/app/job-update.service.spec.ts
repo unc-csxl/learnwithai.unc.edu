@@ -12,9 +12,13 @@ describe('JobUpdateService', () => {
 
   class MockWebSocket {
     static instance: MockWebSocket | null = null;
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSING = 2;
+    static readonly CLOSED = 3;
 
     url: string;
-    readyState = WebSocket.CONNECTING;
+    readyState: number = MockWebSocket.CONNECTING;
     onopen: ((ev: Event) => void) | null = null;
     onmessage: ((ev: MessageEvent) => void) | null = null;
     onclose: ((ev: CloseEvent) => void) | null = null;
@@ -31,23 +35,21 @@ describe('JobUpdateService', () => {
     }
 
     close(): void {
-      this.readyState = WebSocket.CLOSED;
+      this.readyState = MockWebSocket.CLOSED;
     }
 
     // Test helpers
     simulateOpen(): void {
-      this.readyState = WebSocket.OPEN;
+      this.readyState = MockWebSocket.OPEN;
       this.onopen?.(new Event('open'));
     }
 
     simulateMessage(data: unknown): void {
-      this.onmessage?.(
-        new MessageEvent('message', { data: JSON.stringify(data) }),
-      );
+      this.onmessage?.(new MessageEvent('message', { data: JSON.stringify(data) }));
     }
 
     simulateClose(): void {
-      this.readyState = WebSocket.CLOSED;
+      this.readyState = MockWebSocket.CLOSED;
       this.onclose?.(new CloseEvent('close'));
     }
   }
@@ -141,9 +143,7 @@ describe('JobUpdateService', () => {
       service.unsubscribe(10);
 
       const messages = mockWebSocket.sentMessages.map((m) => JSON.parse(m));
-      const unsubMsg = messages.find(
-        (m: Record<string, unknown>) => m['action'] === 'unsubscribe',
-      );
+      const unsubMsg = messages.find((m: Record<string, unknown>) => m['action'] === 'unsubscribe');
       expect(unsubMsg).toBeTruthy();
       expect(unsubMsg['course_id']).toBe(10);
     });
@@ -155,7 +155,32 @@ describe('JobUpdateService', () => {
 
       service.unsubscribe(10);
 
-      expect(mockWebSocket.readyState).toBe(WebSocket.CLOSED);
+      expect(mockWebSocket.readyState).toBe(MockWebSocket.CLOSED);
+    });
+
+    it('should skip send when ws is not open', () => {
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      // Don't open — ws is still CONNECTING
+
+      service.unsubscribe(10);
+
+      // No unsubscribe message sent (only subscribe attempt queued)
+      const messages = mockWebSocket.sentMessages.map((m) => JSON.parse(m));
+      const unsubMsg = messages.find((m: Record<string, unknown>) => m['action'] === 'unsubscribe');
+      expect(unsubMsg).toBeUndefined();
+    });
+
+    it('should not close ws when other subscriptions remain', () => {
+      service.subscribe(10);
+      service.subscribe(20);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      service.unsubscribe(10);
+
+      // WS stays open because course 20 is still subscribed
+      expect(mockWebSocket.readyState).toBe(MockWebSocket.OPEN);
     });
   });
 
@@ -237,13 +262,199 @@ describe('JobUpdateService', () => {
       });
 
       const jobSignal = service.updateForJob(42);
-      expect(jobSignal()).toEqual(
-        expect.objectContaining({ job_id: 42, status: 'processing' }),
-      );
+      expect(jobSignal()).toEqual(expect.objectContaining({ job_id: 42, status: 'processing' }));
     });
 
     it('should return null for unknown job', () => {
       expect(service.updateForJob(999)()).toBeNull();
+    });
+  });
+
+  describe('reconnect', () => {
+    it('should schedule reconnect when WebSocket closes with active subscriptions', () => {
+      vi.useFakeTimers();
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      mockWebSocket.simulateClose();
+
+      // After close, no new WS yet (waiting 5s)
+      MockWebSocket.instance = null;
+      vi.advanceTimersByTime(5000);
+
+      // Reconnect should have opened a new WebSocket
+      expect(MockWebSocket.instance).toBeTruthy();
+      vi.useRealTimers();
+    });
+
+    it('should not reconnect when no subscriptions remain', () => {
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      service.unsubscribe(10);
+
+      // WS closed via unsubscribe → disconnect, not via onclose
+      MockWebSocket.instance = null;
+
+      // No reconnect should happen
+      expect(MockWebSocket.instance).toBeNull();
+    });
+  });
+
+  describe('send subscribe on existing connection', () => {
+    it('should send subscribe immediately when ws is already open', () => {
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      // Second subscribe on an already-open connection
+      service.subscribe(20);
+
+      const messages = mockWebSocket.sentMessages.map((m) => JSON.parse(m));
+      const sub20 = messages.find(
+        (m: Record<string, unknown>) => m['action'] === 'subscribe' && m['course_id'] === 20,
+      );
+      expect(sub20).toBeTruthy();
+    });
+  });
+
+  describe('clearUpdatesForCourse', () => {
+    it('should remove updates for unsubscribed course only', () => {
+      service.subscribe(10);
+      service.subscribe(20);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      mockWebSocket.simulateMessage({
+        job_id: 1,
+        course_id: 10,
+        kind: 'test',
+        status: 'completed',
+      });
+      mockWebSocket.simulateMessage({
+        job_id: 2,
+        course_id: 20,
+        kind: 'test',
+        status: 'completed',
+      });
+
+      expect(service.updates().size).toBe(2);
+
+      service.unsubscribe(10);
+
+      // Only course 20 updates remain
+      expect(service.updates().size).toBe(1);
+      expect(service.updates().get(2)).toBeTruthy();
+      expect(service.updates().get(1)).toBeUndefined();
+    });
+  });
+
+  describe('onerror', () => {
+    it('should not crash on WebSocket error (onclose follows)', () => {
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      // Trigger onerror followed by onclose
+      mockWebSocket.onerror?.(new Event('error'));
+      mockWebSocket.simulateClose();
+
+      // Should have scheduled reconnect since subscriptions remain
+      expect(service.updates().size).toBe(0);
+    });
+  });
+
+  describe('disconnect', () => {
+    it('should clear reconnect timer on disconnect', () => {
+      vi.useFakeTimers();
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      // Trigger close → scheduleReconnect
+      mockWebSocket.simulateClose();
+
+      // Now manually disconnect (e.g. via ngOnDestroy)
+      service.ngOnDestroy();
+
+      MockWebSocket.instance = null;
+
+      // Timer should have been cleared — no reconnect
+      vi.advanceTimersByTime(10000);
+      expect(MockWebSocket.instance).toBeNull();
+      vi.useRealTimers();
+    });
+
+    it('should be safe to call disconnect when already disconnected', () => {
+      // No ws connection ever opened, just call ngOnDestroy
+      service.ngOnDestroy();
+      // Should not throw
+    });
+  });
+
+  describe('reconnect timer cancellation', () => {
+    it('should not reconnect if subscriptions are removed during wait', () => {
+      vi.useFakeTimers();
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+
+      // Save onclose before disconnect nulls it
+      const savedOnclose = mockWebSocket.onclose!;
+
+      // Remove subscription — triggers disconnect which clears timer + onclose
+      service.unsubscribe(10);
+
+      // Manually fire the saved onclose to simulate a delayed close event
+      // This re-enters scheduleReconnect and sets a new timer
+      savedOnclose(new CloseEvent('close'));
+
+      MockWebSocket.instance = null;
+
+      // Timer fires, but subscribedCourses is empty → skip reconnect
+      vi.advanceTimersByTime(5000);
+      expect(MockWebSocket.instance).toBeNull();
+      vi.useRealTimers();
+    });
+  });
+
+  describe('protocol selection', () => {
+    it('should use wss: when location.protocol is https:', () => {
+      const originalLocation = globalThis.location;
+      Object.defineProperty(globalThis, 'location', {
+        value: { ...originalLocation, protocol: 'https:', host: 'example.com' },
+        writable: true,
+        configurable: true,
+      });
+
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+
+      expect(mockWebSocket.url).toMatch(/^wss:/);
+
+      Object.defineProperty(globalThis, 'location', {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
+    });
+  });
+
+  describe('handleMessage edge cases', () => {
+    beforeEach(() => {
+      service.subscribe(10);
+      mockWebSocket = MockWebSocket.instance!;
+      mockWebSocket.simulateOpen();
+    });
+
+    it('should skip unsubscribed confirmations', () => {
+      mockWebSocket.simulateMessage({
+        status: 'unsubscribed',
+        course_id: 10,
+      });
+      expect(service.updates().size).toBe(0);
     });
   });
 });

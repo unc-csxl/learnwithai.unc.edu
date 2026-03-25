@@ -4,6 +4,7 @@ import json
 import logging
 
 import pika
+from pika.adapters.blocking_connection import BlockingChannel
 
 from learnwithai.interfaces.jobs import JobNotifier, JobUpdate
 
@@ -29,7 +30,7 @@ class RabbitMQJobNotifier(JobNotifier):
         """
         self._rabbitmq_url = rabbitmq_url
         self._connection: pika.BlockingConnection | None = None
-        self._channel: pika.adapters.blocking_connection.BlockingChannel | None = None
+        self._channel: BlockingChannel | None = None
 
     def notify(self, update: JobUpdate) -> None:
         """Publishes a job update to the fanout exchange.
@@ -56,7 +57,7 @@ class RabbitMQJobNotifier(JobNotifier):
 
     def _ensure_channel(
         self,
-    ) -> pika.adapters.blocking_connection.BlockingChannel:
+    ) -> BlockingChannel:
         """Returns a usable channel, creating a new connection if necessary.
 
         Returns:

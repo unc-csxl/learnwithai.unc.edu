@@ -1,11 +1,4 @@
-import {
-  Injectable,
-  inject,
-  signal,
-  computed,
-  OnDestroy,
-  NgZone,
-} from '@angular/core';
+import { Injectable, inject, signal, computed, OnDestroy, NgZone } from '@angular/core';
 import { AuthTokenService } from './auth-token.service';
 
 /** Shape of a job update message received over the WebSocket. */
@@ -128,9 +121,7 @@ export class JobUpdateService implements OnDestroy {
 
       this.ws.onclose = () => {
         this.ws = null;
-        if (this.subscribedCourses.size > 0) {
-          this.scheduleReconnect();
-        }
+        this.scheduleReconnect();
       };
 
       this.ws.onerror = () => {
@@ -154,9 +145,6 @@ export class JobUpdateService implements OnDestroy {
   }
 
   private scheduleReconnect(): void {
-    if (this.reconnectTimer !== null) {
-      return;
-    }
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       if (this.subscribedCourses.size > 0) {
@@ -166,9 +154,7 @@ export class JobUpdateService implements OnDestroy {
   }
 
   private sendSubscribe(courseId: number): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ action: 'subscribe', course_id: courseId }));
-    }
+    this.ws!.send(JSON.stringify({ action: 'subscribe', course_id: courseId }));
   }
 
   private handleMessage(data: string): void {

@@ -42,7 +42,9 @@ def configure(manager: JobUpdateManager) -> None:
 def _get_manager() -> JobUpdateManager:
     """Returns the configured manager, raising if not yet set."""
     if _manager is None:
-        raise RuntimeError("JobUpdateManager not configured. Call configure() at startup.")
+        raise RuntimeError(
+            "JobUpdateManager not configured. Call configure() at startup."
+        )
     return _manager
 
 
@@ -106,18 +108,14 @@ async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
             try:
                 message = json.loads(raw)
             except json.JSONDecodeError:
-                await websocket.send_text(
-                    json.dumps({"error": "Invalid JSON."})
-                )
+                await websocket.send_text(json.dumps({"error": "Invalid JSON."}))
                 continue
 
             action = message.get("action")
             course_id = message.get("course_id")
 
             if action not in ("subscribe", "unsubscribe"):
-                await websocket.send_text(
-                    json.dumps({"error": "Unknown action."})
-                )
+                await websocket.send_text(json.dumps({"error": "Unknown action."}))
                 continue
 
             if not isinstance(course_id, int):

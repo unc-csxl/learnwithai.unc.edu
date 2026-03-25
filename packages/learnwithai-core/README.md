@@ -19,10 +19,12 @@
   - `user.py` — `User` table (PID integer primary key)
   - `course.py` — `Course` table (auto-increment integer PK)
   - `membership.py` — `Membership` join table linking users to courses with composite PK `(user_pid, course_id)`, role (`MembershipType`), and lifecycle state (`MembershipState`)
+  - `async_job.py` — `AsyncJob` table for unified async job tracking. Stores `kind`, `status`, JSON `input_data`/`output_data`, and lifecycle timestamps. All background job types share this table.
 - `src/learnwithai/repositories/` — data access layer
   - `user_repository.py` — user lookup and registration
   - `course_repository.py` — course CRUD
   - `membership_repository.py` — membership CRUD
+  - `async_job_repository.py` — CRUD for `AsyncJob` records, including listing by course and kind
 - `src/learnwithai/services/` — shared business logic
 - `src/learnwithai/jobs/` — queueable job definitions
 
@@ -63,6 +65,12 @@ Services are classes whose dependencies (repositories and infrastructure like `J
 Methods are ordered in **literate code style**: public methods (the big picture) come first, private helpers come last.
 
 The `JobQueue` interface (`learnwithai.interfaces.JobQueue`) is defined in this package so services can accept it without importing `learnwithai-jobqueue`. When a context (such as a job handler) constructs a service that never needs to enqueue new jobs, pass `ForbiddenJobQueue()` from `learnwithai.jobs` to satisfy the constructor. `ForbiddenJobQueue` raises a `RuntimeError` if `enqueue` is ever called, surfacing unexpected job submission immediately. Do not make the dependency optional.
+
+### Async Job Tracking
+
+All background job types share a single `async_job` table (`AsyncJob` in `tables/async_job.py`) with a `kind` string discriminator and JSON `input_data`/`output_data` columns. This avoids schema changes when adding new job types.
+
+The `JobNotifier` protocol (`learnwithai.interfaces.jobs`) defines how job handlers publish real-time status updates after commit. `NoOpJobNotifier` (from `learnwithai.jobs`) silently discards notifications and is used in tests. The `RabbitMQJobNotifier` (in `learnwithai-jobqueue`) publishes `JobUpdate` messages to the `job_updates` fanout exchange for the API's WebSocket consumer.
 
 ## Parameter Ordering Convention
 

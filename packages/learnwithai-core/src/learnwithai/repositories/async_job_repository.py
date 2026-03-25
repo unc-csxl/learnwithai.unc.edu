@@ -42,9 +42,7 @@ class AsyncJobRepository:
         """
         return self._session.get(AsyncJob, job_id)
 
-    def list_by_course_and_kind(
-        self, course_id: int, kind: str
-    ) -> list[AsyncJob]:
+    def list_by_course_and_kind(self, course_id: int, kind: str) -> list[AsyncJob]:
         """Returns all jobs for a specific course and kind.
 
         Args:

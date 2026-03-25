@@ -27,6 +27,15 @@ api/
 - `src/api/routes/health.py` exposes `/health` and `/queue`.
 - `src/api/routes/auth.py` exposes the authentication flow under `/auth`.
 - `src/api/routes/courses.py` exposes course creation, roster, and membership management.
+- `src/api/routes/ws.py` exposes `/ws/jobs` WebSocket endpoint for real-time job updates.
+
+## WebSocket Infrastructure
+
+`src/api/job_update_manager.py` is an in-memory subscription manager that tracks which WebSocket connections are interested in updates for each course.
+
+`src/api/routes/ws.py` accepts WebSocket connections authenticated via a JWT query parameter (`?token=<jwt>`). Clients send JSON `subscribe`/`unsubscribe` messages to register for course-level job updates.
+
+On startup, a background task (`_consume_job_updates` in `main.py`) connects to the `job_updates` RabbitMQ fanout exchange via `aio-pika` and broadcasts received `JobUpdate` messages to subscribed WebSocket clients through the `JobUpdateManager`. The consumer is skipped in test environments.
 
 ## How To Run The API
 

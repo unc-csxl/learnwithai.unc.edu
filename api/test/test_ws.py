@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -37,8 +36,18 @@ def _valid_token() -> str:
     import jwt as pyjwt
     from datetime import datetime, timezone, timedelta
 
-    payload = {"sub": "999999999", "exp": datetime.now(timezone.utc) + timedelta(hours=1)}
+    payload = {
+        "sub": "999999999",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+    }
     return pyjwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+class TestGetManager:
+    def test_raises_when_not_configured(self) -> None:
+        ws_route_module._manager = None
+        with pytest.raises(RuntimeError, match="not configured"):
+            ws_route_module._get_manager()
 
 
 class TestWebSocketAuth:

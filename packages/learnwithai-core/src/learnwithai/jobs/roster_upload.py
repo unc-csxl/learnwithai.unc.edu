@@ -1,9 +1,15 @@
 """Background job for processing roster CSV uploads."""
 
-from typing import Literal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal
 
 from ..interfaces import Job, JobHandler, JobUpdate
 from .forbidden_job_queue import ForbiddenJobQueue
+
+if TYPE_CHECKING:
+    from ..repositories.async_job_repository import AsyncJobRepository
+    from learnwithai_jobqueue.rabbitmq_job_notifier import RabbitMQJobNotifier
 
 
 class RosterUploadJob(Job):

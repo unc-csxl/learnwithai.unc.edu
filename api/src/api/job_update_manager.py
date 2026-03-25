@@ -81,9 +81,7 @@ class JobUpdateManager:
         payload = update.model_dump_json()
         stale: list[WebSocket] = []
 
-        send_tasks = [
-            self._safe_send(ws, payload, stale) for ws in subscribers
-        ]
+        send_tasks = [self._safe_send(ws, payload, stale) for ws in subscribers]
         await asyncio.gather(*send_tasks)
 
         for ws in stale:
@@ -92,9 +90,7 @@ class JobUpdateManager:
             del self._subscriptions[update.course_id]
 
     @staticmethod
-    async def _safe_send(
-        ws: WebSocket, payload: str, stale: list[WebSocket]
-    ) -> None:
+    async def _safe_send(ws: WebSocket, payload: str, stale: list[WebSocket]) -> None:
         """Sends text to a single WebSocket, marking it stale on failure.
 
         Args:

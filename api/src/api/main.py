@@ -35,7 +35,18 @@ def _generate_operation_id(route: APIRoute) -> str:
     return route.name
 
 
-async def _consume_job_updates(
+async def _handle_job_update_message(manager: JobUpdateManager, body: bytes) -> None:
+    """Parses a raw message body and broadcasts the job update.
+
+    Args:
+        manager: The in-memory subscription manager to broadcast through.
+        body: Raw JSON bytes from the RabbitMQ message.
+    """
+    update = JobUpdate.model_validate_json(body)
+    await manager.broadcast(update)
+
+
+async def _consume_job_updates(  # pragma: no cover — requires live RabbitMQ
     manager: JobUpdateManager, settings: Settings
 ) -> None:
     """Background task that consumes job updates from RabbitMQ and broadcasts.
@@ -56,9 +67,7 @@ async def _consume_job_updates(
     while True:
         connection = None
         try:
-            connection = await aio_pika.connect(
-                settings.effective_rabbitmq_url
-            )
+            connection = await aio_pika.connect(settings.effective_rabbitmq_url)
             channel = await connection.channel()
             exchange = await channel.declare_exchange(
                 exchange_name, aio_pika.ExchangeType.FANOUT, durable=True
@@ -72,23 +81,16 @@ async def _consume_job_updates(
                 async for message in queue_iter:
                     async with message.process():
                         try:
-                            update = JobUpdate.model_validate_json(
-                                message.body
-                            )
-                            await manager.broadcast(update)
+                            await _handle_job_update_message(manager, message.body)
                         except Exception:
-                            logger.exception(
-                                "Failed to process job update message."
-                            )
+                            logger.exception("Failed to process job update message.")
         except asyncio.CancelledError:
             logger.info("WebSocket consumer task cancelled.")
             if connection and not connection.is_closed:
                 await connection.close()
             return
         except Exception:
-            logger.exception(
-                "RabbitMQ consumer connection lost. Reconnecting in 5s."
-            )
+            logger.exception("RabbitMQ consumer connection lost. Reconnecting in 5s.")
             if connection and not connection.is_closed:
                 try:
                     await connection.close()
@@ -112,14 +114,14 @@ async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
     current_settings = Settings()
     consumer_task: asyncio.Task[None] | None = None
 
-    if not current_settings.is_test:
+    if not current_settings.is_test:  # pragma: no cover — no RabbitMQ in tests
         consumer_task = asyncio.create_task(
             _consume_job_updates(manager, current_settings)
         )
 
     yield
 
-    if consumer_task is not None:
+    if consumer_task is not None:  # pragma: no cover — only when consumer started
         consumer_task.cancel()
         try:
             await consumer_task

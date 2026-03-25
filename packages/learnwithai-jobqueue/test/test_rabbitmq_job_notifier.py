@@ -12,9 +12,7 @@ from learnwithai_jobqueue.rabbitmq_job_notifier import (
 
 
 def _make_update() -> JobUpdate:
-    return JobUpdate(
-        job_id=42, course_id=7, kind="roster_upload", status="completed"
-    )
+    return JobUpdate(job_id=42, course_id=7, kind="roster_upload", status="completed")
 
 
 def test_rabbitmq_job_notifier_satisfies_protocol() -> None:
@@ -140,5 +138,17 @@ def test_close_swallows_exception_during_connection_close() -> None:
     notifier._close()
 
     # Assert — state was still reset
+    assert notifier._connection is None
+    assert notifier._channel is None
+
+
+def test_close_with_no_connection_is_safe() -> None:
+    """Covers the branch where _close is called with no existing connection (85->90)."""
+    notifier = RabbitMQJobNotifier("amqp://guest:guest@localhost/")
+    assert notifier._connection is None
+
+    # Act — should not raise
+    notifier._close()
+
     assert notifier._connection is None
     assert notifier._channel is None
