@@ -10,10 +10,10 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from api.realtime.manager import JobUpdateManager
-
 from learnwithai.config import Settings
 from learnwithai.interfaces.jobs import JobUpdate
+
+from api.realtime.manager import JobUpdateManager
 
 logger = logging.getLogger(__name__)
 

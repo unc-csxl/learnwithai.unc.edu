@@ -1,12 +1,14 @@
 """Integration logic for UNC CSXL authentication and local JWT issuance."""
 
+from datetime import datetime, timedelta, timezone
+
 import httpx
 import jwt
-from datetime import datetime, timezone, timedelta
+
 from ..config import Settings
-from ..tables.user import User
 from ..models.unc import UNCDirectorySearch
 from ..repositories.user_repository import UserRepository
+from ..tables.user import User
 
 
 class AuthenticationException(Exception): ...

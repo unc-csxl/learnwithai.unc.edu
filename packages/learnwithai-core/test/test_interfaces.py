@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
-
 import learnwithai
 from learnwithai.config import Settings
 from learnwithai.interfaces import SupportsJobType
 from learnwithai.jobs.echo import EchoJob
+from pydantic import BaseModel
 
 
 def test_package_exports_settings() -> None:

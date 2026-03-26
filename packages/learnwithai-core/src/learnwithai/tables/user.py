@@ -2,8 +2,8 @@
 
 from datetime import datetime
 
-from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, DateTime, Integer, func
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):

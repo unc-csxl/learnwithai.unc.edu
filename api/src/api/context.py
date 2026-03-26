@@ -1,8 +1,10 @@
 """Request context containers used by the API layer."""
 
 from typing import Annotated, TypeAlias
+
 from fastapi import Depends
-from .di import SessionDI, JobQueueDI
+
+from .di import JobQueueDI, SessionDI
 
 
 class PublicContext:

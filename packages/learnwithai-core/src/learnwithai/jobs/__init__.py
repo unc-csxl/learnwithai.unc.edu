@@ -4,12 +4,12 @@ from typing import Annotated, Any, TypeAlias, Union
 
 from pydantic import Discriminator, TypeAdapter
 
+from ..interfaces import Job, JobHandler
 from .base_job_handler import BaseJobHandler
 from .echo import EchoJob, EchoJobHandler
 from .forbidden_job_queue import ForbiddenJobQueue
 from .noop_job_notifier import NoOpJobNotifier
 from .roster_upload import RosterUploadJob, RosterUploadJobHandler, RosterUploadOutput
-from ..interfaces import JobHandler, Job
 
 JobPayload: TypeAlias = Annotated[
     Union[EchoJob, RosterUploadJob], Discriminator("type")

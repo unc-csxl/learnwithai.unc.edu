@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from sqlmodel import Session
-
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course, Term
+from sqlmodel import Session
 
 
 def _seed_course(session: Session) -> Course:

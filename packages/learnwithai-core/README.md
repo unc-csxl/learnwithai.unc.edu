@@ -14,7 +14,6 @@
 
 - `src/learnwithai/config.py` — application settings
 - `src/learnwithai/db.py` — database engine and session helpers. `get_session` is a yield-based FastAPI dependency: it commits on normal return, rolls back on exception, and closes in `finally`. Route handlers must not call commit or rollback directly.
-- `src/learnwithai/di.py` — shared repository/service dependency factories and reusable `*DI` type aliases used by the API layer and worker handlers
 - `src/learnwithai/models/` — domain models (API facing)
 - `src/learnwithai/tables/` — SQLModel table definitions (DB facing)
   - `user.py` — `User` table (PID integer primary key)
@@ -53,6 +52,8 @@ test/
 ## Development Notes
 
 - Keep this package framework-light and reusable.
+- Keep FastAPI-specific dependency metadata out of this package. Shared services and repositories should be instantiated directly by adapter layers.
+- Keep worker dependency construction explicit inside handlers. Avoid a separate dependency injection layer in core.
 - Prefer pure or narrowly scoped logic where possible.
 - If a service is useful to both the API and the worker, it almost certainly belongs here.
 - Repositories accept and return domain objects for non-lookup operations and for relationship-scoped queries.

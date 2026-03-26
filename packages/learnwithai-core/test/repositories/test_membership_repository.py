@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import pytest
+from learnwithai.pagination import PaginationParams
+from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.tables.course import Course, Term
+from learnwithai.tables.membership import Membership, MembershipState, MembershipType
+from learnwithai.tables.user import User
 from sqlalchemy import inspect
 from sqlmodel import Session
-
-from learnwithai.pagination import PaginationParams
-from learnwithai.tables.membership import Membership, MembershipState, MembershipType
-from learnwithai.tables.course import Course, Term
-from learnwithai.tables.user import User
-from learnwithai.repositories.membership_repository import MembershipRepository
 
 
 def _seed_course(session: Session) -> Course:

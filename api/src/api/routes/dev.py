@@ -6,7 +6,6 @@ These routes are only registered when the application is running in the
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
-
 from learnwithai.db import get_engine, reset_db_and_tables
 from learnwithai.dev_data import seed
 from sqlmodel import Session

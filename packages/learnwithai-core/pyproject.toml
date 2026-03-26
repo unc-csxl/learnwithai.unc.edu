@@ -4,8 +4,6 @@ version = "0.1.0"
 description = "Shared core domain and business logic for LearnWithAI"
 requires-python = ">=3.12"
 dependencies = [
-  "fast-depends>=2.4,<3",
-  "fastapi>=0.115,<1",
   "psycopg[binary]>=3.3.3,<4",
   "pydantic>=2.8,<3",
   "pydantic-settings>=2.13.1,<3",

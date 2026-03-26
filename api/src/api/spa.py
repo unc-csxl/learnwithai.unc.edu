@@ -5,7 +5,6 @@ from pathlib import Path
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-
 from learnwithai.config import Settings
 
 _MEDIA_TYPES: dict[str, str] = {

@@ -1,17 +1,15 @@
 """Background job for processing roster CSV uploads."""
 
-from __future__ import annotations
+from typing import Literal, TypedDict
 
-from typing import TYPE_CHECKING, Literal, TypedDict
+from sqlmodel import Session
 
-from fast_depends import Depends
-
-from ..di import roster_upload_service_handler_factory
 from ..interfaces import TrackedJob
+from ..repositories.async_job_repository import AsyncJobRepository
+from ..repositories.membership_repository import MembershipRepository
+from ..repositories.user_repository import UserRepository
 from .base_job_handler import BaseJobHandler
-
-if TYPE_CHECKING:
-    from ..services.roster_upload_service import RosterUploadService
+from .forbidden_job_queue import ForbiddenJobQueue
 
 
 class RosterUploadOutput(TypedDict):
@@ -34,19 +32,27 @@ class RosterUploadJobHandler(BaseJobHandler[RosterUploadJob]):
     """Processes a queued roster upload.
 
     Session lifecycle, commit/rollback, and notification are handled by
-    :class:`BaseJobHandler`.  Dependencies are resolved via
-    ``fast-depends`` — see :mod:`learnwithai.di`.
+    :class:`BaseJobHandler`. Dependencies are constructed directly from
+    the handler session.
     """
 
     def _execute(  # type: ignore[override]
         self,
         job: RosterUploadJob,
-        svc: RosterUploadService = Depends(roster_upload_service_handler_factory),
+        session: Session,
     ) -> None:
         """Delegates to the roster upload service.
 
         Args:
             job: Job payload containing the upload job ID.
-            svc: Injected roster upload service.
+            session: Open database session shared by the handler.
         """
+        from ..services.roster_upload_service import RosterUploadService
+
+        svc = RosterUploadService(
+            AsyncJobRepository(session),
+            UserRepository(session),
+            MembershipRepository(session),
+            ForbiddenJobQueue(),
+        )
         svc.process_upload(job.job_id)

@@ -9,16 +9,15 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from learnwithai.config import Settings
+from learnwithai.errors import AuthorizationError
 
 from api.lifespan import lifespan
 from api.openapi import API_DESCRIPTION, OPENAPI_TAGS, generate_operation_id
 from api.routes import API_ROUTERS
-from api.routes.dev import router as dev_router
 from api.routes import ws as ws_route_module
+from api.routes.dev import router as dev_router
 from api.spa import configure_spa
-
-from learnwithai.config import Settings
-from learnwithai.errors import AuthorizationError
 
 
 def create_app(settings: Settings) -> FastAPI:

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+from unittest.mock import AsyncMock
 
 import pytest
-from unittest.mock import AsyncMock
 
 from api.realtime import JobUpdateManager, handle_job_update_message
 

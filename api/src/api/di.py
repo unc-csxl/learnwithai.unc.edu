@@ -1,36 +1,29 @@
 """Dependency factories shared across FastAPI route handlers."""
 
+from __future__ import annotations
+
 from typing import Annotated, TypeAlias
 
 from fastapi import Depends, HTTPException, Path, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
-from learnwithai.di import (
-    AsyncJobRepositoryDI,
-    CourseRepositoryDI,
-    CourseServiceDI,
-    MembershipRepositoryDI,
-    SessionDI,
-    SettingsDI,
-    UserRepositoryDI,
-    async_job_repository_factory,
-    course_repository_factory,
-    course_service_factory,
-    membership_repository_factory,
-    roster_upload_service_factory as build_roster_upload_service,
-    settings_factory,
-    user_repository_factory,
-)
+from learnwithai.config import Settings, get_settings
+from learnwithai.db import get_session
+from learnwithai.interfaces import JobQueue
 from learnwithai.pagination import PaginationParams
+from learnwithai.repositories.async_job_repository import AsyncJobRepository
+from learnwithai.repositories.course_repository import CourseRepository
+from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.repositories.user_repository import UserRepository
+from learnwithai.services.course_service import CourseService
 from learnwithai.services.csxl_auth_service import (
-    CSXLAuthService,
     AuthenticationException,
+    CSXLAuthService,
 )
 from learnwithai.services.roster_upload_service import RosterUploadService
-from learnwithai.interfaces import JobQueue
-from learnwithai.tables.user import User
 from learnwithai.tables.course import Course
+from learnwithai.tables.user import User
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
+from sqlmodel import Session
 
 __all__ = [
     "AsyncJobRepositoryDI",
@@ -81,6 +74,68 @@ def csxl_auth_service_factory(
 CSXLAuthServiceDI: TypeAlias = Annotated[
     CSXLAuthService, Depends(csxl_auth_service_factory)
 ]
+
+
+SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
+
+
+def settings_factory() -> Settings:
+    """Builds a settings object for FastAPI dependency injection."""
+    return get_settings()
+
+
+SettingsDI: TypeAlias = Annotated[Settings, Depends(settings_factory)]
+
+
+def user_repository_factory(session: SessionDI) -> UserRepository:
+    """Constructs a user repository bound to the current request session."""
+    return UserRepository(session)
+
+
+UserRepositoryDI: TypeAlias = Annotated[
+    UserRepository, Depends(user_repository_factory)
+]
+
+
+def course_repository_factory(session: SessionDI) -> CourseRepository:
+    """Constructs a course repository bound to the current request session."""
+    return CourseRepository(session)
+
+
+CourseRepositoryDI: TypeAlias = Annotated[
+    CourseRepository, Depends(course_repository_factory)
+]
+
+
+def membership_repository_factory(session: SessionDI) -> MembershipRepository:
+    """Constructs a membership repository bound to the current request session."""
+    return MembershipRepository(session)
+
+
+MembershipRepositoryDI: TypeAlias = Annotated[
+    MembershipRepository, Depends(membership_repository_factory)
+]
+
+
+def async_job_repository_factory(session: SessionDI) -> AsyncJobRepository:
+    """Constructs an async job repository bound to the current request session."""
+    return AsyncJobRepository(session)
+
+
+AsyncJobRepositoryDI: TypeAlias = Annotated[
+    AsyncJobRepository, Depends(async_job_repository_factory)
+]
+
+
+def course_service_factory(
+    course_repo: CourseRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> CourseService:
+    """Creates the course service for the current request."""
+    return CourseService(course_repo, membership_repo)
+
+
+CourseServiceDI: TypeAlias = Annotated[CourseService, Depends(course_service_factory)]
 
 
 def get_authenticated_user(
@@ -214,9 +269,7 @@ def roster_upload_service_factory(
     job_queue: JobQueueDI,
 ) -> RosterUploadService:
     """Creates the roster upload service for the current request."""
-    return build_roster_upload_service(
-        async_job_repo, user_repo, membership_repo, job_queue
-    )
+    return RosterUploadService(async_job_repo, user_repo, membership_repo, job_queue)
 
 
 RosterUploadServiceDI: TypeAlias = Annotated[

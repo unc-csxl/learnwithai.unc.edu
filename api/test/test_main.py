@@ -6,12 +6,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from learnwithai.config import Settings
+from learnwithai.services.course_service import AuthorizationError
 
 import api.lifespan as lifespan_module
 from api.main import app, create_app, settings
 from api.openapi import OPENAPI_TAGS
-from learnwithai.config import Settings
-from learnwithai.services.course_service import AuthorizationError
 
 
 def _development_settings() -> Settings:

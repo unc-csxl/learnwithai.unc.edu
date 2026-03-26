@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from sqlmodel import Session
-
-from learnwithai.tables.course import Course, Term
 from learnwithai.repositories.course_repository import CourseRepository
-
+from learnwithai.tables.course import Course, Term
+from sqlmodel import Session
 
 # --- create ---
 

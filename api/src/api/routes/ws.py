@@ -12,7 +12,6 @@ import json
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
-
 from learnwithai.auth import verify_jwt
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import AuthenticationException

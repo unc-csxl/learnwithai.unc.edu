@@ -2,7 +2,6 @@
 
 import dramatiq
 from dramatiq.brokers.rabbitmq import RabbitmqBroker
-
 from learnwithai.config import get_settings
 
 

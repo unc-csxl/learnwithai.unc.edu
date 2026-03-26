@@ -4,6 +4,10 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from learnwithai.errors import AuthorizationError
+from learnwithai.pagination import PaginatedResult, PaginationParams
+from learnwithai.tables.course import Term
+from learnwithai.tables.membership import MembershipState, MembershipType
 
 from api.di import (
     course_repository_factory,
@@ -29,11 +33,6 @@ from api.routes.courses import (
     list_my_courses,
     update_course,
 )
-from learnwithai.errors import AuthorizationError
-from learnwithai.pagination import PaginatedResult, PaginationParams
-from learnwithai.tables.course import Term
-from learnwithai.tables.membership import MembershipState, MembershipType
-
 
 # ---- helpers ----
 

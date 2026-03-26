@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from learnwithai.interfaces import Job
-from learnwithai.db import Session
 from unittest.mock import MagicMock
+
+from learnwithai.db import Session
+from learnwithai.interfaces import Job
 
 from api.context import PublicContext, UserContext
 

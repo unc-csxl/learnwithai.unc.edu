@@ -1,9 +1,8 @@
 """Pydantic models for course-related API requests and responses."""
 
-from pydantic import BaseModel, ConfigDict
-
 from learnwithai.tables.course import Term
 from learnwithai.tables.membership import MembershipState, MembershipType
+from pydantic import BaseModel, ConfigDict
 
 
 class CourseMembership(BaseModel):

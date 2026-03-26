@@ -9,13 +9,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from learnwithai.config import Settings
+from learnwithai.tables.user import User
 
 from api.di import csxl_auth_service_factory, user_repository_factory
 from api.main import create_app
 from api.routes.dev import dev_list_users, dev_login_as, dev_reset_db
-from learnwithai.config import Settings
-from learnwithai.tables.user import User
-
 
 # ---- helpers ----
 

@@ -4,9 +4,8 @@ import json
 import logging
 
 import pika
-from pika.adapters.blocking_connection import BlockingChannel
-
 from learnwithai.interfaces.jobs import JobNotifier, JobUpdate
+from pika.adapters.blocking_connection import BlockingChannel
 
 logger = logging.getLogger(__name__)
 

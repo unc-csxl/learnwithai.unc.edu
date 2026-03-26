@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from api.di import (
-    job_queue_factory,
     csxl_auth_service_factory,
+    job_queue_factory,
 )
 
 

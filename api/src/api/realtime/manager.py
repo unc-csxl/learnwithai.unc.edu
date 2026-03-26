@@ -12,7 +12,6 @@ import logging
 from collections import defaultdict
 
 from fastapi import WebSocket
-
 from learnwithai.interfaces.jobs import JobUpdate
 
 logger = logging.getLogger(__name__)

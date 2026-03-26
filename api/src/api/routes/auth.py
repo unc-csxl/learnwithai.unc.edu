@@ -4,12 +4,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
+from learnwithai.services.csxl_auth_service import AuthenticationException
 
 from ..di import (
     CSXLAuthServiceDI,
     SettingsDI,
 )
-from learnwithai.services.csxl_auth_service import AuthenticationException
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

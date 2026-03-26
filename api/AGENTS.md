@@ -11,7 +11,7 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 - Keep route handlers thin.
 - Put reusable business logic in `packages/learnwithai-core/`.
 - Use dependency injection for settings, auth helpers, and shared services.
-- Define HTTP-specific DI types and factories in `src/api/di.py`. Put shared repository and service DI in `learnwithai.di`.
+- Define HTTP-specific DI types and factories in `src/api/di.py`. Worker handlers in `learnwithai-core` should construct their own dependencies directly.
 - Keep request body models explicit in route signatures with `Annotated[..., Body()]` when you need body metadata or want to signal API-layer ownership clearly.
 - Do not add DI aliases or helper dependencies that derive values from request bodies. If a body field requires a database lookup, perform that lookup in the route logic and translate missing resources into the appropriate HTTP response there.
 - Add Google-style docstrings to maintained Python modules and public functions.
@@ -19,7 +19,7 @@ This workspace owns FastAPI request handling, routing, dependency wiring, and HT
 
 ## Service Factory Conventions
 
-Service DI factories in `di.py` are responsible for composing API-only dependencies like `JobQueue`. Shared repository and service factories belong in `learnwithai.di`. Route handlers must not receive `JobQueueDI` as a parameter.
+Service DI factories in `di.py` are responsible for composing API-only dependencies like `JobQueue` and instantiating repositories and services inside FastAPI `Depends` wrappers. Route handlers must not receive `JobQueueDI` as a parameter.
 
 ## Parameter Ordering Convention
 

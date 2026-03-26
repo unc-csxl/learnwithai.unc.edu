@@ -18,11 +18,10 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from learnwithai.config import Settings
 
 from api.realtime import JobUpdateManager, consume_job_updates
 from api.routes import ws as ws_route_module
-
-from learnwithai.config import Settings
 
 logger = logging.getLogger(__name__)
 

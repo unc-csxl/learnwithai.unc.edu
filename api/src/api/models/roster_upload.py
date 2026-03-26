@@ -2,9 +2,8 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from learnwithai.tables.async_job import AsyncJobStatus
+from pydantic import BaseModel
 
 
 class RosterUploadResponse(BaseModel):

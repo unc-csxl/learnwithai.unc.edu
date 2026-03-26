@@ -1,7 +1,6 @@
 """Roster CSV upload routes for the public API."""
 
 from fastapi import APIRouter, HTTPException, UploadFile
-
 from learnwithai.jobs.roster_upload import RosterUploadOutput
 
 from ..di import (

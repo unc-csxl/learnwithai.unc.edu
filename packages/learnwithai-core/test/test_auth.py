@@ -2,7 +2,6 @@
 
 import jwt
 import pytest
-
 from learnwithai.auth import verify_jwt
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import AuthenticationException
