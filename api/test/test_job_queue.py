@@ -23,12 +23,13 @@ def test_csxl_auth_service_factory_builds_service_with_dependencies() -> None:
 
 def test_job_queue_factory_builds_dramatiq_job_queue() -> None:
     # Arrange
+    session = MagicMock()
     expected_queue = object()
 
     # Act
     with patch("api.di.DramatiqJobQueue", return_value=expected_queue) as queue_class_mock:
-        job_queue = job_queue_factory()
+        job_queue = job_queue_factory(session)
 
     # Assert
     assert job_queue is expected_queue
-    queue_class_mock.assert_called_once_with()
+    queue_class_mock.assert_called_once_with(session=session)

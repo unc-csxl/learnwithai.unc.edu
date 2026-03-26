@@ -37,8 +37,8 @@ spec:
               value: "INFO"
           resources:
             requests:
-              memory: 96Mi
+              memory: 128Mi
               cpu: 60m
             limits:
-              memory: 192Mi
+              memory: 256Mi
               cpu: 150m

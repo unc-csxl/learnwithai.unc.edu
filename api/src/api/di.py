@@ -163,9 +163,9 @@ def get_authenticated_user(
 AuthenticatedUserDI: TypeAlias = Annotated[User, Depends(get_authenticated_user)]
 
 
-def job_queue_factory() -> JobQueue:
-    """Creates the job queue implementation used by API handlers."""
-    return DramatiqJobQueue()
+def job_queue_factory(session: SessionDI) -> JobQueue:
+    """Creates the request-scoped job queue used by API handlers."""
+    return DramatiqJobQueue(session=session)
 
 
 JobQueueDI: TypeAlias = Annotated[JobQueue, Depends(job_queue_factory)]

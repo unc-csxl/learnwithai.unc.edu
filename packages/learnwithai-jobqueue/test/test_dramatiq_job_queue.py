@@ -20,6 +20,29 @@ def test_enqueue_sends_serialized_job_payload() -> None:
     send_mock.assert_called_once_with({"type": "echo", "message": "hello"})
 
 
+def test_enqueue_defers_dispatch_until_after_commit_when_session_bound() -> None:
+    # Arrange
+    session = Mock()
+    queue = DramatiqJobQueue(session=session)
+    job = EchoJob(message="hello")
+
+    # Act
+    with (
+        patch("learnwithai_jobqueue.dramatiq_job_queue.add_after_commit_callback") as callback_mock,
+        patch("learnwithai_jobqueue.dramatiq_job_queue.job_queue.send") as send_mock,
+    ):
+        queue.enqueue(job)
+
+        # Assert
+        callback_mock.assert_called_once()
+        assert callback_mock.call_args.args[0] is session
+        send_mock.assert_not_called()
+
+        deferred_send = callback_mock.call_args.args[1]
+        deferred_send()
+        send_mock.assert_called_once_with({"type": "echo", "message": "hello"})
+
+
 def test_job_queue_actor_dispatches_to_handler_class() -> None:
     # Arrange
     job = EchoJob(message="hello")

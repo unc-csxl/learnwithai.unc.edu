@@ -195,6 +195,31 @@ def test_get_session_commits_and_closes_on_success() -> None:
     mock_session.rollback.assert_not_called()
 
 
+def test_get_session_runs_after_commit_callbacks_after_commit() -> None:
+    # Arrange
+    mock_session = MagicMock()
+    mock_session.info = {}
+    call_order: list[str] = []
+    mock_session.commit.side_effect = lambda: call_order.append("commit")
+
+    # Act
+    with (
+        patch("learnwithai.db.get_engine"),
+        patch("learnwithai.db.Session", return_value=mock_session),
+    ):
+        gen = db.get_session()
+        yielded = next(gen)
+        db.add_after_commit_callback(yielded, lambda: call_order.append("callback"))
+        try:
+            next(gen)
+        except StopIteration:
+            pass
+
+    # Assert
+    assert call_order == ["commit", "callback"]
+    assert mock_session.info == {}
+
+
 def test_get_session_rolls_back_and_closes_on_exception() -> None:
     # Arrange
     mock_session = MagicMock()
@@ -215,3 +240,27 @@ def test_get_session_rolls_back_and_closes_on_exception() -> None:
     mock_session.rollback.assert_called_once_with()
     mock_session.close.assert_called_once_with()
     mock_session.commit.assert_not_called()
+
+
+def test_get_session_discards_after_commit_callbacks_on_exception() -> None:
+    # Arrange
+    mock_session = MagicMock()
+    mock_session.info = {}
+    callback = MagicMock()
+
+    # Act
+    with (
+        patch("learnwithai.db.get_engine"),
+        patch("learnwithai.db.Session", return_value=mock_session),
+    ):
+        gen = db.get_session()
+        yielded = next(gen)
+        db.add_after_commit_callback(yielded, callback)
+        try:
+            gen.throw(ValueError("db error"))
+        except ValueError:
+            pass
+
+    # Assert
+    callback.assert_not_called()
+    assert mock_session.info == {}

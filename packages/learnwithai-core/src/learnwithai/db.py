@@ -1,14 +1,19 @@
 """Database engine and session helpers."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import lru_cache
 from importlib import import_module
+from typing import TypeAlias
 
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
 from sqlmodel import Session, SQLModel, create_engine
 
 from learnwithai.config import get_settings
+
+AfterCommitCallback: TypeAlias = Callable[[], None]
+
+_AFTER_COMMIT_CALLBACKS_KEY = "after_commit_callbacks"
 
 
 @lru_cache
@@ -102,6 +107,37 @@ def _quote_identifier(identifier: str) -> str:
     return '"' + identifier.replace('"', '""') + '"'
 
 
+def add_after_commit_callback(session: Session, callback: AfterCommitCallback) -> None:
+    """Registers a callback to run after a successful session commit.
+
+    Args:
+        session: Open transactional session.
+        callback: Zero-argument callable to run after commit succeeds.
+    """
+    callbacks = session.info.setdefault(_AFTER_COMMIT_CALLBACKS_KEY, [])
+    callbacks.append(callback)
+
+
+def _run_after_commit_callbacks(session: Session) -> None:
+    """Runs and clears any callbacks registered for post-commit work.
+
+    Args:
+        session: Session whose queued callbacks should be executed.
+    """
+    callbacks = list(session.info.pop(_AFTER_COMMIT_CALLBACKS_KEY, []))
+    for callback in callbacks:
+        callback()
+
+
+def _clear_after_commit_callbacks(session: Session) -> None:
+    """Drops any queued post-commit callbacks without executing them.
+
+    Args:
+        session: Session whose queued callbacks should be discarded.
+    """
+    session.info.pop(_AFTER_COMMIT_CALLBACKS_KEY, None)
+
+
 def get_session() -> Generator[Session, None, None]:
     """Yield a transactional session; commits on success, rolls back on error.
 
@@ -113,8 +149,10 @@ def get_session() -> Generator[Session, None, None]:
     try:
         yield session
         session.commit()
+        _run_after_commit_callbacks(session)
     except Exception:
         session.rollback()
+        _clear_after_commit_callbacks(session)
         raise
     finally:
         session.close()
