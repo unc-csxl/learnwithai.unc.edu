@@ -6,10 +6,11 @@ import pytest
 from learnwithai.jobs import (
     EchoJob,
     ForbiddenJobQueue,
+    JokeGenerationJob,
     JobPayload,
     RosterUploadJob,
+    get_job_handler_map,
     job_adapter,
-    job_handler_map,
     job_payload_adapter,
 )
 from learnwithai.jobs.echo import EchoJobHandler
@@ -30,10 +31,12 @@ def test_jobs_package_exports_expected_symbols() -> None:
         "Job",
         "EchoJob",
         "ForbiddenJobQueue",
+        "JokeGenerationJob",
         "NoOpJobNotifier",
         "RosterUploadJob",
         "RosterUploadOutput",
         "JobPayload",
+        "get_job_handler_map",
     ]
 
 
@@ -84,7 +87,7 @@ def test_job_adapter_rejects_unknown_job_type() -> None:
 
 def test_job_handler_map_points_echo_job_to_echo_handler() -> None:
     # Arrange
-    handler_class = job_handler_map[EchoJob]
+    handler_class = get_job_handler_map()[EchoJob]
 
     # Act
     handler = handler_class()
@@ -116,6 +119,24 @@ def test_echo_job_handler_prints_payload_with_health_status() -> None:
     )
 
 
+# ---- JokeGenerationJob ----
+
+
+def test_job_adapter_builds_joke_generation_job_from_payload() -> None:
+    payload = {"type": "joke_generation", "job_id": 99}
+    job = job_adapter(payload)
+    assert isinstance(job, JokeGenerationJob)
+    assert job.job_id == 99
+
+
+def test_job_handler_map_points_joke_generation_to_handler() -> None:
+    from learnwithai.tools.jokes.job import JokeGenerationJobHandler
+
+    handler_class = get_job_handler_map()[JokeGenerationJob]
+    handler = handler_class()
+    assert isinstance(handler, JokeGenerationJobHandler)
+
+
 # ---- RosterUploadJob ----
 
 
@@ -133,7 +154,7 @@ def test_job_adapter_builds_roster_upload_job_from_payload() -> None:
 
 def test_job_handler_map_points_roster_upload_to_handler() -> None:
     # Arrange
-    handler_class = job_handler_map[RosterUploadJob]
+    handler_class = get_job_handler_map()[RosterUploadJob]
 
     # Act
     handler = handler_class()

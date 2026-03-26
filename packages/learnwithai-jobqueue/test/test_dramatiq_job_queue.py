@@ -30,10 +30,9 @@ def test_job_queue_actor_dispatches_to_handler_class() -> None:
     # Act
     with (
         patch("learnwithai_jobqueue.dramatiq_job_queue.job_adapter", return_value=job),
-        patch.dict(
-            "learnwithai_jobqueue.dramatiq_job_queue.job_handler_map",
-            {EchoJob: handler_class},
-            clear=True,
+        patch(
+            "learnwithai_jobqueue.dramatiq_job_queue.get_job_handler_map",
+            return_value={EchoJob: handler_class},
         ),
     ):
         job_queue.fn(payload)
