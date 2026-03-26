@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from learnwithai.tools.jokes.entities import JokeGenerationJob
+from learnwithai.tools.jokes.models import JokeGenerationJob
 from learnwithai.tools.jokes.job import JokeGenerationJobHandler
 
 

@@ -8,7 +8,7 @@ from ...config import get_settings
 from ...jobs.base_job_handler import BaseJobHandler
 from ...repositories.async_job_repository import AsyncJobRepository
 from ...tables.async_job import AsyncJobStatus
-from .entities import JokeGenerationJob, JokeGenerationOutput
+from .models import JokeGenerationJob, JokeGenerationOutput
 from .openai_service import OpenAIService
 
 

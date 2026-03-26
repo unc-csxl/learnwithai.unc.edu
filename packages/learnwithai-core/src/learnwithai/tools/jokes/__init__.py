@@ -1,11 +1,11 @@
-"""Joke generation tool — entities, service, and OpenAI wrapper.
+"""Joke generation tool — models, service, and OpenAI wrapper.
 
 The ``JokeGenerationJobHandler`` is intentionally **not** re-exported
 here to avoid a circular import with ``learnwithai.jobs``. Import it
 directly from ``learnwithai.tools.jokes.job`` when needed.
 """
 
-from .entities import (
+from .models import (
     JOKE_GENERATION_KIND,
     JokeGenerationInput,
     JokeGenerationJob,

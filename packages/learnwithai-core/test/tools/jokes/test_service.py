@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
-from learnwithai.tools.jokes.entities import JOKE_GENERATION_KIND
+from learnwithai.tools.jokes.models import JOKE_GENERATION_KIND
 from learnwithai.tools.jokes.service import JokeGenerationService
 
 

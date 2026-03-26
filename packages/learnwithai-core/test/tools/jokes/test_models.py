@@ -1,6 +1,6 @@
 """Tests for joke generation entities."""
 
-from learnwithai.tools.jokes.entities import (
+from learnwithai.tools.jokes.models import (
     JOKE_GENERATION_KIND,
     JokeGenerationInput,
     JokeGenerationOutput,

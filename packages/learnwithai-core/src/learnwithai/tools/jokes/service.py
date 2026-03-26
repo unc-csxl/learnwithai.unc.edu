@@ -4,7 +4,7 @@ from ...interfaces import JobQueue
 from ...repositories.async_job_repository import AsyncJobRepository
 from ...tables.async_job import AsyncJob, AsyncJobStatus
 from ...tables.user import User
-from .entities import JOKE_GENERATION_KIND, JokeGenerationInput, JokeGenerationJob
+from .models import JOKE_GENERATION_KIND, JokeGenerationInput, JokeGenerationJob
 
 
 class JokeGenerationService:
