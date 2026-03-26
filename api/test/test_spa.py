@@ -5,10 +5,9 @@ from pathlib import Path
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
-from api.spa import guess_media_type, mount_spa, resolve_static_dir
 from learnwithai.config import Settings
 
+from api.spa import guess_media_type, mount_spa, resolve_static_dir
 
 # ---- resolve_static_dir ----
 

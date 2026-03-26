@@ -1,23 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
-
-import api.main as main_module
-from api.dependency_injection import (
-    course_repository_factory,
-    course_service_factory,
-    membership_repository_factory,
-)
-from api.main import app, create_app, settings
-from api.openapi import OPENAPI_TAGS
 from learnwithai.config import Settings
 from learnwithai.services.course_service import AuthorizationError
+
+import api.lifespan as lifespan_module
+from api.main import app, create_app, settings
+from api.openapi import OPENAPI_TAGS
 
 
 def _development_settings() -> Settings:
@@ -167,9 +161,11 @@ def test_lifespan_context_skips_consumer_in_test_environment(
         nonlocal called
         called = True
 
-    monkeypatch.setattr(main_module, "consume_job_updates", fake_consume_job_updates)
     monkeypatch.setattr(
-        main_module,
+        lifespan_module, "consume_job_updates", fake_consume_job_updates
+    )
+    monkeypatch.setattr(
+        lifespan_module,
         "Settings",
         lambda: Settings.model_construct(
             _fields_set=None,
@@ -179,7 +175,7 @@ def test_lifespan_context_skips_consumer_in_test_environment(
     )
 
     async def exercise() -> None:
-        lifespan = main_module._lifespan_context(FastAPI())
+        lifespan = lifespan_module._lifespan_context(FastAPI())
         await anext(lifespan)
         with pytest.raises(StopAsyncIteration):
             await anext(lifespan)
@@ -203,9 +199,11 @@ def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
             cancelled.set()
             raise
 
-    monkeypatch.setattr(main_module, "consume_job_updates", fake_consume_job_updates)
     monkeypatch.setattr(
-        main_module,
+        lifespan_module, "consume_job_updates", fake_consume_job_updates
+    )
+    monkeypatch.setattr(
+        lifespan_module,
         "Settings",
         lambda: Settings.model_construct(
             _fields_set=None,
@@ -215,7 +213,7 @@ def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
     )
 
     async def exercise() -> None:
-        lifespan = main_module._lifespan_context(FastAPI())
+        lifespan = lifespan_module._lifespan_context(FastAPI())
         await anext(lifespan)
         await asyncio.wait_for(started.wait(), timeout=1)
         with pytest.raises(StopAsyncIteration):
@@ -225,44 +223,6 @@ def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
 
     assert started.is_set()
     assert cancelled.is_set()
-
-
-# ---- DI factories ----
-
-
-def test_course_repository_factory_returns_repository() -> None:
-    # Arrange
-    session = MagicMock()
-
-    # Act
-    repo = course_repository_factory(session)
-
-    # Assert
-    assert repo._session is session
-
-
-def test_membership_repository_factory_returns_repository() -> None:
-    # Arrange
-    session = MagicMock()
-
-    # Act
-    repo = membership_repository_factory(session)
-
-    # Assert
-    assert repo._session is session
-
-
-def test_course_service_factory_returns_service() -> None:
-    # Arrange
-    course_repo = MagicMock()
-    membership_repo = MagicMock()
-
-    # Act
-    svc = course_service_factory(course_repo, membership_repo)
-
-    # Assert
-    assert svc._course_repo is course_repo
-    assert svc._membership_repo is membership_repo
 
 
 # ---- exception handler ----

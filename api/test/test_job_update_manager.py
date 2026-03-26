@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock
 
-from api.job_update_manager import JobUpdateManager
 from learnwithai.interfaces.jobs import JobUpdate
+
+from api.realtime.manager import JobUpdateManager
 
 
 def _make_update(

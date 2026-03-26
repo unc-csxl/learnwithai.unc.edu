@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from sqlmodel import Session
-
-from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
-
+from learnwithai.tables.user import User
+from sqlmodel import Session
 
 # --- get_by_pid ---
 

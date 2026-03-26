@@ -8,7 +8,6 @@ from typing import Literal
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 Environment = Literal["development", "test", "production"]
 
 

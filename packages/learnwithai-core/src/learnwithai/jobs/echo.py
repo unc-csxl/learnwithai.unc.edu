@@ -14,7 +14,12 @@ class EchoJob(Job):
 
 
 class EchoJobHandler(JobHandler[EchoJob]):
-    """Processes echo jobs by logging their payload and service health."""
+    """Processes echo jobs by logging their payload and service health.
+
+    Extends ``JobHandler`` directly instead of ``BaseJobHandler`` because
+    echo jobs are stateless diagnostics — no database tracking or session
+    lifecycle is needed.
+    """
 
     def handle(self, job: EchoJob) -> None:
         """Handles an echo job.

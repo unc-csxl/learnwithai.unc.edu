@@ -5,15 +5,14 @@ from unittest.mock import MagicMock, patch
 import httpx
 import jwt
 import pytest
-
 from learnwithai.config import Settings
 from learnwithai.models.unc import UNCDirectorySearch
-from learnwithai.tables.user import User
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
+from learnwithai.tables.user import User
 
 
 def _build_service(

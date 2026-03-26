@@ -4,14 +4,14 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from learnwithai.repositories.user_repository import UserRepository
+from learnwithai.tables.user import User
 from pydantic import ValidationError
 
-from api.dependency_injection import get_authenticated_user, user_repository_factory
+from api.di import get_authenticated_user, user_repository_factory
 from api.main import app
 from api.models import UpdateProfileRequest, UserProfile
 from api.routes.me import get_current_subject_profile, update_current_subject_profile
-from learnwithai.repositories.user_repository import UserRepository
-from learnwithai.tables.user import User
 
 
 def _stub_user(

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-
-import pytest
 from unittest.mock import AsyncMock
 
-from api.job_update_manager import JobUpdateManager
-from api.job_update_consumer import handle_job_update_message
+import pytest
+
+from api.realtime import JobUpdateManager, handle_job_update_message
 
 
 def _valid_body() -> bytes:

@@ -1,8 +1,9 @@
 """Roster CSV upload routes for the public API."""
 
 from fastapi import APIRouter, HTTPException, UploadFile
+from learnwithai.jobs.roster_upload import RosterUploadOutput
 
-from ..dependency_injection import (
+from ..di import (
     AsyncJobRepositoryDI,
     AuthenticatedUserDI,
     CourseByCourseIDPathDI,
@@ -109,7 +110,7 @@ def get_roster_upload_status(
     if job.course_id != course.id:
         raise HTTPException(status_code=404, detail="Upload job not found.")
 
-    output = job.output_data or {}
+    output: RosterUploadOutput = job.output_data or {}  # type: ignore[assignment]
     return RosterUploadStatusResponse(
         id=job.id,  # type: ignore[arg-type]
         status=job.status,

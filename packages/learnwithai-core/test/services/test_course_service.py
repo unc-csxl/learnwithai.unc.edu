@@ -3,11 +3,10 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-
+from learnwithai.errors import AuthorizationError
 from learnwithai.pagination import PaginatedResult, PaginationParams
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
-from learnwithai.errors import AuthorizationError
 from learnwithai.services.course_service import CourseService
 from learnwithai.tables.course import Course, Term
 from learnwithai.tables.membership import Membership, MembershipState, MembershipType

@@ -3,8 +3,6 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pydantic import ValidationError
-
 from learnwithai.jobs import (
     EchoJob,
     ForbiddenJobQueue,
@@ -16,6 +14,7 @@ from learnwithai.jobs import (
 )
 from learnwithai.jobs.echo import EchoJobHandler
 from learnwithai.jobs.roster_upload import RosterUploadJobHandler
+from pydantic import ValidationError
 
 
 def test_jobs_package_exports_expected_symbols() -> None:
@@ -33,6 +32,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
         "ForbiddenJobQueue",
         "NoOpJobNotifier",
         "RosterUploadJob",
+        "RosterUploadOutput",
         "JobPayload",
     ]
 
@@ -189,8 +189,22 @@ def test_roster_upload_job_handler_commits_on_success() -> None:
             "learnwithai.jobs.base_job_handler.AsyncJobRepository",
             mock_async_job_repo_cls,
         ),
-        patch("learnwithai.repositories.user_repository.UserRepository"),
-        patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+        patch(
+            "learnwithai.jobs.roster_upload.UserRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.MembershipRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.AsyncJobRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.ForbiddenJobQueue",
+            return_value=MagicMock(),
+        ),
         patch("learnwithai.config.get_settings"),
     ):
         handler.handle(job_payload)
@@ -233,8 +247,22 @@ def test_roster_upload_job_handler_rolls_back_and_marks_failed_on_error() -> Non
             "learnwithai.jobs.base_job_handler.AsyncJobRepository",
             mock_async_job_repo_cls,
         ),
-        patch("learnwithai.repositories.user_repository.UserRepository"),
-        patch("learnwithai.repositories.membership_repository.MembershipRepository"),
+        patch(
+            "learnwithai.jobs.roster_upload.UserRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.MembershipRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.AsyncJobRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.ForbiddenJobQueue",
+            return_value=MagicMock(),
+        ),
         patch("learnwithai.config.get_settings"),
         pytest.raises(RuntimeError, match="boom"),
     ):

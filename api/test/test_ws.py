@@ -8,8 +8,8 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from api.job_update_manager import JobUpdateManager
 from api.main import app
+from api.realtime.manager import JobUpdateManager
 from api.routes import ws as ws_route_module
 
 
@@ -33,8 +33,9 @@ def _valid_token() -> str:
     from learnwithai.config import Settings
 
     settings = Settings()
+    from datetime import datetime, timedelta, timezone
+
     import jwt as pyjwt
-    from datetime import datetime, timezone, timedelta
 
     payload = {
         "sub": "999999999",

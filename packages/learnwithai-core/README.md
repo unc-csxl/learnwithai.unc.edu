@@ -52,6 +52,8 @@ test/
 ## Development Notes
 
 - Keep this package framework-light and reusable.
+- Keep FastAPI-specific dependency metadata out of this package. Shared services and repositories should be instantiated directly by adapter layers.
+- Keep worker dependency construction explicit inside handlers. Avoid a separate dependency injection layer in core.
 - Prefer pure or narrowly scoped logic where possible.
 - If a service is useful to both the API and the worker, it almost certainly belongs here.
 - Repositories accept and return domain objects for non-lookup operations and for relationship-scoped queries.

@@ -8,13 +8,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException, UploadFile
-from starlette.datastructures import Headers
-
-from api.routes.roster_uploads import get_roster_upload_status, upload_roster_csv
-from api.models import RosterUploadResponse, RosterUploadStatusResponse
 from learnwithai.errors import AuthorizationError
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
+from starlette.datastructures import Headers
 
+from api.models import RosterUploadResponse, RosterUploadStatusResponse
+from api.routes.roster_uploads import get_roster_upload_status, upload_roster_csv
 
 # ---- helpers ----
 

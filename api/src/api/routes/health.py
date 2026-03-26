@@ -1,11 +1,10 @@
 """Operational health routes for the API."""
 
 from fastapi import APIRouter
-
-from learnwithai.services.health import get_health_status
 from learnwithai.jobs import EchoJob
+from learnwithai.services.health import get_health_status
 
-from ..dependency_injection import JobQueueDI
+from ..di import JobQueueDI
 
 router = APIRouter(tags=["Operations"])
 

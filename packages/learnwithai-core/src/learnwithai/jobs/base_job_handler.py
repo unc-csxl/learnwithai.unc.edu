@@ -10,16 +10,14 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, TypeVar
 
+from sqlmodel import Session
+
+from ..config import Settings
 from ..interfaces import JobHandler, JobNotifier, JobUpdate, TrackedJob
 from ..repositories.async_job_repository import AsyncJobRepository
 from ..tables.async_job import AsyncJobStatus
-
-if TYPE_CHECKING:
-    from sqlmodel import Session
-
-    from ..config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +35,20 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
     * Committing on success and notifying the final status
     * Rolling back on failure, marking ``FAILED``, and notifying
 
+    Concrete handlers receive the open session directly in
+    :meth:`_execute` and construct whatever repositories or services
+    they need inside the handler. This keeps worker wiring explicit and
+    avoids a separate dependency injection layer inside core.
+
     The ``job`` payload must expose a ``job_id: int`` attribute that
     maps to an :class:`~learnwithai.tables.async_job.AsyncJob` row.
     """
 
     def handle(self, job: JobT) -> None:
         """Runs the full handler lifecycle for a single job.
+
+        Opens a session, transitions to PROCESSING, calls ``_execute``
+        with that live session, and manages commit/rollback.
 
         Args:
             job: Typed job payload containing at least ``job_id``.
@@ -58,9 +64,10 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         engine = get_engine()
         with _Session(engine) as session:
             async_job_repo = AsyncJobRepository(session)
+
             try:
                 self._set_processing(job.job_id, async_job_repo, session, notifier)
-                self._execute(session, job)
+                self._execute(job, session)
                 session.commit()
                 self._notify(notifier, job.job_id, async_job_repo)
             except Exception:
@@ -71,20 +78,20 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
                 raise
 
     @abstractmethod
-    def _execute(self, session: "Session", job: JobT) -> None:
+    def _execute(self, job: JobT, session: Session) -> None:
         """Subclasses implement domain-specific job logic here.
 
         The session is open and a ``PROCESSING`` status has already been
-        set.  Implementations should construct their services and
-        repositories using the provided session and perform their work.
-        Raising an exception triggers rollback and ``FAILED`` marking.
+        set. Construct any repositories or services you need directly
+        from this session inside the handler. Raising an exception
+        triggers rollback and ``FAILED`` marking.
 
         Args:
-            session: Open database session managed by the base handler.
             job: Typed job payload.
+            session: Open database session shared by the full handler.
         """
 
-    def _build_notifier(self, settings: "Settings") -> JobNotifier:
+    def _build_notifier(self, settings: Settings) -> JobNotifier:
         """Creates the notifier used for status-change broadcasts.
 
         Override in tests or alternate environments to supply a
@@ -108,10 +115,18 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         self,
         job_id: int,
         async_job_repo: AsyncJobRepository,
-        session: "Session",
+        session: Session,
         notifier: JobNotifier,
     ) -> None:
         """Transitions the job to PROCESSING, flushes, and notifies.
+
+        The flush writes the status change to the database within the
+        current transaction so the subsequent ``_notify()`` reads the
+        correct state.  External database connections will not see
+        ``PROCESSING`` until the handler commits after ``_execute()``
+        returns.  This is intentional: the RabbitMQ notification
+        provides an early signal, but the database row is only durably
+        visible after the full operation succeeds.
 
         Args:
             job_id: Primary key of the AsyncJob to update.

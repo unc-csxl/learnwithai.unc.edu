@@ -12,11 +12,11 @@ import json
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
-
+from learnwithai.auth import verify_jwt
 from learnwithai.config import Settings
 from learnwithai.services.csxl_auth_service import AuthenticationException
 
-from api.job_update_manager import JobUpdateManager
+from api.realtime.manager import JobUpdateManager
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,8 @@ def _get_manager() -> JobUpdateManager:
 def _authenticate_token(token: str) -> int:
     """Validates a JWT and returns the user PID.
 
+    Delegates to :func:`learnwithai.auth.verify_jwt`.
+
     Args:
         token: JWT from the query string.
 
@@ -127,15 +129,4 @@ def _authenticate_token(token: str) -> int:
     Raises:
         AuthenticationException: If the token is invalid or expired.
     """
-    settings = Settings()
-    import jwt as pyjwt
-
-    try:
-        payload = pyjwt.decode(
-            token,
-            settings.jwt_secret,
-            algorithms=[settings.jwt_algorithm],
-        )
-        return int(payload["sub"])
-    except (pyjwt.InvalidTokenError, KeyError, ValueError) as exc:
-        raise AuthenticationException() from exc
+    return verify_jwt(token, Settings())

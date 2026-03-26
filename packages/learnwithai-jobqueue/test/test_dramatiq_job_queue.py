@@ -3,7 +3,6 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
-
 from learnwithai.jobs import EchoJob
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue, job_queue
 

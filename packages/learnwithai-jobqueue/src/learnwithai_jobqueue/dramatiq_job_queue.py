@@ -3,9 +3,8 @@
 from typing import Any
 
 import dramatiq
-
-from learnwithai.interfaces import JobQueue, JobHandler
-from learnwithai.jobs import Job, job_handler_map, job_adapter
+from learnwithai.interfaces import JobHandler, JobQueue
+from learnwithai.jobs import Job, job_adapter, job_handler_map
 
 
 class DramatiqJobQueue(JobQueue):

@@ -3,14 +3,16 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException, Query
+from learnwithai.tables.course import Course
+from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 
-from ..dependency_injection import (
+from ..di import (
+    AuthenticatedUserDI,
     CourseByCourseIDPathDI,
     CourseServiceDI,
-    AuthenticatedUserDI,
     PaginationParamsDI,
-    UserRepositoryDI,
     UserByPIDPathDI,
+    UserRepositoryDI,
 )
 from ..models import (
     AddMemberRequest,
@@ -22,8 +24,6 @@ from ..models import (
     RosterMemberResponse,
     UpdateCourseRequest,
 )
-from learnwithai.tables.course import Course
-from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
 

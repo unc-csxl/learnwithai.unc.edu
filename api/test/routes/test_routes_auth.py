@@ -3,24 +3,22 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
-
 from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.testclient import TestClient
+from learnwithai.config import Settings
+from learnwithai.services.csxl_auth_service import AuthenticationException
+from learnwithai.tables.user import User
 
-from api.dependency_injection import (
-    settings_factory,
+from api.di import (
     csxl_auth_service_factory,
     get_authenticated_user,
+    settings_factory,
 )
 from api.main import app
 from api.routes.auth import (
-    onyen_login_redirect,
     authenticate_with_csxl_callback,
+    onyen_login_redirect,
 )
-from learnwithai.config import Settings
-from learnwithai.tables.user import User
-from learnwithai.services.csxl_auth_service import AuthenticationException
-
 
 # ---- helpers ----
 
