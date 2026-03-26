@@ -24,7 +24,7 @@ class JokeRequest(SQLModel, table=True):
     row.
     """
 
-    __tablename__ = "joke_request"
+    __tablename__: str = "joke_request"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, sa_column=Column(Integer, primary_key=True))
     course_id: int = Field(

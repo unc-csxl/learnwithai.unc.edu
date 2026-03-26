@@ -1,8 +1,11 @@
 """Joke generation tool — models, tables, and service.
 
-The ``JokeGenerationJobHandler`` is intentionally **not** re-exported
-here to avoid a circular import with ``learnwithai.jobs``. Import it
-directly from ``learnwithai.tools.jokes.job`` when needed.
+``JokeGenerationService`` and ``JokeGenerationJobHandler`` are
+intentionally **not** re-exported here to avoid circular imports with
+the repository layer.  Import them directly from their modules:
+
+    from learnwithai.tools.jokes.service import JokeGenerationService
+    from learnwithai.tools.jokes.job import JokeGenerationJobHandler
 """
 
 from .models import (
@@ -11,7 +14,6 @@ from .models import (
     JokeGenerationJob,
     JokeGenerationOutput,
 )
-from .service import JokeGenerationService
 from .tables import JokeRequest
 
 __all__ = [
@@ -19,6 +21,5 @@ __all__ = [
     "JokeGenerationInput",
     "JokeGenerationJob",
     "JokeGenerationOutput",
-    "JokeGenerationService",
     "JokeRequest",
 ]

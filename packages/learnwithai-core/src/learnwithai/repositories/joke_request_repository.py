@@ -1,6 +1,6 @@
 """Persistence helpers for joke request records."""
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from ..tools.jokes.tables import JokeRequest
 
@@ -63,9 +63,7 @@ class JokeRequestRepository:
             A list of joke requests ordered by creation time descending.
         """
         stmt = (
-            select(JokeRequest)
-            .where(JokeRequest.course_id == course_id)
-            .order_by(JokeRequest.created_at.desc())
+            select(JokeRequest).where(JokeRequest.course_id == course_id).order_by(col(JokeRequest.created_at).desc())
         )
         return list(self._session.exec(stmt).all())
 

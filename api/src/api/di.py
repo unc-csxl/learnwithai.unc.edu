@@ -12,6 +12,7 @@ from learnwithai.interfaces import JobQueue
 from learnwithai.pagination import PaginationParams
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.course_repository import CourseRepository
+from learnwithai.repositories.joke_request_repository import JokeRequestRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.services.course_service import CourseService
@@ -22,7 +23,7 @@ from learnwithai.services.csxl_auth_service import (
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.course import Course
 from learnwithai.tables.user import User
-from learnwithai.tools.jokes import JokeGenerationService
+from learnwithai.tools.jokes.service import JokeGenerationService
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 from sqlmodel import Session
 
@@ -34,6 +35,7 @@ __all__ = [
     "CourseRepositoryDI",
     "CourseServiceDI",
     "JokeGenerationServiceDI",
+    "JokeRequestRepositoryDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
     "PaginationParamsDI",
@@ -51,6 +53,7 @@ __all__ = [
     "get_user_by_path_pid",
     "get_user_by_pid",
     "joke_generation_service_factory",
+    "joke_request_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
     "roster_upload_service_factory",
@@ -116,6 +119,14 @@ def async_job_repository_factory(session: SessionDI) -> AsyncJobRepository:
 
 
 AsyncJobRepositoryDI: TypeAlias = Annotated[AsyncJobRepository, Depends(async_job_repository_factory)]
+
+
+def joke_request_repository_factory(session: SessionDI) -> JokeRequestRepository:
+    """Constructs a joke request repository bound to the current request session."""
+    return JokeRequestRepository(session)
+
+
+JokeRequestRepositoryDI: TypeAlias = Annotated[JokeRequestRepository, Depends(joke_request_repository_factory)]
 
 
 def course_service_factory(
@@ -261,11 +272,12 @@ RosterUploadServiceDI: TypeAlias = Annotated[RosterUploadService, Depends(roster
 
 
 def joke_generation_service_factory(
+    joke_request_repo: JokeRequestRepositoryDI,
     async_job_repo: AsyncJobRepositoryDI,
     job_queue: JobQueueDI,
 ) -> JokeGenerationService:
     """Creates the joke generation service for the current request."""
-    return JokeGenerationService(async_job_repo, job_queue)
+    return JokeGenerationService(joke_request_repo, async_job_repo, job_queue)
 
 
 JokeGenerationServiceDI: TypeAlias = Annotated[JokeGenerationService, Depends(joke_generation_service_factory)]
