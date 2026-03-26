@@ -173,7 +173,7 @@ def test_list_by_course_returns_empty_when_none(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_list_by_course_with_jobs_returns_joke_and_job_pairs(session: Session) -> None:
+def test_list_by_course_with_jobs_returns_jokes_with_preloaded_jobs(session: Session) -> None:
     _seed_user(session)
     course = _seed_course(session)
     repo = JokeRepository(session)
@@ -199,9 +199,9 @@ def test_list_by_course_with_jobs_returns_joke_and_job_pairs(session: Session) -
     results = repo.list_by_course_with_jobs(course.id)  # type: ignore[arg-type]
 
     assert len(results) == 2
-    for joke, async_job in results:
+    for joke in results:
         assert isinstance(joke, Joke)
-        assert isinstance(async_job, AsyncJob)
+        assert isinstance(joke.async_job, AsyncJob)
 
 
 @pytest.mark.integration
@@ -221,9 +221,9 @@ def test_list_by_course_with_jobs_returns_none_for_missing_job(session: Session)
     results = repo.list_by_course_with_jobs(course.id)  # type: ignore[arg-type]
 
     assert len(results) == 1
-    joke, async_job = results[0]
+    joke = results[0]
     assert isinstance(joke, Joke)
-    assert async_job is None
+    assert joke.async_job is None
 
 
 @pytest.mark.integration

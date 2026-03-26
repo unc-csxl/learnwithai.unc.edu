@@ -1,8 +1,8 @@
 """Persistence helpers for joke records."""
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
-from ...tables.async_job import AsyncJob
 from .tables import Joke
 
 
@@ -66,27 +66,26 @@ class JokeRepository:
         stmt = select(Joke).where(Joke.course_id == course_id).order_by(col(Joke.created_at).desc())
         return list(self._session.exec(stmt).all())
 
-    def list_by_course_with_jobs(self, course_id: int) -> list[tuple[Joke, AsyncJob | None]]:
-        """Returns all jokes for a course with their linked async jobs.
+    def list_by_course_with_jobs(self, course_id: int) -> list[Joke]:
+        """Returns all jokes for a course with their linked async jobs eagerly loaded.
 
-        Uses a single LEFT JOIN to avoid N+1 queries when the caller
-        needs both joke data and job status.
+        Uses eager loading via the ``Joke.async_job`` relationship so
+        callers can access ``joke.async_job`` without additional queries.
 
         Args:
             course_id: The course to filter by.
 
         Returns:
-            A list of ``(joke, async_job)`` tuples ordered by creation
-            time descending.  ``async_job`` is ``None`` when the joke
-            has no linked job.
+            A list of jokes ordered by creation time descending, each
+            with ``async_job`` pre-loaded (``None`` when no linked job).
         """
         stmt = (
-            select(Joke, AsyncJob)
-            .outerjoin(AsyncJob, col(Joke.async_job_id) == col(AsyncJob.id))
+            select(Joke)
+            .options(selectinload(Joke.async_job))  # type: ignore[arg-type]
             .where(Joke.course_id == course_id)
             .order_by(col(Joke.created_at).desc())
         )
-        return [(joke, job) for joke, job in self._session.exec(stmt).all()]
+        return list(self._session.exec(stmt).all())
 
     def update(self, joke: Joke) -> Joke:
         """Persists changes to an existing joke.

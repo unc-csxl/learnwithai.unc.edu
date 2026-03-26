@@ -81,7 +81,7 @@ def test_list_requests_delegates_to_repo() -> None:
 
 def test_list_requests_with_jobs_delegates_to_repo() -> None:
     joke_repo = MagicMock()
-    expected = [(MagicMock(spec=Joke), MagicMock(spec=AsyncJob))]
+    expected = [MagicMock(spec=Joke)]
     joke_repo.list_by_course_with_jobs.return_value = expected
     svc = _make_service(joke_repo=joke_repo)
 

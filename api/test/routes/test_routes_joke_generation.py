@@ -13,7 +13,6 @@ from learnwithai.tables.async_job import AsyncJobStatus
 from learnwithai.tools.jokes.tables import Joke
 
 from api.di import (
-    async_job_repository_factory,
     course_service_factory,
     get_authenticated_user,
     get_course_by_path_id,
@@ -49,6 +48,8 @@ def _stub_joke(
     prompt: str = "Jokes about recursion",
     jokes: list[str] | None = None,
     async_job_id: int | None = 100,
+    async_job_status: AsyncJobStatus = AsyncJobStatus.PENDING,
+    async_job_completed_at: datetime | None = None,
 ) -> MagicMock:
     mock = MagicMock(spec=Joke)
     mock.id = joke_id
@@ -59,31 +60,15 @@ def _stub_joke(
     mock.created_by_pid = 123456789
     mock.created_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
     mock.updated_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    if async_job_id is not None:
+        job_mock = MagicMock()
+        job_mock.id = async_job_id
+        job_mock.status = async_job_status
+        job_mock.completed_at = async_job_completed_at
+        mock.async_job = job_mock
+    else:
+        mock.async_job = None
     return mock
-
-
-def _stub_async_job(
-    job_id: int = 100,
-    status: AsyncJobStatus = AsyncJobStatus.PENDING,
-    completed_at: datetime | None = None,
-) -> MagicMock:
-    """Returns a mock async job with the given fields."""
-    job_mock = MagicMock()
-    job_mock.id = job_id
-    job_mock.status = status
-    job_mock.completed_at = completed_at
-    return job_mock
-
-
-def _stub_async_job_repo(
-    status: AsyncJobStatus = AsyncJobStatus.PENDING,
-    completed_at: datetime | None = None,
-) -> MagicMock:
-    """Returns a mock async job repo whose get_by_id returns a job with the given status."""
-    repo = MagicMock()
-    job_mock = _stub_async_job(status=status, completed_at=completed_at)
-    repo.get_by_id.return_value = job_mock
-    return repo
 
 
 # ---- create_joke_request ----
@@ -96,11 +81,10 @@ def test_create_joke_request_returns_accepted_response() -> None:
     joke_svc = MagicMock()
     created = _stub_joke(joke_id=42)
     joke_svc.create_request.return_value = created
-    async_job_repo = _stub_async_job_repo()
     body = MagicMock()
     body.prompt = "Jokes about recursion"
 
-    result = create_joke_request(subject, course, body, course_svc, joke_svc, async_job_repo)
+    result = create_joke_request(subject, course, body, course_svc, joke_svc)
 
     assert isinstance(result, JokeResponse)
     assert result.id == 42
@@ -117,12 +101,11 @@ def test_create_joke_request_raises_403_for_non_instructor() -> None:
     course_svc = MagicMock()
     course_svc.authorize_instructor.side_effect = AuthorizationError("nope")
     joke_svc = MagicMock()
-    async_job_repo = MagicMock()
     body = MagicMock()
     body.prompt = "topic"
 
     with pytest.raises(AuthorizationError):
-        create_joke_request(subject, course, body, course_svc, joke_svc, async_job_repo)
+        create_joke_request(subject, course, body, course_svc, joke_svc)
 
 
 def test_get_joke_request_returns_none_job_when_no_async_job() -> None:
@@ -131,14 +114,11 @@ def test_get_joke_request_returns_none_job_when_no_async_job() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1, async_job_id=None)
-    jr.async_job_id = None
     joke_svc.get_request.return_value = jr
-    async_job_repo = MagicMock()
 
-    result = get_joke_request(subject, course, course_svc, joke_svc, async_job_repo, 42)
+    result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
     assert result.job is None
-    async_job_repo.get_by_id.assert_not_called()
 
 
 def test_get_joke_request_returns_none_job_when_async_job_missing() -> None:
@@ -146,12 +126,10 @@ def test_get_joke_request_returns_none_job_when_async_job_missing() -> None:
     course = _stub_course(course_id=1)
     course_svc = MagicMock()
     joke_svc = MagicMock()
-    jr = _stub_joke(joke_id=42, course_id=1, async_job_id=100)
+    jr = _stub_joke(joke_id=42, course_id=1, async_job_id=None)
     joke_svc.get_request.return_value = jr
-    async_job_repo = MagicMock()
-    async_job_repo.get_by_id.return_value = None
 
-    result = get_joke_request(subject, course, course_svc, joke_svc, async_job_repo, 42)
+    result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
     assert result.job is None
 
@@ -165,11 +143,8 @@ def test_list_joke_requests_returns_list() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.list_requests_with_jobs.return_value = [
-        (_stub_joke(joke_id=1), _stub_async_job(status=AsyncJobStatus.COMPLETED)),
-        (
-            _stub_joke(joke_id=2, jokes=["Ha!", "Ho!"]),
-            _stub_async_job(status=AsyncJobStatus.COMPLETED),
-        ),
+        _stub_joke(joke_id=1, async_job_status=AsyncJobStatus.COMPLETED),
+        _stub_joke(joke_id=2, jokes=["Ha!", "Ho!"], async_job_status=AsyncJobStatus.COMPLETED),
     ]
 
     result = list_joke_requests(subject, course, course_svc, joke_svc)
@@ -202,9 +177,8 @@ def test_get_joke_request_returns_job() -> None:
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1)
     joke_svc.get_request.return_value = jr
-    async_job_repo = _stub_async_job_repo()
 
-    result = get_joke_request(subject, course, course_svc, joke_svc, async_job_repo, 42)
+    result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
     assert isinstance(result, JokeResponse)
     assert result.id == 42
@@ -216,10 +190,9 @@ def test_get_joke_request_returns_404_when_not_found() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = None
-    async_job_repo = MagicMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        get_joke_request(subject, course, course_svc, joke_svc, async_job_repo, 999)
+        get_joke_request(subject, course, course_svc, joke_svc, 999)
     assert exc_info.value.status_code == 404
 
 
@@ -230,10 +203,9 @@ def test_get_joke_request_returns_404_for_wrong_course() -> None:
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=99)
     joke_svc.get_request.return_value = jr
-    async_job_repo = MagicMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        get_joke_request(subject, course, course_svc, joke_svc, async_job_repo, 42)
+        get_joke_request(subject, course, course_svc, joke_svc, 42)
     assert exc_info.value.status_code == 404
 
 
@@ -292,7 +264,6 @@ def client():
 
 def _override_common(
     joke_svc: MagicMock,
-    async_job_repo: MagicMock | None = None,
 ) -> None:
     """Applies common DI overrides shared by all integration tests."""
     user = _stub_user()
@@ -302,16 +273,13 @@ def _override_common(
     app.dependency_overrides[get_course_by_path_id] = lambda: course
     app.dependency_overrides[course_service_factory] = lambda: course_svc
     app.dependency_overrides[joke_generation_service_factory] = lambda: joke_svc
-    if async_job_repo is not None:
-        app.dependency_overrides[async_job_repository_factory] = lambda: async_job_repo
 
 
 @pytest.mark.integration
 def test_create_joke_request_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
     joke_svc.create_request.return_value = _stub_joke(joke_id=42)
-    async_job_repo = _stub_async_job_repo()
-    _override_common(joke_svc, async_job_repo)
+    _override_common(joke_svc)
 
     response = client.post(
         "/api/courses/1/joke-requests",
@@ -329,7 +297,7 @@ def test_create_joke_request_endpoint(client: TestClient) -> None:
 def test_list_joke_requests_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
     joke_svc.list_requests_with_jobs.return_value = [
-        (_stub_joke(joke_id=1), _stub_async_job(status=AsyncJobStatus.PENDING)),
+        _stub_joke(joke_id=1, async_job_status=AsyncJobStatus.PENDING),
     ]
     _override_common(joke_svc)
 
@@ -345,8 +313,7 @@ def test_list_joke_requests_endpoint(client: TestClient) -> None:
 def test_get_joke_request_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = _stub_joke(joke_id=42, course_id=1)
-    async_job_repo = _stub_async_job_repo()
-    _override_common(joke_svc, async_job_repo)
+    _override_common(joke_svc)
 
     response = client.get("/api/courses/1/joke-requests/42")
 

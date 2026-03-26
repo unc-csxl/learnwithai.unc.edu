@@ -74,18 +74,17 @@ class JokeGenerationService:
         """
         return self._joke_repo.list_by_course(course_id)
 
-    def list_requests_with_jobs(self, course_id: int) -> list[tuple[Joke, AsyncJob | None]]:
-        """Returns all jokes for a course with their linked async jobs.
+    def list_requests_with_jobs(self, course_id: int) -> list[Joke]:
+        """Returns all jokes for a course with their async jobs pre-loaded.
 
-        Pre-fetches associated async jobs in a single query to avoid
-        N+1 when the caller needs both joke data and job status.
+        The ``async_job`` relationship is eagerly loaded so callers can
+        access ``joke.async_job`` without additional queries.
 
         Args:
             course_id: The course to filter by.
 
         Returns:
-            A list of ``(joke, async_job)`` tuples ordered by creation
-            time descending.
+            A list of jokes ordered by creation time descending.
         """
         return self._joke_repo.list_by_course_with_jobs(course_id)
 
