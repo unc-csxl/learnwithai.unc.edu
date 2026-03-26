@@ -4,6 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="${1:-fix}"
+TEST_DB_URL="postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
 
 cd "$ROOT_DIR"
 
@@ -17,9 +18,14 @@ if [[ "$MODE" == "fix" ]]; then
   uv run ruff check --fix .
 fi
 
+export ENVIRONMENT="test"
+export TEST_DATABASE_URL="$TEST_DB_URL"
+export DATABASE_URL="$TEST_DB_URL"
+
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright .
+uv run python -c "from learnwithai.db import reset_db_and_tables; reset_db_and_tables()"
 uv run pytest api/test packages/learnwithai-core/test packages/learnwithai-jobqueue/test
 
 # ---- Frontend (TypeScript / Angular) ----

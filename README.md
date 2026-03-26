@@ -41,8 +41,10 @@ What it runs:
 
 - Ruff formatting and linting for Python
 - Pyright type checking
-- Pytest with coverage across the Python workspaces
+- Pytest with coverage across the Python workspaces, forced onto the dedicated PostgreSQL test database
 - Prettier, ESLint, and Angular tests in the frontend workspace
+
+Before `pytest`, the QA script resets the PostgreSQL test database so local runs start clean like GitHub Actions.
 
 If you are not sure whether your work is ready, run `./scripts/qa.sh --check`. That is the closest local match to the GitHub Actions workflow.
 
