@@ -20,9 +20,7 @@ class JokeGenerationService:
         self._async_job_repo = async_job_repo
         self._job_queue = job_queue
 
-    def create_request(
-        self, subject: User, course_id: int, prompt: str
-    ) -> AsyncJob:
+    def create_request(self, subject: User, course_id: int, prompt: str) -> AsyncJob:
         """Creates a joke generation job and enqueues it for processing.
 
         Args:

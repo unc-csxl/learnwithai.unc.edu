@@ -54,8 +54,20 @@ export const routes: Routes = [
           },
           {
             path: 'tools',
-            loadComponent: () =>
-              import('./courses/course-detail/tools/tools.component').then((m) => m.Tools),
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./courses/course-detail/tools/tools.component').then((m) => m.Tools),
+              },
+              {
+                path: 'joke-generator',
+                loadComponent: () =>
+                  import('./courses/course-detail/tools/joke-generator/joke-generator.component').then(
+                    (m) => m.JokeGenerator,
+                  ),
+              },
+            ],
           },
           {
             path: 'settings',

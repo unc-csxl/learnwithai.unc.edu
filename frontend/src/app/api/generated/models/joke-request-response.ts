@@ -4,9 +4,13 @@
 import { AsyncJobStatus } from '../models/async-job-status';
 
 /**
- * Response returned when a roster CSV upload is accepted.
+ * Response for a single joke generation job.
  */
-export interface RosterUploadResponse {
+export interface JokeRequestResponse {
+  completed_at: (string | null);
+  created_at: string;
   id: number;
+  jokes: Array<string>;
+  prompt: string;
   status: AsyncJobStatus;
 }

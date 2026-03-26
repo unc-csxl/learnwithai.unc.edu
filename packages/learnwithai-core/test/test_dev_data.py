@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from learnwithai.dev_data import seed
+from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import MembershipState, MembershipType
 
@@ -31,10 +32,11 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     # add_all called twice: once for users, once for memberships
     assert session.add_all.call_count == 2
-    # add called once: for the course
-    assert session.add.call_count == 1
-    # flush called three times: after users, after course, after memberships
-    assert session.flush.call_count == 3
+    # add called twice: for the course and the joke job
+    assert session.add.call_count == 2
+    # flush called four times:
+    # after users, after course, after memberships, after joke job
+    assert session.flush.call_count == 4
 
     # Verify users
     users = added[0]
@@ -58,3 +60,12 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
     }
     for m in memberships:
         assert m.state == MembershipState.ENROLLED
+
+    # Verify joke job
+    joke_job = added_single[1]
+    assert isinstance(joke_job, AsyncJob)
+    assert joke_job.kind == "joke_generation"
+    assert joke_job.status == AsyncJobStatus.COMPLETED
+    assert joke_job.input_data["prompt"] == "Tell me 3 jokes about software engineering"
+    assert joke_job.output_data is not None
+    assert len(joke_job.output_data["jokes"]) == 3

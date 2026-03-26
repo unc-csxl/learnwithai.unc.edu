@@ -1,0 +1,82 @@
+@if (errorMessage()) {
+  <p role="alert" class="error-message">{{ errorMessage() }}</p>
+}
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="prompt-form">
+  <mat-form-field appearance="outline" class="prompt-field">
+    <mat-label>Joke prompt</mat-label>
+    <input matInput formControlName="prompt" placeholder="e.g. Tell me 5 jokes about recursion" />
+    <mat-hint>Describe what kind of jokes you'd like generated</mat-hint>
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
+    @if (submitting()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      Generate
+    }
+  </button>
+</form>
+
+@if (loaded()) {
+  @if (hasRequests()) {
+    <section class="request-list" aria-label="Joke generation requests">
+      @for (request of requests(); track request.id) {
+        <mat-card class="request-card" appearance="outlined">
+          <mat-card-header>
+            <mat-icon
+              mat-card-avatar
+              class="status-icon"
+              [class.status-completed]="request.status === 'completed'"
+              [class.status-failed]="request.status === 'failed'"
+              [class.status-pending]="
+                request.status === 'pending' || request.status === 'processing'
+              "
+            >
+              {{ statusIcon(request.status) }}
+            </mat-icon>
+            <mat-card-title>{{ request.prompt }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ statusLabel(request.status) }}
+              @if (request.completed_at) {
+                &middot; Completed {{ request.completed_at }}
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          @if (request.jokes && request.jokes.length > 0) {
+            <mat-card-content>
+              <ul class="joke-list" aria-label="Generated jokes">
+                @for (joke of request.jokes; track $index) {
+                  <li class="joke-item">{{ joke }}</li>
+                }
+              </ul>
+            </mat-card-content>
+          }
+
+          @if (request.status === 'pending' || request.status === 'processing') {
+            <mat-card-content>
+              <div class="pending-indicator">
+                <mat-spinner diameter="24" />
+                <span>Generating jokes&hellip;</span>
+              </div>
+            </mat-card-content>
+          }
+
+          <mat-card-actions align="end">
+            <button
+              mat-button
+              color="warn"
+              (click)="onDelete(request.id)"
+              aria-label="Delete joke request"
+            >
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </section>
+  } @else {
+    <p class="empty-state">No joke requests yet. Enter a prompt above to get started.</p>
+  }
+}

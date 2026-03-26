@@ -110,7 +110,7 @@ class TestSubscribeUnsubscribe:
         assert (100, 10) not in manager._user_subscriptions
 
     def test_unregister_connection_is_safe_for_unknown_socket(self) -> None:
-        """unregister_connection does not raise for a socket that was never registered."""
+        """unregister_connection does not raise for an unknown socket."""
         manager = JobUpdateManager()
         ws = _make_ws()
         manager.unregister_connection(ws)  # should not raise

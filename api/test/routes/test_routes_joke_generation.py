@@ -233,7 +233,6 @@ def client():
 @pytest.mark.integration
 def test_create_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
-    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.create_request.return_value = _stub_job(job_id=42)
@@ -257,7 +256,6 @@ def test_create_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_list_joke_requests_endpoint(client: TestClient) -> None:
     user = _stub_user()
-    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.list_requests.return_value = [_stub_job(job_id=1)]
@@ -277,7 +275,6 @@ def test_list_joke_requests_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_get_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
-    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = _stub_job(job_id=42, course_id=1)
@@ -295,7 +292,6 @@ def test_get_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_delete_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
-    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = _stub_job(job_id=42, course_id=1)
