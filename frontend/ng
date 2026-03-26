@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Wrapper to run the Angular CLI inside the frontend package context.
+# Usage: ./frontend/ng <args...>
+
+pnpm --filter frontend exec -- ng "$@"
