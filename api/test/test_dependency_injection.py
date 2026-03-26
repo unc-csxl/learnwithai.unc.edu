@@ -10,6 +10,7 @@ from api.di import (
     course_repository_factory,
     get_course_by_path_id,
     get_user_by_pid,
+    joke_generation_service_factory,
     roster_upload_service_factory,
 )
 
@@ -96,8 +97,17 @@ def test_roster_upload_service_factory_returns_service() -> None:
     membership_repo = MagicMock()
     job_queue = MagicMock()
 
-    result = roster_upload_service_factory(
-        async_job_repo, user_repo, membership_repo, job_queue
-    )
+    result = roster_upload_service_factory(async_job_repo, user_repo, membership_repo, job_queue)
 
     assert isinstance(result, RosterUploadService)
+
+
+def test_joke_generation_service_factory_returns_service() -> None:
+    from learnwithai.tools.jokes.service import JokeGenerationService
+
+    async_job_repo = MagicMock()
+    job_queue = MagicMock()
+
+    result = joke_generation_service_factory(async_job_repo, job_queue)
+
+    assert isinstance(result, JokeGenerationService)

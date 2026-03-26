@@ -8,6 +8,7 @@ from .course import (
     RosterMemberResponse,
     UpdateCourseRequest,
 )
+from .joke_generation import CreateJokeRequest, JokeRequestResponse
 from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
 from .user_profile import UpdateProfileRequest, UserProfile
 
@@ -16,6 +17,8 @@ __all__ = [
     "CourseMembership",
     "CourseResponse",
     "CreateCourseRequest",
+    "CreateJokeRequest",
+    "JokeRequestResponse",
     "MembershipResponse",
     "PaginatedRosterResponse",
     "RosterMemberResponse",

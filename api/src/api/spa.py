@@ -38,16 +38,12 @@ def mount_spa(application: FastAPI, static_dir: Path) -> None:
     """Mounts static file serving and an SPA catch-all on the application."""
     static_root = static_dir.resolve()
 
-    @application.get(
-        "/api/{rest_of_path:path}", status_code=404, include_in_schema=False
-    )
+    @application.get("/api/{rest_of_path:path}", status_code=404, include_in_schema=False)
     def api_fallback() -> dict[str, str]:
         """Returns 404 for unmatched API paths while SPA routing is enabled."""
         return {"detail": "Not Found"}
 
-    application.mount(
-        "/assets", StaticFiles(directory=static_dir), name="static-assets"
-    )
+    application.mount("/assets", StaticFiles(directory=static_dir), name="static-assets")
 
     @application.get("/{full_path:path}", include_in_schema=False)
     def serve_spa_route(request: Request) -> Response:

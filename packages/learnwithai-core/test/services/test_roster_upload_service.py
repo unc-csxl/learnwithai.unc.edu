@@ -226,9 +226,7 @@ def test_import_students_creates_new_user_and_membership() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course_ids.return_value = None
     svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
+    student = ParsedStudent(family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe")
 
     # Act
     result = svc._import_students(1, [student])
@@ -250,9 +248,7 @@ def test_import_students_re_enrolls_dropped_membership() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course_ids.return_value = existing
     svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
+    student = ParsedStudent(family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe")
 
     # Act
     result = svc._import_students(1, [student])
@@ -273,9 +269,7 @@ def test_import_students_skips_already_enrolled() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course_ids.return_value = existing
     svc = _make_service(user_repo=user_repo, membership_repo=membership_repo)
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
+    student = ParsedStudent(family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe")
 
     # Act
     result = svc._import_students(1, [student])
@@ -291,9 +285,7 @@ def test_import_students_records_error_on_exception() -> None:
     user_repo = MagicMock()
     user_repo.get_by_pid.side_effect = RuntimeError("db error")
     svc = _make_service(user_repo=user_repo)
-    student = ParsedStudent(
-        family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe"
-    )
+    student = ParsedStudent(family_name="Doe", given_name="Jane", pid=999999999, onyen="jdoe")
 
     # Act
     result = svc._import_students(1, [student])

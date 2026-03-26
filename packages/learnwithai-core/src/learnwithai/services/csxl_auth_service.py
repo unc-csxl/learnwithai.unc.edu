@@ -42,9 +42,7 @@ class CSXLAuthService:
         params = {"token": token}
 
         with httpx.Client() as client:
-            response = client.get(
-                f"https://{self._settings.unc_auth_server_host}/verify", params=params
-            )
+            response = client.get(f"https://{self._settings.unc_auth_server_host}/verify", params=params)
             if response.status_code == httpx.codes.OK:
                 body = response.json()
                 onyen = body["uid"]
@@ -118,9 +116,7 @@ class CSXLAuthService:
         """
         expire_at = datetime.now(timezone.utc) + timedelta(days=1)
         payload = {"sub": str(user.pid), "exp": expire_at}
-        token = jwt.encode(
-            payload, self._settings.jwt_secret, algorithm=self._settings.jwt_algorithm
-        )
+        token = jwt.encode(payload, self._settings.jwt_secret, algorithm=self._settings.jwt_algorithm)
         return token
 
     def verify_jwt(self, token: str) -> int:

@@ -10,9 +10,7 @@ from sqlmodel import Session
 
 
 def _seed_course(session: Session) -> Course:
-    course = Course(
-        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
-    )
+    course = Course(course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026)
     session.add(course)
     session.flush()
     return course

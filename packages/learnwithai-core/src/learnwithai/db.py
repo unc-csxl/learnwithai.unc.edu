@@ -50,9 +50,7 @@ def reset_db_and_tables() -> None:
         engine.dispose()
         _reset_postgresql_database(database_url)
     else:
-        raise ValueError(
-            f"Unsupported database driver for reset: {database_url.drivername}"
-        )
+        raise ValueError(f"Unsupported database driver for reset: {database_url.drivername}")
 
     get_engine.cache_clear()
     create_db_and_tables()
@@ -105,7 +103,7 @@ def _quote_identifier(identifier: str) -> str:
 
 
 def get_session() -> Generator[Session, None, None]:
-    """Yields a transactional session that commits on success and rolls back on exception.
+    """Yield a transactional session; commits on success, rolls back on error.
 
     The session commits when the route handler returns normally.
     Any unhandled exception triggers a rollback before propagating.

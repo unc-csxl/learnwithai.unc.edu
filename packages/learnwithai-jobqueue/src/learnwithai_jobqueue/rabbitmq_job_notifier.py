@@ -63,9 +63,7 @@ class RabbitMQJobNotifier(JobNotifier):
             An open pika channel with the fanout exchange declared.
         """
         if self._connection is None or self._connection.is_closed:
-            self._connection = pika.BlockingConnection(
-                pika.URLParameters(self._rabbitmq_url)
-            )
+            self._connection = pika.BlockingConnection(pika.URLParameters(self._rabbitmq_url))
             self._channel = None
 
         if self._channel is None or self._channel.is_closed:

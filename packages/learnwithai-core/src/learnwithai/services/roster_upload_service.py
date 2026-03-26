@@ -145,9 +145,7 @@ class RosterUploadService:
         required = {"Student", "SIS User ID", "SIS Login ID"}
         if reader.fieldnames is None or not required.issubset(set(reader.fieldnames)):
             missing = required - set(reader.fieldnames or [])
-            raise ValueError(
-                f"CSV missing required columns: {', '.join(sorted(missing))}"
-            )
+            raise ValueError(f"CSV missing required columns: {', '.join(sorted(missing))}")
 
         students: list[ParsedStudent] = []
         for row in reader:
@@ -180,9 +178,7 @@ class RosterUploadService:
 
         return students
 
-    def _import_students(
-        self, course_id: int, students: list[ParsedStudent]
-    ) -> ImportResult:
+    def _import_students(self, course_id: int, students: list[ParsedStudent]) -> ImportResult:
         """Creates or updates users and memberships for parsed students.
 
         Args:
@@ -209,9 +205,7 @@ class RosterUploadService:
                         )
                     )
 
-                existing_membership = self._membership_repo.get_by_user_and_course_ids(
-                    student.pid, course_id
-                )
+                existing_membership = self._membership_repo.get_by_user_and_course_ids(student.pid, course_id)
                 if existing_membership is None:
                     self._membership_repo.create(
                         Membership(

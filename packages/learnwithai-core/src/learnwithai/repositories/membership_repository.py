@@ -51,9 +51,7 @@ class MembershipRepository:
 
         return self._session.get(Membership, (user.pid, course.id))
 
-    def get_by_user_and_course_ids(
-        self, user_pid: int, course_id: int
-    ) -> Membership | None:
+    def get_by_user_and_course_ids(self, user_pid: int, course_id: int) -> Membership | None:
         """Looks up a membership by user PID and course ID.
 
         Args:

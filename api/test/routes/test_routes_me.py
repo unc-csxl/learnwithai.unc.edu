@@ -53,9 +53,7 @@ def test_get_current_subject_profile_returns_user_profile() -> None:
     )
 
 
-def test_get_current_subject_profile_raises_validation_error_when_email_is_missing() -> (
-    None
-):
+def test_get_current_subject_profile_raises_when_email_missing() -> None:
     # Arrange
     user = _stub_user(email=None)
 

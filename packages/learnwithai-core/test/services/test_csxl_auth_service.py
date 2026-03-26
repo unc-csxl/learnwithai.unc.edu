@@ -53,9 +53,7 @@ def test_verify_auth_token_returns_onyen_and_pid_on_success() -> None:
     )
 
     # Act
-    with patch(
-        "learnwithai.services.csxl_auth_service.httpx.Client"
-    ) as mock_client_cls:
+    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -69,14 +67,10 @@ def test_verify_auth_token_returns_onyen_and_pid_on_success() -> None:
 def test_verify_auth_token_raises_on_non_200() -> None:
     # Arrange
     svc = _build_service()
-    mock_response = httpx.Response(
-        401, request=httpx.Request("GET", "https://example.com")
-    )
+    mock_response = httpx.Response(401, request=httpx.Request("GET", "https://example.com"))
 
     # Act / Assert
-    with patch(
-        "learnwithai.services.csxl_auth_service.httpx.Client"
-    ) as mock_client_cls:
+    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -148,14 +142,10 @@ def test_unc_directory_lookup_returns_parsed_result_on_success() -> None:
             "mailIterator": ["test@example.com"],
         }
     ]
-    mock_response = httpx.Response(
-        200, json=api_response, request=httpx.Request("GET", "https://example.com")
-    )
+    mock_response = httpx.Response(200, json=api_response, request=httpx.Request("GET", "https://example.com"))
 
     # Act
-    with patch(
-        "learnwithai.services.csxl_auth_service.httpx.Client"
-    ) as mock_client_cls:
+    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -170,14 +160,10 @@ def test_unc_directory_lookup_returns_parsed_result_on_success() -> None:
 def test_unc_directory_lookup_returns_default_on_empty_results() -> None:
     # Arrange
     svc = _build_service()
-    mock_response = httpx.Response(
-        200, json=[], request=httpx.Request("GET", "https://example.com")
-    )
+    mock_response = httpx.Response(200, json=[], request=httpx.Request("GET", "https://example.com"))
 
     # Act
-    with patch(
-        "learnwithai.services.csxl_auth_service.httpx.Client"
-    ) as mock_client_cls:
+    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -191,14 +177,10 @@ def test_unc_directory_lookup_returns_default_on_empty_results() -> None:
 def test_unc_directory_lookup_returns_default_on_non_200() -> None:
     # Arrange
     svc = _build_service()
-    mock_response = httpx.Response(
-        500, request=httpx.Request("GET", "https://example.com")
-    )
+    mock_response = httpx.Response(500, request=httpx.Request("GET", "https://example.com"))
 
     # Act
-    with patch(
-        "learnwithai.services.csxl_auth_service.httpx.Client"
-    ) as mock_client_cls:
+    with patch("learnwithai.services.csxl_auth_service.httpx.Client") as mock_client_cls:
         mock_client_cls.return_value.__enter__ = lambda s: s
         mock_client_cls.return_value.__exit__ = lambda s, *a: None
         mock_client_cls.return_value.get.return_value = mock_response
@@ -221,9 +203,7 @@ def test_issue_jwt_token_returns_decodable_jwt() -> None:
     token = svc.issue_jwt_token(user)
 
     # Assert
-    decoded = jwt.decode(
-        token, "really-secure-secret-is-really-secure", algorithms=["HS256"]
-    )
+    decoded = jwt.decode(token, "really-secure-secret-is-really-secure", algorithms=["HS256"])
     assert decoded["sub"] == str(user.pid)
     assert "exp" in decoded
 

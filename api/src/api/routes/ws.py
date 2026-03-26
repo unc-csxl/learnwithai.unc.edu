@@ -85,21 +85,15 @@ async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
                 continue
 
             if not isinstance(course_id, int):
-                await websocket.send_text(
-                    json.dumps({"error": "course_id must be an integer."})
-                )
+                await websocket.send_text(json.dumps({"error": "course_id must be an integer."}))
                 continue
 
             if action == "subscribe":
                 manager.subscribe(course_id, websocket)
-                await websocket.send_text(
-                    json.dumps({"status": "subscribed", "course_id": course_id})
-                )
+                await websocket.send_text(json.dumps({"status": "subscribed", "course_id": course_id}))
             else:
                 manager.unsubscribe(course_id, websocket)
-                await websocket.send_text(
-                    json.dumps({"status": "unsubscribed", "course_id": course_id})
-                )
+                await websocket.send_text(json.dumps({"status": "unsubscribed", "course_id": course_id}))
     except WebSocketDisconnect:
         pass
     finally:
@@ -109,9 +103,7 @@ async def job_updates_ws(websocket: WebSocket, token: str = "") -> None:
 def _get_manager() -> JobUpdateManager:
     """Returns the configured manager, raising if not yet set."""
     if _manager is None:
-        raise RuntimeError(
-            "JobUpdateManager not configured. Call configure() at startup."
-        )
+        raise RuntimeError("JobUpdateManager not configured. Call configure() at startup.")
     return _manager
 
 

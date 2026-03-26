@@ -51,9 +51,7 @@ def create_course(
     Returns:
         The newly created course.
     """
-    course = course_svc.create_course(
-        subject, body.course_number, body.name, body.term, body.year, body.description
-    )
+    course = course_svc.create_course(subject, body.course_number, body.name, body.term, body.year, body.description)
     return _build_course_response(
         course,
         CourseMembership(
@@ -84,10 +82,7 @@ def list_my_courses(
         List of courses with active membership.
     """
     memberships = course_svc.get_my_courses(subject)
-    return [
-        _build_course_response(membership.course, membership)
-        for membership in memberships
-    ]
+    return [_build_course_response(membership.course, membership) for membership in memberships]
 
 
 @router.put(

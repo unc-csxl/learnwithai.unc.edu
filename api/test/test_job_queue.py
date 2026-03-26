@@ -26,9 +26,7 @@ def test_job_queue_factory_builds_dramatiq_job_queue() -> None:
     expected_queue = object()
 
     # Act
-    with patch(
-        "api.di.DramatiqJobQueue", return_value=expected_queue
-    ) as queue_class_mock:
+    with patch("api.di.DramatiqJobQueue", return_value=expected_queue) as queue_class_mock:
         job_queue = job_queue_factory()
 
     # Assert

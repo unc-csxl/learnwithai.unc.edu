@@ -11,6 +11,8 @@ def test_api_models_exports_expected_symbols() -> None:
         "CourseMembership",
         "CourseResponse",
         "CreateCourseRequest",
+        "CreateJokeRequest",
+        "JokeRequestResponse",
         "MembershipResponse",
         "PaginatedRosterResponse",
         "RosterMemberResponse",

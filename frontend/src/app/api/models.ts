@@ -23,3 +23,6 @@ export type { RosterUploadStatusResponse as RosterUploadStatus } from './generat
 export type { BodyUploadRosterCsv as UploadRosterCsvBody } from './generated/models/body-upload-roster-csv';
 export type { UpdateProfileRequest as UpdateProfile } from './generated/models/update-profile-request';
 export type { UpdateCourseRequest as UpdateCourse } from './generated/models/update-course-request';
+export type { CreateJokeRequest as CreateJoke } from './generated/models/create-joke-request';
+export type { JokeRequestResponse as JokeRequest } from './generated/models/joke-request-response';
+export type { AsyncJobStatus } from './generated/models/async-job-status';

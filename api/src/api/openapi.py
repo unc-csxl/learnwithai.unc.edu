@@ -25,10 +25,7 @@ OPENAPI_TAGS: list[dict[str, str]] = [
     },
     {
         "name": "Authentication",
-        "description": (
-            "Authentication redirects, callback handling, and authenticated "
-            "identity endpoints."
-        ),
+        "description": ("Authentication redirects, callback handling, and authenticated identity endpoints."),
     },
     {
         "name": "Courses",
@@ -37,8 +34,11 @@ OPENAPI_TAGS: list[dict[str, str]] = [
     {
         "name": "Development",
         "description": (
-            "Routes available only in the development environment for local "
-            "testing and database management."
+            "Routes available only in the development environment for local testing and database management."
         ),
+    },
+    {
+        "name": "Instructor Tools",
+        "description": "AI-powered instructor tools including joke generation.",
     },
 ]

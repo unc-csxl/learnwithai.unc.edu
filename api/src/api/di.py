@@ -22,6 +22,7 @@ from learnwithai.services.csxl_auth_service import (
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.course import Course
 from learnwithai.tables.user import User
+from learnwithai.tools.jokes import JokeGenerationService
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 from sqlmodel import Session
 
@@ -32,6 +33,7 @@ __all__ = [
     "CourseByCourseIDPathDI",
     "CourseRepositoryDI",
     "CourseServiceDI",
+    "JokeGenerationServiceDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
     "PaginationParamsDI",
@@ -48,6 +50,7 @@ __all__ = [
     "get_pagination_params",
     "get_user_by_path_pid",
     "get_user_by_pid",
+    "joke_generation_service_factory",
     "job_queue_factory",
     "membership_repository_factory",
     "roster_upload_service_factory",
@@ -56,9 +59,7 @@ __all__ = [
 ]
 
 
-def csxl_auth_service_factory(
-    settings: SettingsDI, user_repository: UserRepositoryDI
-) -> CSXLAuthService:
+def csxl_auth_service_factory(settings: SettingsDI, user_repository: UserRepositoryDI) -> CSXLAuthService:
     """Creates the CSXL authentication service for the current request.
 
     Args:
@@ -71,9 +72,7 @@ def csxl_auth_service_factory(
     return CSXLAuthService(settings, user_repository)
 
 
-CSXLAuthServiceDI: TypeAlias = Annotated[
-    CSXLAuthService, Depends(csxl_auth_service_factory)
-]
+CSXLAuthServiceDI: TypeAlias = Annotated[CSXLAuthService, Depends(csxl_auth_service_factory)]
 
 
 SessionDI: TypeAlias = Annotated[Session, Depends(get_session)]
@@ -92,9 +91,7 @@ def user_repository_factory(session: SessionDI) -> UserRepository:
     return UserRepository(session)
 
 
-UserRepositoryDI: TypeAlias = Annotated[
-    UserRepository, Depends(user_repository_factory)
-]
+UserRepositoryDI: TypeAlias = Annotated[UserRepository, Depends(user_repository_factory)]
 
 
 def course_repository_factory(session: SessionDI) -> CourseRepository:
@@ -102,9 +99,7 @@ def course_repository_factory(session: SessionDI) -> CourseRepository:
     return CourseRepository(session)
 
 
-CourseRepositoryDI: TypeAlias = Annotated[
-    CourseRepository, Depends(course_repository_factory)
-]
+CourseRepositoryDI: TypeAlias = Annotated[CourseRepository, Depends(course_repository_factory)]
 
 
 def membership_repository_factory(session: SessionDI) -> MembershipRepository:
@@ -112,9 +107,7 @@ def membership_repository_factory(session: SessionDI) -> MembershipRepository:
     return MembershipRepository(session)
 
 
-MembershipRepositoryDI: TypeAlias = Annotated[
-    MembershipRepository, Depends(membership_repository_factory)
-]
+MembershipRepositoryDI: TypeAlias = Annotated[MembershipRepository, Depends(membership_repository_factory)]
 
 
 def async_job_repository_factory(session: SessionDI) -> AsyncJobRepository:
@@ -122,9 +115,7 @@ def async_job_repository_factory(session: SessionDI) -> AsyncJobRepository:
     return AsyncJobRepository(session)
 
 
-AsyncJobRepositoryDI: TypeAlias = Annotated[
-    AsyncJobRepository, Depends(async_job_repository_factory)
-]
+AsyncJobRepositoryDI: TypeAlias = Annotated[AsyncJobRepository, Depends(async_job_repository_factory)]
 
 
 def course_service_factory(
@@ -180,9 +171,7 @@ def job_queue_factory() -> JobQueue:
 JobQueueDI: TypeAlias = Annotated[JobQueue, Depends(job_queue_factory)]
 
 
-def get_course_by_path_id(
-    course_id: Annotated[int, Path()], course_repo: CourseRepositoryDI
-) -> Course:
+def get_course_by_path_id(course_id: Annotated[int, Path()], course_repo: CourseRepositoryDI) -> Course:
     """Loads a course from the course_id path parameter.
 
     Args:
@@ -223,9 +212,7 @@ def get_user_by_pid(pid: int, user_repo: UserRepositoryDI) -> User:
     return user
 
 
-def get_user_by_path_pid(
-    pid: Annotated[int, Path()], user_repo: UserRepositoryDI
-) -> User:
+def get_user_by_path_pid(pid: Annotated[int, Path()], user_repo: UserRepositoryDI) -> User:
     """Loads a user from the pid path parameter.
 
     Args:
@@ -257,9 +244,7 @@ def get_pagination_params(
     return PaginationParams(page=page, page_size=page_size)
 
 
-PaginationParamsDI: TypeAlias = Annotated[
-    PaginationParams, Depends(get_pagination_params)
-]
+PaginationParamsDI: TypeAlias = Annotated[PaginationParams, Depends(get_pagination_params)]
 
 
 def roster_upload_service_factory(
@@ -272,6 +257,15 @@ def roster_upload_service_factory(
     return RosterUploadService(async_job_repo, user_repo, membership_repo, job_queue)
 
 
-RosterUploadServiceDI: TypeAlias = Annotated[
-    RosterUploadService, Depends(roster_upload_service_factory)
-]
+RosterUploadServiceDI: TypeAlias = Annotated[RosterUploadService, Depends(roster_upload_service_factory)]
+
+
+def joke_generation_service_factory(
+    async_job_repo: AsyncJobRepositoryDI,
+    job_queue: JobQueueDI,
+) -> JokeGenerationService:
+    """Creates the joke generation service for the current request."""
+    return JokeGenerationService(async_job_repo, job_queue)
+
+
+JokeGenerationServiceDI: TypeAlias = Annotated[JokeGenerationService, Depends(joke_generation_service_factory)]

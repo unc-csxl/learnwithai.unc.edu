@@ -660,7 +660,7 @@
           "Roster Uploads"
         ],
         "summary": "Get roster upload status",
-        "description": "Returns the current status and results of a roster upload job.\n\nOnly instructors may check upload status.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    upload_repo: Repository for loading the upload job.\n    job_id: Primary key of the upload job.\n\nReturns:\n    The upload job status and result counts.",
+        "description": "Returns the current status and results of a roster upload job.\n\nOnly instructors may check upload status.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    async_job_repo: Repository for loading the async job.\n    job_id: Primary key of the upload job.\n\nReturns:\n    The upload job status and result counts.",
         "operationId": "get_roster_upload_status",
         "security": [
           {
@@ -697,6 +697,255 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course or job not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/joke-requests": {
+      "post": {
+        "tags": [
+          "Instructor Tools"
+        ],
+        "summary": "Submit a joke generation request",
+        "description": "Submits a joke generation request for a course.\n\nOnly instructors may submit joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    body: Request containing the prompt.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to create the job.\n\nReturns:\n    The accepted joke generation job.",
+        "operationId": "create_joke_request",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The accepted joke generation job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JokeRequestResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Instructor Tools"
+        ],
+        "summary": "List joke generation requests",
+        "description": "Returns all joke generation jobs for a course.\n\nOnly instructors may list joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to query jobs.\n\nReturns:\n    List of joke generation jobs.",
+        "operationId": "list_joke_requests",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All joke generation jobs for the course.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JokeRequestResponse"
+                  },
+                  "title": "Response List Joke Requests"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/joke-requests/{job_id}": {
+      "get": {
+        "tags": [
+          "Instructor Tools"
+        ],
+        "summary": "Get a joke generation request",
+        "description": "Returns a single joke generation job.\n\nOnly instructors may view joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to load the job.\n    job_id: Primary key of the joke generation job.\n\nReturns:\n    The matching joke generation job.",
+        "operationId": "get_joke_request",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of a single joke generation job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JokeRequestResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Course or job not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Instructor Tools"
+        ],
+        "summary": "Delete a joke generation request",
+        "description": "Deletes a joke generation job.\n\nOnly instructors may delete joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to delete the job.\n    job_id: Primary key of the joke generation job.",
+        "operationId": "delete_joke_request",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "401": {
             "description": "Not authenticated."
@@ -840,6 +1089,17 @@
         "title": "AddMemberRequest",
         "description": "Payload for adding a member to a course."
       },
+      "AsyncJobStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "processing",
+          "completed",
+          "failed"
+        ],
+        "title": "AsyncJobStatus",
+        "description": "Lifecycle state of an asynchronous job."
+      },
       "Body_upload_roster_csv": {
         "properties": {
           "file": {
@@ -946,6 +1206,20 @@
         "title": "CreateCourseRequest",
         "description": "Payload for creating a new course."
       },
+      "CreateJokeRequest": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt"
+        ],
+        "title": "CreateJokeRequest",
+        "description": "Request body for submitting a joke generation request."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -958,6 +1232,56 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "JokeRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AsyncJobStatus"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "jokes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Jokes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "prompt",
+          "jokes",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "JokeRequestResponse",
+        "description": "Response for a single joke generation job."
       },
       "MembershipResponse": {
         "properties": {
@@ -1087,7 +1411,7 @@
             "title": "Id"
           },
           "status": {
-            "$ref": "#/components/schemas/RosterUploadStatus"
+            "$ref": "#/components/schemas/AsyncJobStatus"
           }
         },
         "type": "object",
@@ -1098,17 +1422,6 @@
         "title": "RosterUploadResponse",
         "description": "Response returned when a roster CSV upload is accepted."
       },
-      "RosterUploadStatus": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "processing",
-          "completed",
-          "failed"
-        ],
-        "title": "RosterUploadStatus",
-        "description": "Lifecycle state of a roster CSV upload job."
-      },
       "RosterUploadStatusResponse": {
         "properties": {
           "id": {
@@ -1116,7 +1429,7 @@
             "title": "Id"
           },
           "status": {
-            "$ref": "#/components/schemas/RosterUploadStatus"
+            "$ref": "#/components/schemas/AsyncJobStatus"
           },
           "created_count": {
             "type": "integer",
@@ -1339,6 +1652,10 @@
     {
       "name": "Development",
       "description": "Routes available only in the development environment for local testing and database management."
+    },
+    {
+      "name": "Instructor Tools",
+      "description": "AI-powered instructor tools including joke generation."
     }
   ]
 }

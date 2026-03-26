@@ -44,9 +44,7 @@ class Membership(SQLModel, table=True):
         sa_column=Column(Integer, primary_key=True, nullable=False),
     )
     course_id: int = Field(
-        sa_column=Column(
-            Integer, ForeignKey("course.id"), primary_key=True, nullable=False
-        ),
+        sa_column=Column(Integer, ForeignKey("course.id"), primary_key=True, nullable=False),
     )
     type: MembershipType = Field(
         sa_column=Column(

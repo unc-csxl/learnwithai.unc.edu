@@ -11,9 +11,7 @@ from sqlmodel import Session
 
 
 def _seed_course(session: Session) -> Course:
-    course = Course(
-        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
-    )
+    course = Course(course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026)
     session.add(course)
     session.flush()
     return course
@@ -105,9 +103,7 @@ def test_get_by_user_and_course_returns_none_when_not_found(
 def test_get_by_user_and_course_raises_for_unpersisted_course(session: Session) -> None:
     # Arrange
     repo = MembershipRepository(session)
-    missing_id_course = Course(
-        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
-    )
+    missing_id_course = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
 
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):
@@ -345,9 +341,7 @@ def test_get_all_by_course_returns_all_memberships(session: Session) -> None:
 def test_get_all_by_course_raises_for_unpersisted_course(session: Session) -> None:
     # Arrange
     repo = MembershipRepository(session)
-    missing_id_course = Course(
-        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
-    )
+    missing_id_course = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
 
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):

@@ -29,6 +29,14 @@ export type { UploadRosterCsv$Params as UploadRosterCsv$Params } from './fn/rost
 export { uploadRosterCsv as uploadRosterCsv } from './fn/roster-uploads/upload-roster-csv';
 export type { GetRosterUploadStatus$Params as GetRosterUploadStatus$Params } from './fn/roster-uploads/get-roster-upload-status';
 export { getRosterUploadStatus as getRosterUploadStatus } from './fn/roster-uploads/get-roster-upload-status';
+export type { ListJokeRequests$Params as ListJokeRequests$Params } from './fn/instructor-tools/list-joke-requests';
+export { listJokeRequests as listJokeRequests } from './fn/instructor-tools/list-joke-requests';
+export type { CreateJokeRequest$Params as CreateJokeRequest$Params } from './fn/instructor-tools/create-joke-request';
+export { createJokeRequest as createJokeRequest } from './fn/instructor-tools/create-joke-request';
+export type { GetJokeRequest$Params as GetJokeRequest$Params } from './fn/instructor-tools/get-joke-request';
+export { getJokeRequest as getJokeRequest } from './fn/instructor-tools/get-joke-request';
+export type { DeleteJokeRequest$Params as DeleteJokeRequest$Params } from './fn/instructor-tools/delete-joke-request';
+export { deleteJokeRequest as deleteJokeRequest } from './fn/instructor-tools/delete-joke-request';
 export type { DevListUsers$Params as DevListUsers$Params } from './fn/development/dev-list-users';
 export { devListUsers as devListUsers } from './fn/development/dev-list-users';
 export type { DevLoginAs$Params as DevLoginAs$Params } from './fn/development/dev-login-as';

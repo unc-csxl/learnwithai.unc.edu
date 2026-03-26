@@ -40,9 +40,7 @@ async def _lifespan_context(application: FastAPI) -> AsyncIterator[None]:
     consumer_task: asyncio.Task[None] | None = None
 
     if not current_settings.is_test:
-        consumer_task = asyncio.create_task(
-            consume_job_updates(manager, current_settings)
-        )
+        consumer_task = asyncio.create_task(consume_job_updates(manager, current_settings))
 
     yield
 

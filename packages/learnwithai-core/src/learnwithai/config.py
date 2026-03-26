@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     # Static files
     static_dir: str = ""
 
+    # OpenAI
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o-mini"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -53,9 +57,7 @@ class Settings(BaseSettings):
             return self.database_url
 
         if self.environment == "test":
-            return (
-                "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-            )
+            return "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
 
         return "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai"
 

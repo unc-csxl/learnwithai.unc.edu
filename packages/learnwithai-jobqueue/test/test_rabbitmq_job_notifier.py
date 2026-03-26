@@ -12,9 +12,7 @@ from learnwithai_jobqueue.rabbitmq_job_notifier import (
 
 
 def _make_update() -> JobUpdate:
-    return JobUpdate(
-        job_id=42, course_id=7, user_id=999, kind="roster_upload", status="completed"
-    )
+    return JobUpdate(job_id=42, course_id=7, user_id=999, kind="roster_upload", status="completed")
 
 
 def test_rabbitmq_job_notifier_satisfies_protocol() -> None:
