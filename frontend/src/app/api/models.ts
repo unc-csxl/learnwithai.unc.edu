@@ -24,5 +24,6 @@ export type { BodyUploadRosterCsv as UploadRosterCsvBody } from './generated/mod
 export type { UpdateProfileRequest as UpdateProfile } from './generated/models/update-profile-request';
 export type { UpdateCourseRequest as UpdateCourse } from './generated/models/update-course-request';
 export type { CreateJokeRequest as CreateJoke } from './generated/models/create-joke-request';
-export type { JokeRequestResponse as JokeRequest } from './generated/models/joke-request-response';
+export type { JokeResponse as JokeRequest } from './generated/models/joke-response';
+export type { AsyncJobInfo } from './generated/models/async-job-info';
 export type { AsyncJobStatus } from './generated/models/async-job-status';

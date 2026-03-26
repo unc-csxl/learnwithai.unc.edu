@@ -331,3 +331,28 @@ def test_delete_joke_request_endpoint(client: TestClient) -> None:
 
     assert response.status_code == 204
     joke_svc.delete_request.assert_called_once_with(42)
+
+
+@pytest.mark.integration
+def test_create_response_nests_status_inside_job_field(client: TestClient) -> None:
+    """Guards against flattening the job field back onto the top-level response.
+
+    The frontend reads ``request.job.status`` to drive the progress spinner.
+    If the API flattens ``status`` onto the root, the frontend silently breaks.
+    """
+    joke_svc = MagicMock()
+    joke_svc.create_request.return_value = _stub_joke(
+        joke_id=7,
+        async_job_id=70,
+        async_job_status=AsyncJobStatus.PENDING,
+    )
+    _override_common(joke_svc)
+
+    body = client.post(
+        "/api/courses/1/joke-requests",
+        json={"prompt": "test"},
+    ).json()
+
+    assert "status" not in body, "status must be nested inside 'job', not top-level"
+    assert body["job"]["id"] == 70
+    assert body["job"]["status"] == "pending"

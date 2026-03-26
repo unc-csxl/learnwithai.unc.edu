@@ -7,13 +7,13 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { JokeRequestResponse } from '../../models/joke-request-response';
+import { JokeResponse } from '../../models/joke-response';
 
 export interface ListJokeRequests$Params {
   course_id: number;
 }
 
-export function listJokeRequests(http: HttpClient, rootUrl: string, params: ListJokeRequests$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<JokeRequestResponse>>> {
+export function listJokeRequests(http: HttpClient, rootUrl: string, params: ListJokeRequests$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<JokeResponse>>> {
   const rb = new RequestBuilder(rootUrl, listJokeRequests.PATH, 'get');
   if (params) {
     rb.path('course_id', params.course_id, {});
@@ -24,7 +24,7 @@ export function listJokeRequests(http: HttpClient, rootUrl: string, params: List
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<JokeRequestResponse>>;
+      return r as StrictHttpResponse<Array<JokeResponse>>;
     })
   );
 }

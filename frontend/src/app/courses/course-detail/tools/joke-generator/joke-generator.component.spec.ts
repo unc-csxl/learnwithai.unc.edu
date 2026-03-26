@@ -12,20 +12,18 @@ import { JokeRequest } from '../../../../api/models';
 
 const fakeRequest: JokeRequest = {
   id: 1,
-  status: 'completed',
   prompt: 'Tell me jokes about recursion',
   jokes: ['Why do recursive functions never finish? Because they keep calling themselves!'],
   created_at: '2025-01-01T00:00:00Z',
-  completed_at: '2025-01-01T00:01:00Z',
+  job: { id: 10, status: 'completed', completed_at: '2025-01-01T00:01:00Z' },
 };
 
 const fakePendingRequest: JokeRequest = {
   id: 2,
-  status: 'pending',
   prompt: 'Jokes about algorithms',
   jokes: [],
   created_at: '2025-01-01T00:02:00Z',
-  completed_at: null,
+  job: { id: 20, status: 'pending', completed_at: null },
 };
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -42,7 +40,11 @@ describe('JokeGenerator', () => {
         : vi.fn(() => Promise.resolve(options.requests ?? [fakeRequest])),
       create: vi.fn(() => Promise.resolve(fakePendingRequest)),
       get: vi.fn(() =>
-        Promise.resolve({ ...fakePendingRequest, status: 'completed' as const, jokes: ['Ha!'] }),
+        Promise.resolve({
+          ...fakePendingRequest,
+          job: { id: 20, status: 'completed' as const, completed_at: '2025-01-01T00:03:00Z' },
+          jokes: ['Ha!'],
+        }),
       ),
       delete: vi.fn(() => Promise.resolve()),
     };
@@ -102,6 +104,8 @@ describe('JokeGenerator', () => {
     expect(el.textContent).toContain(
       'Why do recursive functions never finish? Because they keep calling themselves!',
     );
+    expect(el.textContent).toContain('Completed');
+    expect(el.textContent).toContain('2025-01-01');
   });
 
   it('should show empty state when no requests exist', async () => {
@@ -135,6 +139,27 @@ describe('JokeGenerator', () => {
     expect(el.textContent).toContain('Jokes about algorithms');
   });
 
+  it('should handle created request with null job without watching', async () => {
+    const nullJobRequest: JokeRequest = {
+      id: 5,
+      prompt: 'Null job',
+      jokes: [],
+      created_at: '2025-01-01T00:00:00Z',
+      job: null,
+    };
+    const { fixture, mockService, mockJobUpdate } = await setup({ requests: [] });
+    mockService.create.mockResolvedValueOnce(nullJobRequest);
+    const component = fixture.componentInstance;
+
+    component['form'].setValue({ prompt: 'Null job' });
+    await component['onSubmit']();
+    fixture.detectChanges();
+
+    expect(mockJobUpdate.updateForJob).not.toHaveBeenCalled();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Null job');
+  });
+
   it('should delete a joke request and remove it from the list', async () => {
     const { fixture, mockService, mockSnackbar } = await setup({ requests: [fakeRequest] });
 
@@ -163,11 +188,11 @@ describe('JokeGenerator', () => {
       requests: [fakeRequest, fakePendingRequest],
     });
 
-    expect(mockJobUpdate.updateForJob).toHaveBeenCalledWith(2);
+    expect(mockJobUpdate.updateForJob).toHaveBeenCalledWith(20);
 
     // Simulate intermediate status that should be ignored
     jobUpdateSignal.set({
-      job_id: 2,
+      job_id: 20,
       course_id: 1,
       user_id: 1,
       kind: 'joke_generation',
@@ -179,7 +204,7 @@ describe('JokeGenerator', () => {
 
     // Simulate job completion via WebSocket
     jobUpdateSignal.set({
-      job_id: 2,
+      job_id: 20,
       course_id: 1,
       user_id: 1,
       kind: 'joke_generation',
@@ -261,7 +286,7 @@ describe('JokeGenerator', () => {
   it('should return fallback labels for unknown status', async () => {
     const { fixture } = await setup();
     const component = fixture.componentInstance;
-    expect(component['statusLabel']('unknown')).toBe('unknown');
+    expect(component['statusLabel']('unknown')).toBe('Unknown');
     expect(component['statusIcon']('unknown')).toBe('help');
   });
 
@@ -273,7 +298,7 @@ describe('JokeGenerator', () => {
     mockService.get.mockRejectedValueOnce(new Error('fail'));
 
     jobUpdateSignal.set({
-      job_id: 2,
+      job_id: 20,
       course_id: 1,
       user_id: 1,
       kind: 'joke_generation',
@@ -287,5 +312,51 @@ describe('JokeGenerator', () => {
     // The list should still contain the old request
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('Jokes about algorithms');
+  });
+
+  it('should read status from nested job field (regression)', async () => {
+    const { fixture } = await setup({ requests: [fakePendingRequest] });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Pending');
+    expect(el.querySelector('.pending-indicator')).toBeTruthy();
+    expect(el.querySelector('mat-spinner')).toBeTruthy();
+  });
+
+  it('should track async job ID for WebSocket updates (regression)', async () => {
+    const { mockJobUpdate } = await setup({
+      requests: [fakePendingRequest],
+    });
+    // Must watch the async_job.id (20), not the joke.id (2)
+    expect(mockJobUpdate.updateForJob).toHaveBeenCalledWith(20);
+    expect(mockJobUpdate.updateForJob).not.toHaveBeenCalledWith(2);
+  });
+
+  it('should display the failed status style and label', async () => {
+    const failedRequest: JokeRequest = {
+      id: 3,
+      prompt: 'Bad prompt',
+      jokes: [],
+      created_at: '2025-01-01T00:00:00Z',
+      job: { id: 30, status: 'failed', completed_at: null },
+    };
+    const { fixture } = await setup({ requests: [failedRequest] });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Failed');
+    expect(el.querySelector('.status-failed')).toBeTruthy();
+  });
+
+  it('should handle a request with null job gracefully', async () => {
+    const orphanRequest: JokeRequest = {
+      id: 4,
+      prompt: 'Orphan prompt',
+      jokes: ['A joke'],
+      created_at: '2025-01-01T00:00:00Z',
+      job: null,
+    };
+    const { fixture } = await setup({ requests: [orphanRequest] });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Orphan prompt');
+    expect(el.textContent).toContain('A joke');
+    expect(el.textContent).toContain('Unknown');
   });
 });

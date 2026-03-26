@@ -726,7 +726,7 @@
           "Instructor Tools"
         ],
         "summary": "Submit a joke generation request",
-        "description": "Submits a joke generation request for a course.\n\nOnly instructors may submit joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    body: Request containing the prompt.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to create the job.\n\nReturns:\n    The accepted joke generation job.",
+        "description": "Submits a joke generation request for a course.\n\nOnly instructors may submit joke requests.",
         "operationId": "create_joke_request",
         "security": [
           {
@@ -760,7 +760,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JokeRequestResponse"
+                  "$ref": "#/components/schemas/JokeResponse"
                 }
               }
             }
@@ -791,7 +791,7 @@
           "Instructor Tools"
         ],
         "summary": "List joke generation requests",
-        "description": "Returns all joke generation jobs for a course.\n\nOnly instructors may list joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to query jobs.\n\nReturns:\n    List of joke generation jobs.",
+        "description": "Returns all joke generation jobs for a course.\n\nOnly instructors may list joke requests.",
         "operationId": "list_joke_requests",
         "security": [
           {
@@ -817,7 +817,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/JokeRequestResponse"
+                    "$ref": "#/components/schemas/JokeResponse"
                   },
                   "title": "Response List Joke Requests"
                 }
@@ -852,7 +852,7 @@
           "Instructor Tools"
         ],
         "summary": "Get a joke generation request",
-        "description": "Returns a single joke generation job.\n\nOnly instructors may view joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to load the job.\n    job_id: Primary key of the joke generation job.\n\nReturns:\n    The matching joke generation job.",
+        "description": "Returns a single joke generation job.\n\nOnly instructors may view joke requests.",
         "operationId": "get_joke_request",
         "security": [
           {
@@ -885,7 +885,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JokeRequestResponse"
+                  "$ref": "#/components/schemas/JokeResponse"
                 }
               }
             }
@@ -916,7 +916,7 @@
           "Instructor Tools"
         ],
         "summary": "Delete a joke generation request",
-        "description": "Deletes a joke generation job.\n\nOnly instructors may delete joke requests.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI from the path.\n    course_svc: Service used for authorization check.\n    joke_svc: Joke generation service to delete the job.\n    job_id: Primary key of the joke generation job.",
+        "description": "Deletes a joke generation job.\n\nOnly instructors may delete joke requests.",
         "operationId": "delete_joke_request",
         "security": [
           {
@@ -1089,6 +1089,37 @@
         "title": "AddMemberRequest",
         "description": "Payload for adding a member to a course."
       },
+      "AsyncJobInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AsyncJobStatus"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "completed_at"
+        ],
+        "title": "AsyncJobInfo",
+        "description": "Nested representation of an async job's current state.\n\nDesigned for embedding inside feature-specific response models so\nthat job lifecycle fields (status, timing) are grouped together\nrather than flattened alongside domain data."
+      },
       "AsyncJobStatus": {
         "type": "string",
         "enum": [
@@ -1233,14 +1264,11 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "JokeRequestResponse": {
+      "JokeResponse": {
         "properties": {
           "id": {
             "type": "integer",
             "title": "Id"
-          },
-          "status": {
-            "$ref": "#/components/schemas/AsyncJobStatus"
           },
           "prompt": {
             "type": "string",
@@ -1258,30 +1286,27 @@
             "format": "date-time",
             "title": "Created At"
           },
-          "completed_at": {
+          "job": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "date-time"
+                "$ref": "#/components/schemas/AsyncJobInfo"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Completed At"
+            ]
           }
         },
         "type": "object",
         "required": [
           "id",
-          "status",
           "prompt",
           "jokes",
           "created_at",
-          "completed_at"
+          "job"
         ],
-        "title": "JokeRequestResponse",
-        "description": "Response for a single joke generation job."
+        "title": "JokeResponse",
+        "description": "Response for a single joke generation result."
       },
       "MembershipResponse": {
         "properties": {

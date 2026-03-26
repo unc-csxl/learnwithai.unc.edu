@@ -26,19 +26,21 @@
             <mat-icon
               mat-card-avatar
               class="status-icon"
-              [class.status-completed]="request.status === 'completed'"
-              [class.status-failed]="request.status === 'failed'"
+              [class.status-completed]="request.job?.status === 'completed'"
+              [class.status-failed]="request.job?.status === 'failed'"
               [class.status-pending]="
-                request.status === 'pending' || request.status === 'processing'
+                request.job?.status === 'pending' || request.job?.status === 'processing'
               "
             >
-              {{ statusIcon(request.status) }}
+              {{ statusIcon(request.job?.status) }}
             </mat-icon>
             <mat-card-title>{{ request.prompt }}</mat-card-title>
             <mat-card-subtitle>
-              {{ statusLabel(request.status) }}
-              @if (request.completed_at) {
-                &middot; Completed {{ request.completed_at }}
+              {{ statusLabel(request.job?.status) }}
+              @if (request.job; as job) {
+                @if (job.completed_at) {
+                  &middot; Completed {{ job.completed_at }}
+                }
               }
             </mat-card-subtitle>
           </mat-card-header>
@@ -53,7 +55,7 @@
             </mat-card-content>
           }
 
-          @if (request.status === 'pending' || request.status === 'processing') {
+          @if (request.job?.status === 'pending' || request.job?.status === 'processing') {
             <mat-card-content>
               <div class="pending-indicator">
                 <mat-spinner diameter="24" />
