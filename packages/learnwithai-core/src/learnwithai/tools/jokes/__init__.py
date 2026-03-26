@@ -14,12 +14,12 @@ from .models import (
     JokeGenerationJob,
     JokeGenerationOutput,
 )
-from .tables import JokeRequest
+from .tables import Joke
 
 __all__ = [
     "JOKE_GENERATION_KIND",
+    "Joke",
     "JokeGenerationInput",
     "JokeGenerationJob",
     "JokeGenerationOutput",
-    "JokeRequest",
 ]

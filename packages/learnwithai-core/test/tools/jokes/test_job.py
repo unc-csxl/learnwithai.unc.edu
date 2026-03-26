@@ -29,19 +29,19 @@ def test_handler_calls_ai_service_and_stores_output() -> None:
     mock_async_job.kind = "joke_generation"
     mock_async_job.status = MagicMock(value="completed")
 
-    # Mock the joke request
-    mock_joke_request = MagicMock()
-    mock_joke_request.prompt = "Jokes about recursion"
+    # Mock the joke
+    mock_joke = MagicMock()
+    mock_joke.prompt = "Jokes about recursion"
 
     mock_async_job_repo_cls = MagicMock()
     mock_async_job_repo_instance = MagicMock()
     mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
     mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
 
-    mock_joke_request_repo_cls = MagicMock()
-    mock_joke_request_repo_instance = MagicMock()
-    mock_joke_request_repo_instance.get_by_async_job_id.return_value = mock_joke_request
-    mock_joke_request_repo_cls.return_value = mock_joke_request_repo_instance
+    mock_joke_repo_cls = MagicMock()
+    mock_joke_repo_instance = MagicMock()
+    mock_joke_repo_instance.get_by_async_job_id.return_value = mock_joke
+    mock_joke_repo_cls.return_value = mock_joke_repo_instance
 
     mock_ai_svc = MagicMock()
     mock_ai_svc.complete.return_value = "Joke 1\nJoke 2"
@@ -63,8 +63,8 @@ def test_handler_calls_ai_service_and_stores_output() -> None:
             mock_async_job_repo_cls,
         ),
         patch(
-            "learnwithai.tools.jokes.job.JokeRequestRepository",
-            mock_joke_request_repo_cls,
+            "learnwithai.tools.jokes.job.JokeRepository",
+            mock_joke_repo_cls,
         ),
         patch(
             "learnwithai.tools.jokes.job.get_settings",
@@ -80,8 +80,8 @@ def test_handler_calls_ai_service_and_stores_output() -> None:
     mock_ai_svc.complete.assert_called_once()
     mock_session.commit.assert_called_once()
     mock_session.rollback.assert_not_called()
-    # Jokes stored on joke_request
-    assert mock_joke_request.jokes == ["Joke 1", "Joke 2"]
+    # Jokes stored on joke
+    assert mock_joke.jokes == ["Joke 1", "Joke 2"]
     # Raw data stored on async_job
     assert mock_async_job.output_data == {"raw_response": "Joke 1\nJoke 2"}
 
@@ -140,18 +140,18 @@ def test_handler_rolls_back_on_ai_error() -> None:
     mock_async_job.input_data = {}
     mock_async_job.status = MagicMock(value="failed")
 
-    mock_joke_request = MagicMock()
-    mock_joke_request.prompt = "topic"
+    mock_joke = MagicMock()
+    mock_joke.prompt = "topic"
 
     mock_async_job_repo_cls = MagicMock()
     mock_async_job_repo_instance = MagicMock()
     mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
     mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
 
-    mock_joke_request_repo_cls = MagicMock()
-    mock_joke_request_repo_instance = MagicMock()
-    mock_joke_request_repo_instance.get_by_async_job_id.return_value = mock_joke_request
-    mock_joke_request_repo_cls.return_value = mock_joke_request_repo_instance
+    mock_joke_repo_cls = MagicMock()
+    mock_joke_repo_instance = MagicMock()
+    mock_joke_repo_instance.get_by_async_job_id.return_value = mock_joke
+    mock_joke_repo_cls.return_value = mock_joke_repo_instance
 
     mock_ai_svc = MagicMock()
     mock_ai_svc.complete.side_effect = RuntimeError("API error")
@@ -173,8 +173,8 @@ def test_handler_rolls_back_on_ai_error() -> None:
             mock_async_job_repo_cls,
         ),
         patch(
-            "learnwithai.tools.jokes.job.JokeRequestRepository",
-            mock_joke_request_repo_cls,
+            "learnwithai.tools.jokes.job.JokeRepository",
+            mock_joke_repo_cls,
         ),
         patch(
             "learnwithai.tools.jokes.job.get_settings",
@@ -240,7 +240,7 @@ def test_handler_raises_when_async_job_not_found() -> None:
         handler.handle(job_payload)
 
 
-def test_handler_raises_when_joke_request_not_found() -> None:
+def test_handler_raises_when_joke_not_found() -> None:
     job_payload = JokeGenerationJob(job_id=42)
     handler = JokeGenerationJobHandler()
     mock_session = MagicMock()
@@ -259,10 +259,10 @@ def test_handler_raises_when_joke_request_not_found() -> None:
     mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
     mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
 
-    mock_joke_request_repo_cls = MagicMock()
-    mock_joke_request_repo_instance = MagicMock()
-    mock_joke_request_repo_instance.get_by_async_job_id.return_value = None
-    mock_joke_request_repo_cls.return_value = mock_joke_request_repo_instance
+    mock_joke_repo_cls = MagicMock()
+    mock_joke_repo_instance = MagicMock()
+    mock_joke_repo_instance.get_by_async_job_id.return_value = None
+    mock_joke_repo_cls.return_value = mock_joke_repo_instance
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
@@ -281,14 +281,14 @@ def test_handler_raises_when_joke_request_not_found() -> None:
             mock_async_job_repo_cls,
         ),
         patch(
-            "learnwithai.tools.jokes.job.JokeRequestRepository",
-            mock_joke_request_repo_cls,
+            "learnwithai.tools.jokes.job.JokeRepository",
+            mock_joke_repo_cls,
         ),
         patch(
             "learnwithai.tools.jokes.job.get_settings",
             return_value=mock_settings,
         ),
-        pytest.raises(ValueError, match="JokeRequest for AsyncJob"),
+        pytest.raises(ValueError, match="Joke for AsyncJob"),
     ):
         handler.handle(job_payload)
 

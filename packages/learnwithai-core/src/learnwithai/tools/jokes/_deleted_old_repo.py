@@ -1,11 +1,5 @@
-"""Persistence helpers for joke request records."""
-
-from sqlmodel import Session, col, select
-
-from ..tools.jokes.tables import JokeRequest
-
-
-class JokeRequestRepository:
+# This file has been moved to repository.py. Delete this file.
+_placeholder = None
     """Provides CRUD operations for joke request records."""
 
     def __init__(self, session: Session):

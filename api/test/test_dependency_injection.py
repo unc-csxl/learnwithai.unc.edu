@@ -11,7 +11,7 @@ from api.di import (
     get_course_by_path_id,
     get_user_by_pid,
     joke_generation_service_factory,
-    joke_request_repository_factory,
+    joke_repository_factory,
     roster_upload_service_factory,
 )
 
@@ -106,20 +106,20 @@ def test_roster_upload_service_factory_returns_service() -> None:
 def test_joke_generation_service_factory_returns_service() -> None:
     from learnwithai.tools.jokes.service import JokeGenerationService
 
-    joke_request_repo = MagicMock()
+    joke_repo = MagicMock()
     async_job_repo = MagicMock()
     job_queue = MagicMock()
 
-    result = joke_generation_service_factory(joke_request_repo, async_job_repo, job_queue)
+    result = joke_generation_service_factory(joke_repo, async_job_repo, job_queue)
 
     assert isinstance(result, JokeGenerationService)
 
 
-def test_joke_request_repository_factory_returns_repository() -> None:
-    from learnwithai.repositories.joke_request_repository import JokeRequestRepository
+def test_joke_repository_factory_returns_repository() -> None:
+    from learnwithai.tools.jokes.repository import JokeRepository
 
     session = MagicMock()
 
-    result = joke_request_repository_factory(session)
+    result = joke_repository_factory(session)
 
-    assert isinstance(result, JokeRequestRepository)
+    assert isinstance(result, JokeRepository)

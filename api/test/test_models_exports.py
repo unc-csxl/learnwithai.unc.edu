@@ -8,11 +8,12 @@ import api.models as models
 def test_api_models_exports_expected_symbols() -> None:
     assert set(models.__all__) == {
         "AddMemberRequest",
+        "AsyncJobInfo",
         "CourseMembership",
         "CourseResponse",
         "CreateCourseRequest",
         "CreateJokeRequest",
-        "JokeRequestResponse",
+        "JokeResponse",
         "MembershipResponse",
         "PaginatedRosterResponse",
         "RosterMemberResponse",

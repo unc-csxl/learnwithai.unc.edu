@@ -2,8 +2,9 @@
 
 from datetime import datetime
 
-from learnwithai.tables.async_job import AsyncJobStatus
 from pydantic import BaseModel
+
+from .async_job import AsyncJobInfo
 
 
 class CreateJokeRequest(BaseModel):
@@ -12,12 +13,11 @@ class CreateJokeRequest(BaseModel):
     prompt: str
 
 
-class JokeRequestResponse(BaseModel):
-    """Response for a single joke generation job."""
+class JokeResponse(BaseModel):
+    """Response for a single joke generation result."""
 
     id: int
-    status: AsyncJobStatus
     prompt: str
     jokes: list[str]
     created_at: datetime
-    completed_at: datetime | None
+    job: AsyncJobInfo | None

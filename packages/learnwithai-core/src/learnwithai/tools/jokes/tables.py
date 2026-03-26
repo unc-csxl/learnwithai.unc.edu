@@ -1,4 +1,4 @@
-"""Database-backed joke request table."""
+"""Database-backed joke table for the joke generation tool."""
 
 from datetime import datetime
 from typing import Any
@@ -16,22 +16,23 @@ from sqlmodel import (
 )
 
 
-class JokeRequest(SQLModel, table=True):
-    """First-class table for joke generation requests.
+class Joke(SQLModel, table=True):
+    """First-class table for joke generation results.
 
     Stores the user-facing prompt and generated jokes. The async job
     lifecycle (status, timing) is tracked by the linked ``AsyncJob``
     row.
     """
 
-    __tablename__: str = "joke_request"  # type: ignore[assignment]
+    __tablename__: str = "joke_tool__joke"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, sa_column=Column(Integer, primary_key=True))
     course_id: int = Field(
         sa_column=Column(Integer, ForeignKey("course.id"), nullable=False),
     )
-    created_by_pid: int = Field(
-        sa_column=Column(Integer, nullable=False),
+    created_by_pid: int | None = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("user.pid"), nullable=True),
     )
     prompt: str = Field(
         sa_column=Column(Text, nullable=False),

@@ -1,3 +1,4 @@
+from .async_job import AsyncJobInfo
 from .course import (
     AddMemberRequest,
     CourseMembership,
@@ -8,17 +9,18 @@ from .course import (
     RosterMemberResponse,
     UpdateCourseRequest,
 )
-from .joke_generation import CreateJokeRequest, JokeRequestResponse
+from .joke_generation import CreateJokeRequest, JokeResponse
 from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
 from .user_profile import UpdateProfileRequest, UserProfile
 
 __all__ = [
     "AddMemberRequest",
+    "AsyncJobInfo",
     "CourseMembership",
     "CourseResponse",
     "CreateCourseRequest",
     "CreateJokeRequest",
-    "JokeRequestResponse",
+    "JokeResponse",
     "MembershipResponse",
     "PaginatedRosterResponse",
     "RosterMemberResponse",

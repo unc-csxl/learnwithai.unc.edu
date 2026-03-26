@@ -12,7 +12,7 @@ from .tables.async_job import AsyncJob, AsyncJobStatus
 from .tables.course import Course, Term
 from .tables.membership import Membership, MembershipState, MembershipType
 from .tables.user import User
-from .tools.jokes.tables import JokeRequest
+from .tools.jokes.tables import Joke
 
 
 def seed(session: Session) -> None:
@@ -103,7 +103,7 @@ def seed(session: Session) -> None:
     session.add(joke_job)
     session.flush()
 
-    joke_request = JokeRequest(
+    joke_request = Joke(
         course_id=course.id,
         created_by_pid=instructor.pid,
         prompt="Tell me 3 jokes about software engineering",

@@ -8,7 +8,7 @@ from learnwithai.dev_data import seed
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import MembershipState, MembershipType
-from learnwithai.tools.jokes.tables import JokeRequest
+from learnwithai.tools.jokes.tables import Joke
 
 
 def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
@@ -75,7 +75,7 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     # Verify joke request
     joke_request = added_single[2]
-    assert isinstance(joke_request, JokeRequest)
+    assert isinstance(joke_request, Joke)
     assert joke_request.prompt == "Tell me 3 jokes about software engineering"
     assert len(joke_request.jokes) == 3
     assert joke_request.async_job_id == joke_job.id

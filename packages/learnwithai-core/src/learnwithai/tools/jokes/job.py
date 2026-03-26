@@ -7,10 +7,10 @@ from sqlmodel import Session
 from ...config import get_settings
 from ...jobs.base_job_handler import BaseJobHandler
 from ...repositories.async_job_repository import AsyncJobRepository
-from ...repositories.joke_request_repository import JokeRequestRepository
 from ...services.ai_completion_service import AiCompletionService
 from ...tables.async_job import AsyncJobStatus
 from .models import JokeGenerationJob
+from .repository import JokeRepository
 
 JOKE_SYSTEM_PROMPT = (
     "You are a witty comedy writer who specializes in educational humor. "
@@ -28,8 +28,8 @@ class JokeGenerationJobHandler(BaseJobHandler[JokeGenerationJob]):
 
     Session lifecycle, PROCESSING transition, commit/rollback, and
     notification are handled by :class:`BaseJobHandler`. This handler
-    loads the JokeRequest, calls the AI completion service, parses
-    jokes, and writes results to both the JokeRequest and AsyncJob.
+    loads the Joke, calls the AI completion service, parses
+    jokes, and writes results to both the Joke and AsyncJob.
     """
 
     def _execute(  # type: ignore[override]
@@ -52,27 +52,27 @@ class JokeGenerationJobHandler(BaseJobHandler[JokeGenerationJob]):
         if async_job is None:
             raise ValueError(f"AsyncJob {job.job_id} not found")
 
-        joke_request_repo = JokeRequestRepository(session)
-        joke_request = joke_request_repo.get_by_async_job_id(job.job_id)
-        if joke_request is None:
-            raise ValueError(f"JokeRequest for AsyncJob {job.job_id} not found")
+        joke_repo = JokeRepository(session)
+        joke = joke_repo.get_by_async_job_id(job.job_id)
+        if joke is None:
+            raise ValueError(f"Joke for AsyncJob {job.job_id} not found")
 
         system_prompt = JOKE_SYSTEM_PROMPT.format(count=DEFAULT_JOKE_COUNT)
         ai_svc = AiCompletionService(api_key=settings.openai_api_key, model=settings.openai_model)
-        raw_response = ai_svc.complete(system_prompt=system_prompt, user_prompt=joke_request.prompt)
+        raw_response = ai_svc.complete(system_prompt=system_prompt, user_prompt=joke.prompt)
 
         jokes = _parse_jokes(raw_response, DEFAULT_JOKE_COUNT)
 
         # Store raw AI data in async_job for debugging
-        async_job.input_data = {"system_prompt": system_prompt, "user_prompt": joke_request.prompt}
+        async_job.input_data = {"system_prompt": system_prompt, "user_prompt": joke.prompt}
         async_job.output_data = {"raw_response": raw_response}
         async_job.status = AsyncJobStatus.COMPLETED
         async_job.completed_at = datetime.now(timezone.utc)
         async_job_repo.update(async_job)
 
-        # Store parsed feature data in joke_request
-        joke_request.jokes = jokes
-        joke_request_repo.update(joke_request)
+        # Store parsed feature data in joke
+        joke.jokes = jokes
+        joke_repo.update(joke)
 
 
 def _parse_jokes(content: str, count: int) -> list[str]:

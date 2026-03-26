@@ -1,14 +1,24 @@
-"""Integration tests for joke request repository."""
+"""Integration tests for the joke repository."""
 
 from __future__ import annotations
 
 import pytest
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
-from learnwithai.repositories.joke_request_repository import JokeRequestRepository
 from learnwithai.tables.async_job import AsyncJob
 from learnwithai.tables.course import Course, Term
-from learnwithai.tools.jokes.tables import JokeRequest
+from learnwithai.tables.user import User
+from learnwithai.tools.jokes.repository import JokeRepository
+from learnwithai.tools.jokes.tables import Joke
 from sqlmodel import Session
+
+TEST_PID = 123456789
+
+
+def _seed_user(session: Session) -> User:
+    user = User(pid=TEST_PID, name="Test User", onyen="testuser")
+    session.add(user)
+    session.flush()
+    return user
 
 
 def _seed_course(session: Session) -> Course:
@@ -23,7 +33,7 @@ def _seed_async_job(session: Session, course_id: int) -> AsyncJob:
     return repo.create(
         AsyncJob(
             course_id=course_id,
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             kind="joke_generation",
             input_data={},
         )
@@ -34,22 +44,23 @@ def _seed_async_job(session: Session, course_id: int) -> AsyncJob:
 
 
 @pytest.mark.integration
-def test_create_persists_and_returns_joke_request(session: Session) -> None:
+def test_create_persists_and_returns_joke(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
     async_job = _seed_async_job(session, course.id)  # type: ignore[arg-type]
-    repo = JokeRequestRepository(session)
-    jr = JokeRequest(
+    repo = JokeRepository(session)
+    joke = Joke(
         course_id=course.id,  # type: ignore[arg-type]
-        created_by_pid=123456789,
+        created_by_pid=TEST_PID,
         prompt="Jokes about recursion",
         async_job_id=async_job.id,
     )
 
-    result = repo.create(jr)
+    result = repo.create(joke)
 
     assert result.id is not None
     assert result.course_id == course.id
-    assert result.created_by_pid == 123456789
+    assert result.created_by_pid == TEST_PID
     assert result.prompt == "Jokes about recursion"
     assert result.jokes == []
     assert result.async_job_id == async_job.id
@@ -61,14 +72,15 @@ def test_create_persists_and_returns_joke_request(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_get_by_id_returns_joke_request(session: Session) -> None:
+def test_get_by_id_returns_joke(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
     async_job = _seed_async_job(session, course.id)  # type: ignore[arg-type]
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
     created = repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="topic",
             async_job_id=async_job.id,
         )
@@ -82,7 +94,7 @@ def test_get_by_id_returns_joke_request(session: Session) -> None:
 
 @pytest.mark.integration
 def test_get_by_id_returns_none_for_missing(session: Session) -> None:
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
 
     assert repo.get_by_id(9999) is None
 
@@ -91,14 +103,15 @@ def test_get_by_id_returns_none_for_missing(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_get_by_async_job_id_returns_joke_request(session: Session) -> None:
+def test_get_by_async_job_id_returns_joke(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
     async_job = _seed_async_job(session, course.id)  # type: ignore[arg-type]
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
     created = repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="topic",
             async_job_id=async_job.id,
         )
@@ -112,7 +125,7 @@ def test_get_by_async_job_id_returns_joke_request(session: Session) -> None:
 
 @pytest.mark.integration
 def test_get_by_async_job_id_returns_none_for_missing(session: Session) -> None:
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
 
     assert repo.get_by_async_job_id(9999) is None
 
@@ -121,23 +134,24 @@ def test_get_by_async_job_id_returns_none_for_missing(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_list_by_course_returns_matching_requests(session: Session) -> None:
+def test_list_by_course_returns_matching_jokes(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
     job1 = _seed_async_job(session, course.id)  # type: ignore[arg-type]
     job2 = _seed_async_job(session, course.id)  # type: ignore[arg-type]
     repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="first",
             async_job_id=job1.id,
         )
     )
     repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="second",
             async_job_id=job2.id,
         )
@@ -150,9 +164,73 @@ def test_list_by_course_returns_matching_requests(session: Session) -> None:
 
 @pytest.mark.integration
 def test_list_by_course_returns_empty_when_none(session: Session) -> None:
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
 
     assert repo.list_by_course(9999) == []
+
+
+# --- list_by_course_with_jobs ---
+
+
+@pytest.mark.integration
+def test_list_by_course_with_jobs_returns_joke_and_job_pairs(session: Session) -> None:
+    _seed_user(session)
+    course = _seed_course(session)
+    repo = JokeRepository(session)
+    job1 = _seed_async_job(session, course.id)  # type: ignore[arg-type]
+    job2 = _seed_async_job(session, course.id)  # type: ignore[arg-type]
+    repo.create(
+        Joke(
+            course_id=course.id,  # type: ignore[arg-type]
+            created_by_pid=TEST_PID,
+            prompt="first",
+            async_job_id=job1.id,
+        )
+    )
+    repo.create(
+        Joke(
+            course_id=course.id,  # type: ignore[arg-type]
+            created_by_pid=TEST_PID,
+            prompt="second",
+            async_job_id=job2.id,
+        )
+    )
+
+    results = repo.list_by_course_with_jobs(course.id)  # type: ignore[arg-type]
+
+    assert len(results) == 2
+    for joke, async_job in results:
+        assert isinstance(joke, Joke)
+        assert isinstance(async_job, AsyncJob)
+
+
+@pytest.mark.integration
+def test_list_by_course_with_jobs_returns_none_for_missing_job(session: Session) -> None:
+    _seed_user(session)
+    course = _seed_course(session)
+    repo = JokeRepository(session)
+    repo.create(
+        Joke(
+            course_id=course.id,  # type: ignore[arg-type]
+            created_by_pid=TEST_PID,
+            prompt="no job",
+            async_job_id=None,
+        )
+    )
+
+    results = repo.list_by_course_with_jobs(course.id)  # type: ignore[arg-type]
+
+    assert len(results) == 1
+    joke, async_job = results[0]
+    assert isinstance(joke, Joke)
+    assert async_job is None
+
+
+@pytest.mark.integration
+def test_list_by_course_with_jobs_returns_empty_when_none(session: Session) -> None:
+    repo = JokeRepository(session)
+
+    assert repo.list_by_course_with_jobs(9999) == []
 
 
 # --- update ---
@@ -160,13 +238,14 @@ def test_list_by_course_returns_empty_when_none(session: Session) -> None:
 
 @pytest.mark.integration
 def test_update_persists_changes(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
     async_job = _seed_async_job(session, course.id)  # type: ignore[arg-type]
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
     created = repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="topic",
             async_job_id=async_job.id,
         )
@@ -182,14 +261,15 @@ def test_update_persists_changes(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_delete_removes_joke_request(session: Session) -> None:
+def test_delete_removes_joke(session: Session) -> None:
+    _seed_user(session)
     course = _seed_course(session)
     async_job = _seed_async_job(session, course.id)  # type: ignore[arg-type]
-    repo = JokeRequestRepository(session)
+    repo = JokeRepository(session)
     created = repo.create(
-        JokeRequest(
+        Joke(
             course_id=course.id,  # type: ignore[arg-type]
-            created_by_pid=123456789,
+            created_by_pid=TEST_PID,
             prompt="topic",
             async_job_id=async_job.id,
         )

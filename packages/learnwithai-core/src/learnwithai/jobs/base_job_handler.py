@@ -182,7 +182,7 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         """
         try:
             reloaded = async_job_repo.get_by_id(job_id)
-            if reloaded is not None:
+            if reloaded is not None and reloaded.created_by_pid is not None:
                 notifier.notify(
                     JobUpdate(
                         job_id=job_id,
