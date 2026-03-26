@@ -12,6 +12,7 @@ from .tables.async_job import AsyncJob, AsyncJobStatus
 from .tables.course import Course, Term
 from .tables.membership import Membership, MembershipState, MembershipType
 from .tables.user import User
+from .tools.jokes.tables import JokeRequest
 
 
 def seed(session: Session) -> None:
@@ -100,4 +101,19 @@ def seed(session: Session) -> None:
         completed_at=datetime(2025, 1, 15, 10, 0, 12, tzinfo=timezone.utc),
     )
     session.add(joke_job)
+    session.flush()
+
+    joke_request = JokeRequest(
+        course_id=course.id,
+        created_by_pid=instructor.pid,
+        prompt="Tell me 3 jokes about software engineering",
+        jokes=[
+            "Why do programmers prefer dark mode? Because light attracts bugs!",
+            "A QA engineer walks into a bar. Orders 1 beer. Orders 0 beers. Orders -1 beers. Orders a lizard.",
+            "There are only 10 types of people who understand binary and those who don't.",
+        ],
+        async_job_id=joke_job.id,
+        created_at=datetime(2025, 1, 15, 10, 0, tzinfo=timezone.utc),
+    )
+    session.add(joke_request)
     session.flush()
