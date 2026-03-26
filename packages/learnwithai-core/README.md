@@ -86,19 +86,7 @@ The `JobNotifier` protocol (`learnwithai.interfaces.jobs`) defines how job handl
 
 ### SQLModel Relationship and Eager Loading Conventions
 
-When a domain table has a foreign key to another table (e.g. `Joke.async_job_id → AsyncJob.id`), define a unidirectional `Relationship` on the owning side only:
-
-```python
-from sqlmodel import Relationship
-
-class Joke(SQLModel, table=True):
-    async_job_id: int | None = Field(default=None, foreign_key="async_job.id")
-    async_job: Optional["AsyncJob"] = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[Joke.async_job_id]", "lazy": "select"},
-    )
-```
-
-**Important:** Do not use `from __future__ import annotations` in files that define SQLModel `Relationship` fields. Postponed evaluation breaks SQLAlchemy's class registry resolver, which needs to evaluate forward-reference strings like `"AsyncJob"` at class-creation time. Use `Optional["AsyncJob"]` from `typing` instead of `AsyncJob | None` when the related class is a forward reference.
+In current SQLModel, avoid from **future** import annotations in files that define Relationship fields, especially with circular imports or forward references. Use quoted forward references such as Optional["AsyncJob"], list["AsyncJob"], or "AsyncJob" instead. This appears to be a SQLModel annotation-handling limitation, not a general SQLAlchemy limitation.
 
 In repository queries, use SQLAlchemy `selectinload` to eagerly load the relationship instead of writing manual outer joins:
 
