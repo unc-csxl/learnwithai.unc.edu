@@ -41,4 +41,8 @@ OPENAPI_TAGS: list[dict[str, str]] = [
             "testing and database management."
         ),
     },
+    {
+        "name": "Instructor Tools",
+        "description": "AI-powered instructor tools including joke generation.",
+    },
 ]

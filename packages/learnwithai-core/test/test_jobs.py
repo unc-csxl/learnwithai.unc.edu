@@ -6,8 +6,8 @@ import pytest
 from learnwithai.jobs import (
     EchoJob,
     ForbiddenJobQueue,
-    JokeGenerationJob,
     JobPayload,
+    JokeGenerationJob,
     RosterUploadJob,
     get_job_handler_map,
     job_adapter,

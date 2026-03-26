@@ -22,6 +22,7 @@ from learnwithai.services.csxl_auth_service import (
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.course import Course
 from learnwithai.tables.user import User
+from learnwithai.tools.jokes import JokeGenerationService
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 from sqlmodel import Session
 
@@ -32,6 +33,7 @@ __all__ = [
     "CourseByCourseIDPathDI",
     "CourseRepositoryDI",
     "CourseServiceDI",
+    "JokeGenerationServiceDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
     "PaginationParamsDI",
@@ -48,6 +50,7 @@ __all__ = [
     "get_pagination_params",
     "get_user_by_path_pid",
     "get_user_by_pid",
+    "joke_generation_service_factory",
     "job_queue_factory",
     "membership_repository_factory",
     "roster_upload_service_factory",
@@ -274,4 +277,17 @@ def roster_upload_service_factory(
 
 RosterUploadServiceDI: TypeAlias = Annotated[
     RosterUploadService, Depends(roster_upload_service_factory)
+]
+
+
+def joke_generation_service_factory(
+    async_job_repo: AsyncJobRepositoryDI,
+    job_queue: JobQueueDI,
+) -> JokeGenerationService:
+    """Creates the joke generation service for the current request."""
+    return JokeGenerationService(async_job_repo, job_queue)
+
+
+JokeGenerationServiceDI: TypeAlias = Annotated[
+    JokeGenerationService, Depends(joke_generation_service_factory)
 ]
