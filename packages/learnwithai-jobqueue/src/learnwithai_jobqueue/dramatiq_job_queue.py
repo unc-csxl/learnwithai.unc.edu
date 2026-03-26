@@ -41,7 +41,7 @@ class DramatiqJobQueue(JobQueue):
         )
 
 
-@dramatiq.actor
+@dramatiq.actor(max_retries=3)
 def job_queue(payload: dict) -> None:
     """Deserializes queued payloads and dispatches them to their handler.
 

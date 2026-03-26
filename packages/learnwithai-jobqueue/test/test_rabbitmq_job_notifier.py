@@ -135,7 +135,7 @@ def test_close_swallows_exception_during_connection_close() -> None:
     notifier._connection = mock_connection
 
     # Act — should not raise
-    notifier._close()
+    notifier.close()
 
     # Assert — state was still reset
     assert notifier._connection is None
@@ -143,12 +143,12 @@ def test_close_swallows_exception_during_connection_close() -> None:
 
 
 def test_close_with_no_connection_is_safe() -> None:
-    """Covers the branch where _close is called with no existing connection (85->90)."""
+    """Covers the branch where close is called with no existing connection (85->90)."""
     notifier = RabbitMQJobNotifier("amqp://guest:guest@localhost/")
     assert notifier._connection is None
 
     # Act — should not raise
-    notifier._close()
+    notifier.close()
 
     assert notifier._connection is None
     assert notifier._channel is None

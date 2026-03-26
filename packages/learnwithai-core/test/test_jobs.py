@@ -418,3 +418,127 @@ def test_notify_includes_user_id_from_created_by_pid() -> None:
     assert update.user_id == 999
     assert update.kind == "roster_upload"
     assert update.status == "completed"
+
+
+# ---- NotifierCloseable ----
+
+
+def test_notifier_closeable_protocol_is_runtime_checkable() -> None:
+    from learnwithai.interfaces import NotifierCloseable
+
+    class _Closeable:
+        def close(self) -> None:
+            pass
+
+    assert isinstance(_Closeable(), NotifierCloseable)
+
+
+def test_base_handler_closes_closeable_notifier_on_success() -> None:
+    """handle() must close the notifier after a successful run."""
+    job_payload = RosterUploadJob(job_id=42)
+    handler = RosterUploadJobHandler()
+    mock_session = MagicMock()
+    mock_session.__enter__ = MagicMock(return_value=mock_session)
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_notifier = MagicMock()
+    mock_notifier.close = MagicMock()  # satisfies NotifierCloseable
+    mock_async_job = MagicMock()
+    mock_async_job.course_id = 1
+    mock_async_job.created_by_pid = 111
+    mock_async_job.kind = "roster_upload"
+    mock_async_job.status = MagicMock(value="completed")
+    mock_async_job_repo_cls = MagicMock()
+    mock_async_job_repo_instance = MagicMock()
+    mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
+    mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
+
+    with (
+        patch.object(handler, "_build_notifier", return_value=mock_notifier),
+        patch("learnwithai.db.get_engine", return_value=MagicMock()),
+        patch("sqlmodel.Session", return_value=mock_session),
+        patch(
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.base_job_handler.AsyncJobRepository",
+            mock_async_job_repo_cls,
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.UserRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.MembershipRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.AsyncJobRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.ForbiddenJobQueue",
+            return_value=MagicMock(),
+        ),
+        patch("learnwithai.config.get_settings"),
+    ):
+        handler.handle(job_payload)
+
+    mock_notifier.close.assert_called_once()
+
+
+def test_base_handler_closes_closeable_notifier_on_error() -> None:
+    """handle() must close the notifier even when the handler fails."""
+    job_payload = RosterUploadJob(job_id=42)
+    handler = RosterUploadJobHandler()
+    mock_session = MagicMock()
+    mock_session.__enter__ = MagicMock(return_value=mock_session)
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_notifier = MagicMock()
+    mock_notifier.close = MagicMock()
+    mock_svc = MagicMock()
+    mock_svc.process_upload.side_effect = RuntimeError("boom")
+    mock_async_job = MagicMock()
+    mock_async_job.course_id = 1
+    mock_async_job.created_by_pid = 111
+    mock_async_job.kind = "roster_upload"
+    mock_async_job.status = MagicMock(value="failed")
+    mock_async_job_repo_cls = MagicMock()
+    mock_async_job_repo_instance = MagicMock()
+    mock_async_job_repo_instance.get_by_id.return_value = mock_async_job
+    mock_async_job_repo_cls.return_value = mock_async_job_repo_instance
+
+    with (
+        patch.object(handler, "_build_notifier", return_value=mock_notifier),
+        patch("learnwithai.db.get_engine", return_value=MagicMock()),
+        patch("sqlmodel.Session", return_value=mock_session),
+        patch(
+            "learnwithai.services.roster_upload_service.RosterUploadService",
+            return_value=mock_svc,
+        ),
+        patch(
+            "learnwithai.jobs.base_job_handler.AsyncJobRepository",
+            mock_async_job_repo_cls,
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.UserRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.MembershipRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.AsyncJobRepository",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "learnwithai.jobs.roster_upload.ForbiddenJobQueue",
+            return_value=MagicMock(),
+        ),
+        patch("learnwithai.config.get_settings"),
+        pytest.raises(RuntimeError, match="boom"),
+    ):
+        handler.handle(job_payload)
+
+    mock_notifier.close.assert_called_once()

@@ -37,6 +37,7 @@ def test_interfaces_export_job_class() -> None:
         "JobNotifier",
         "JobQueue",
         "JobUpdate",
+        "NotifierCloseable",
         "SupportsJobType",
         "TrackedJob",
     ]

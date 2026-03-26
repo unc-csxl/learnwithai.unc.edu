@@ -84,3 +84,8 @@ def test_job_queue_actor_integrates_adapter_and_handler() -> None:
     assert printed_payload["task"] == "echo_job"
     assert printed_payload["payload"].message == "hello"
     assert printed_payload["core_status"] == expected_status
+
+
+def test_job_queue_actor_limits_retries() -> None:
+    """max_retries prevents retry storms from configuration errors."""
+    assert job_queue.options.get("max_retries") == 3
