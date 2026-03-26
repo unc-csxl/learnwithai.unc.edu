@@ -27,6 +27,10 @@ spec:
           command:
             - /app/.venv/bin/dramatiq
             - learnwithai_jobqueue.worker
+            - --processes
+            - "2"
+            - --threads
+            - "2"
           envFrom:
             - secretRef:
                 name: learnwithai-secrets

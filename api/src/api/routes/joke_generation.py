@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException
+from learnwithai.tools.jokes.tables import Joke
 
 from ..di import (
     AuthenticatedUserDI,
@@ -10,35 +11,39 @@ from ..di import (
     CourseServiceDI,
     JokeGenerationServiceDI,
 )
-from ..models import CreateJokeRequest, JokeRequestResponse
+from ..models import AsyncJobInfo, CreateJokeRequest, JokeResponse
 
 router = APIRouter(prefix="/courses/{course_id}/joke-requests", tags=["Instructor Tools"])
 
 
-def _build_response(job: object) -> JokeRequestResponse:
-    """Builds a JokeRequestResponse from an AsyncJob record.
+def _build_response(joke: Joke) -> JokeResponse:
+    """Builds a JokeResponse from a Joke using its ``async_job`` relationship.
 
     Args:
-        job: An AsyncJob instance loaded from the database.
+        joke: The joke record with ``async_job`` pre-loaded or lazily available.
 
     Returns:
         A serializable response model.
     """
-    input_data: dict = getattr(job, "input_data", None) or {}  # type: ignore[assignment]
-    output_data: dict = getattr(job, "output_data", None) or {}  # type: ignore[assignment]
-    return JokeRequestResponse(
-        id=job.id,  # type: ignore[arg-type]
-        status=job.status,  # type: ignore[arg-type]
-        prompt=input_data.get("prompt", ""),
-        jokes=output_data.get("jokes", []),
-        created_at=job.created_at,  # type: ignore[arg-type]
-        completed_at=job.completed_at,  # type: ignore[arg-type]
+    job_info: AsyncJobInfo | None = None
+    if joke.async_job is not None:
+        job_info = AsyncJobInfo(
+            id=joke.async_job.id,  # type: ignore[arg-type]
+            status=joke.async_job.status,
+            completed_at=joke.async_job.completed_at,
+        )
+    return JokeResponse(
+        id=joke.id,  # type: ignore[arg-type]
+        prompt=joke.prompt,
+        jokes=joke.jokes,
+        created_at=joke.created_at,  # type: ignore[arg-type]
+        job=job_info,
     )
 
 
 @router.post(
     "",
-    response_model=JokeRequestResponse,
+    response_model=JokeResponse,
     status_code=202,
     summary="Submit a joke generation request",
     response_description="The accepted joke generation job.",
@@ -54,30 +59,20 @@ def create_joke_request(
     body: Annotated[CreateJokeRequest, Body()],
     course_svc: CourseServiceDI,
     joke_svc: JokeGenerationServiceDI,
-) -> JokeRequestResponse:
+) -> JokeResponse:
     """Submits a joke generation request for a course.
 
     Only instructors may submit joke requests.
-
-    Args:
-        subject: Authenticated subject.
-        course: Course loaded via DI from the path.
-        body: Request containing the prompt.
-        course_svc: Service used for authorization check.
-        joke_svc: Joke generation service to create the job.
-
-    Returns:
-        The accepted joke generation job.
     """
     course_svc.authorize_instructor(subject, course)
     assert course.id is not None
-    job = joke_svc.create_request(subject, course.id, body.prompt)
-    return _build_response(job)
+    joke = joke_svc.create_request(subject, course.id, body.prompt)
+    return _build_response(joke)
 
 
 @router.get(
     "",
-    response_model=list[JokeRequestResponse],
+    response_model=list[JokeResponse],
     summary="List joke generation requests",
     response_description="All joke generation jobs for the course.",
     responses={
@@ -91,29 +86,20 @@ def list_joke_requests(
     course: CourseByCourseIDPathDI,
     course_svc: CourseServiceDI,
     joke_svc: JokeGenerationServiceDI,
-) -> list[JokeRequestResponse]:
+) -> list[JokeResponse]:
     """Returns all joke generation jobs for a course.
 
     Only instructors may list joke requests.
-
-    Args:
-        subject: Authenticated subject.
-        course: Course loaded via DI from the path.
-        course_svc: Service used for authorization check.
-        joke_svc: Joke generation service to query jobs.
-
-    Returns:
-        List of joke generation jobs.
     """
     course_svc.authorize_instructor(subject, course)
     assert course.id is not None
-    jobs = joke_svc.list_requests(course.id)
-    return [_build_response(j) for j in jobs]
+    jokes = joke_svc.list_requests_with_jobs(course.id)
+    return [_build_response(joke) for joke in jokes]
 
 
 @router.get(
     "/{job_id}",
-    response_model=JokeRequestResponse,
+    response_model=JokeResponse,
     summary="Get a joke generation request",
     response_description="Details of a single joke generation job.",
     responses={
@@ -128,29 +114,19 @@ def get_joke_request(
     course_svc: CourseServiceDI,
     joke_svc: JokeGenerationServiceDI,
     job_id: int,
-) -> JokeRequestResponse:
+) -> JokeResponse:
     """Returns a single joke generation job.
 
     Only instructors may view joke requests.
-
-    Args:
-        subject: Authenticated subject.
-        course: Course loaded via DI from the path.
-        course_svc: Service used for authorization check.
-        joke_svc: Joke generation service to load the job.
-        job_id: Primary key of the joke generation job.
-
-    Returns:
-        The matching joke generation job.
     """
     course_svc.authorize_instructor(subject, course)
-    job = joke_svc.get_request(job_id)
-    if job is None:
+    joke = joke_svc.get_request(job_id)
+    if joke is None:
         raise HTTPException(status_code=404, detail="Joke request not found.")
     assert course.id is not None
-    if job.course_id != course.id:
+    if joke.course_id != course.id:
         raise HTTPException(status_code=404, detail="Joke request not found.")
-    return _build_response(job)
+    return _build_response(joke)
 
 
 @router.delete(
@@ -173,19 +149,12 @@ def delete_joke_request(
     """Deletes a joke generation job.
 
     Only instructors may delete joke requests.
-
-    Args:
-        subject: Authenticated subject.
-        course: Course loaded via DI from the path.
-        course_svc: Service used for authorization check.
-        joke_svc: Joke generation service to delete the job.
-        job_id: Primary key of the joke generation job.
     """
     course_svc.authorize_instructor(subject, course)
-    job = joke_svc.get_request(job_id)
-    if job is None:
+    joke = joke_svc.get_request(job_id)
+    if joke is None:
         raise HTTPException(status_code=404, detail="Joke request not found.")
     assert course.id is not None
-    if job.course_id != course.id:
+    if joke.course_id != course.id:
         raise HTTPException(status_code=404, detail="Joke request not found.")
     joke_svc.delete_request(job_id)

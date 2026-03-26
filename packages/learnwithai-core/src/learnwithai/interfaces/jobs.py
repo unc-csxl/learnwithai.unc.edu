@@ -61,3 +61,10 @@ class JobNotifier(Protocol):
     """Publishes job status changes to interested listeners."""
 
     def notify(self, update: JobUpdate) -> None: ...
+
+
+@runtime_checkable
+class NotifierCloseable(Protocol):
+    """Notifier that holds resources which should be explicitly released."""
+
+    def close(self) -> None: ...

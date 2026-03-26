@@ -1,27 +1,36 @@
-"""Service layer for joke generation job CRUD operations."""
+"""Service layer for joke generation CRUD operations."""
 
 from ...interfaces import JobQueue
 from ...repositories.async_job_repository import AsyncJobRepository
 from ...tables.async_job import AsyncJob, AsyncJobStatus
 from ...tables.user import User
-from .entities import JOKE_GENERATION_KIND, JokeGenerationInput, JokeGenerationJob
+from .models import JOKE_GENERATION_KIND, JokeGenerationJob
+from .repository import JokeRepository
+from .tables import Joke
 
 
 class JokeGenerationService:
-    """Orchestrates creation, listing, retrieval, and deletion of joke jobs."""
+    """Orchestrates creation, listing, retrieval, and deletion of jokes."""
 
-    def __init__(self, async_job_repo: AsyncJobRepository, job_queue: JobQueue):
+    def __init__(
+        self,
+        joke_repo: JokeRepository,
+        async_job_repo: AsyncJobRepository,
+        job_queue: JobQueue,
+    ):
         """Initializes the service with its dependencies.
 
         Args:
+            joke_repo: Repository for joke records.
             async_job_repo: Repository for unified async job records.
             job_queue: Queue used to dispatch background jobs.
         """
+        self._joke_repo = joke_repo
         self._async_job_repo = async_job_repo
         self._job_queue = job_queue
 
-    def create_request(self, subject: User, course_id: int, prompt: str) -> AsyncJob:
-        """Creates a joke generation job and enqueues it for processing.
+    def create_request(self, subject: User, course_id: int, prompt: str) -> Joke:
+        """Creates a joke, its async job, and enqueues it.
 
         Args:
             subject: The authenticated instructor submitting the request.
@@ -29,54 +38,81 @@ class JokeGenerationService:
             prompt: Description of the topic to generate jokes about.
 
         Returns:
-            The persisted async job in PENDING status.
+            The persisted joke with a linked PENDING async job.
         """
-        input_data = JokeGenerationInput(prompt=prompt).model_dump()
-        job = self._async_job_repo.create(
+        async_job = self._async_job_repo.create(
             AsyncJob(
                 course_id=course_id,
                 created_by_pid=subject.pid,
                 kind=JOKE_GENERATION_KIND,
                 status=AsyncJobStatus.PENDING,
-                input_data=input_data,
+                input_data={},
             )
         )
-        assert job.id is not None
-        self._job_queue.enqueue(JokeGenerationJob(job_id=job.id))
-        return job
+        assert async_job.id is not None
 
-    def list_requests(self, course_id: int) -> list[AsyncJob]:
-        """Returns all joke generation jobs for a course, newest first.
+        joke = self._joke_repo.create(
+            Joke(
+                course_id=course_id,
+                created_by_pid=subject.pid,
+                prompt=prompt,
+                async_job_id=async_job.id,
+            )
+        )
+
+        self._job_queue.enqueue(JokeGenerationJob(job_id=async_job.id))
+        return joke
+
+    def list_requests(self, course_id: int) -> list[Joke]:
+        """Returns all jokes for a course, newest first.
 
         Args:
             course_id: The course to filter by.
 
         Returns:
-            A list of async jobs ordered by creation time descending.
+            A list of jokes ordered by creation time descending.
         """
-        return self._async_job_repo.list_by_course_and_kind(course_id, JOKE_GENERATION_KIND)
+        return self._joke_repo.list_by_course(course_id)
 
-    def get_request(self, job_id: int) -> AsyncJob | None:
-        """Returns a single joke generation job by ID.
+    def list_requests_with_jobs(self, course_id: int) -> list[Joke]:
+        """Returns all jokes for a course with their async jobs pre-loaded.
+
+        The ``async_job`` relationship is eagerly loaded so callers can
+        access ``joke.async_job`` without additional queries.
 
         Args:
-            job_id: Primary key of the async job.
+            course_id: The course to filter by.
 
         Returns:
-            The matching job, or ``None`` if not found.
+            A list of jokes ordered by creation time descending.
         """
-        return self._async_job_repo.get_by_id(job_id)
+        return self._joke_repo.list_by_course_with_jobs(course_id)
 
-    def delete_request(self, job_id: int) -> None:
-        """Deletes a joke generation job.
+    def get_request(self, joke_id: int) -> Joke | None:
+        """Returns a single joke by ID.
 
         Args:
-            job_id: Primary key of the async job to delete.
+            joke_id: Primary key of the joke.
+
+        Returns:
+            The matching joke, or ``None`` if not found.
+        """
+        return self._joke_repo.get_by_id(joke_id)
+
+    def delete_request(self, joke_id: int) -> None:
+        """Deletes a joke and its linked async job.
+
+        Args:
+            joke_id: Primary key of the joke to delete.
 
         Raises:
-            ValueError: If the job does not exist.
+            ValueError: If the joke does not exist.
         """
-        job = self._async_job_repo.get_by_id(job_id)
-        if job is None:
-            raise ValueError(f"Job {job_id} not found")
-        self._async_job_repo.delete(job)
+        joke = self._joke_repo.get_by_id(joke_id)
+        if joke is None:
+            raise ValueError(f"Joke {joke_id} not found")
+        if joke.async_job_id is not None:
+            async_job = self._async_job_repo.get_by_id(joke.async_job_id)
+            if async_job is not None:
+                self._async_job_repo.delete(async_job)
+        self._joke_repo.delete(joke)

@@ -8,14 +8,14 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { CreateJokeRequest } from '../../models/create-joke-request';
-import { JokeRequestResponse } from '../../models/joke-request-response';
+import { JokeResponse } from '../../models/joke-response';
 
 export interface CreateJokeRequest$Params {
   course_id: number;
       body: CreateJokeRequest
 }
 
-export function createJokeRequest(http: HttpClient, rootUrl: string, params: CreateJokeRequest$Params, context?: HttpContext): Observable<StrictHttpResponse<JokeRequestResponse>> {
+export function createJokeRequest(http: HttpClient, rootUrl: string, params: CreateJokeRequest$Params, context?: HttpContext): Observable<StrictHttpResponse<JokeResponse>> {
   const rb = new RequestBuilder(rootUrl, createJokeRequest.PATH, 'post');
   if (params) {
     rb.path('course_id', params.course_id, {});
@@ -27,7 +27,7 @@ export function createJokeRequest(http: HttpClient, rootUrl: string, params: Cre
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<JokeRequestResponse>;
+      return r as StrictHttpResponse<JokeResponse>;
     })
   );
 }

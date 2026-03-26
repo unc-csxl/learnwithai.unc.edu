@@ -52,7 +52,7 @@ class RabbitMQJobNotifier(JobNotifier):
             )
         except Exception:
             logger.exception("Failed to publish job update for job %d", update.job_id)
-            self._close()
+            self.close()
 
     def _ensure_channel(
         self,
@@ -76,8 +76,12 @@ class RabbitMQJobNotifier(JobNotifier):
 
         return self._channel
 
-    def _close(self) -> None:
-        """Closes the connection and resets internal state."""
+    def close(self) -> None:
+        """Closes the connection and resets internal state.
+
+        Called by :meth:`BaseJobHandler.handle` after each job so that
+        connections do not accumulate across messages.
+        """
         try:
             if self._connection is not None and self._connection.is_open:
                 self._connection.close()

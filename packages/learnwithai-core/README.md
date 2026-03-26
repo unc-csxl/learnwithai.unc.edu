@@ -27,6 +27,8 @@
   - `async_job_repository.py` — CRUD for `AsyncJob` records, including listing by course and kind
 - `src/learnwithai/services/` — shared business logic
 - `src/learnwithai/jobs/` — queueable job definitions
+- `src/learnwithai/tools/` — self-contained feature packages for AI-powered tools
+  - `jokes/` — joke generation tool (tables, repository, service, models, job handler)
 
 ## Test Directory Layout
 
@@ -34,20 +36,28 @@ Tests mirror the source package structure:
 
 ```
 test/
-  conftest.py                          # global fixtures (settings cache)
+  conftest.py                          # shared fixtures (settings cache, DB session)
   test_config.py
   test_db.py
   test_interfaces.py
   test_jobs.py
   repositories/
-    conftest.py                        # shared session fixture for DB tests
     test_user_repository.py
     test_course_repository.py
     test_membership_repository.py
+    test_async_job_repository.py
   services/
     test_csxl_auth_service.py
     test_health.py
+  tools/
+    jokes/
+      test_job.py
+      test_models.py
+      test_repository.py
+      test_service.py
 ```
+
+The `session` fixture in `test/conftest.py` is shared by all integration tests that need a database session. Do not duplicate this fixture in subdirectory `conftest.py` files.
 
 ## Development Notes
 
@@ -73,6 +83,32 @@ The `JobQueue` interface (`learnwithai.interfaces.JobQueue`) is defined in this 
 All background job types share a single `async_job` table (`AsyncJob` in `tables/async_job.py`) with a `kind` string discriminator and JSON `input_data`/`output_data` columns. This avoids schema changes when adding new job types.
 
 The `JobNotifier` protocol (`learnwithai.interfaces.jobs`) defines how job handlers publish real-time status updates after commit. `NoOpJobNotifier` (from `learnwithai.jobs`) silently discards notifications and is used in tests. The `RabbitMQJobNotifier` (in `learnwithai-jobqueue`) publishes `JobUpdate` messages to the `job_updates` fanout exchange for the API's WebSocket consumer.
+
+### SQLModel Relationship and Eager Loading Conventions
+
+In current SQLModel, avoid from **future** import annotations in files that define Relationship fields, especially with circular imports or forward references. Use quoted forward references such as Optional["AsyncJob"], list["AsyncJob"], or "AsyncJob" instead. This appears to be a SQLModel annotation-handling limitation, not a general SQLAlchemy limitation.
+
+In repository queries, use SQLAlchemy `selectinload` to eagerly load the relationship instead of writing manual outer joins:
+
+```python
+from sqlalchemy.orm import selectinload
+
+stmt = select(Joke).options(selectinload(Joke.async_job)).where(...)
+```
+
+This returns fully hydrated domain objects (`list[Joke]`) rather than tuples (`list[tuple[Joke, AsyncJob | None]]`), keeping the service and route layers simpler.
+
+### Tool Package Pattern
+
+Each AI tool lives in a self-contained package under `src/learnwithai/tools/` (e.g. `tools/jokes/`). A tool package contains its own:
+
+- `tables.py` — SQLModel table definitions specific to the tool
+- `repository.py` — data access layer
+- `service.py` — business logic and job orchestration
+- `models.py` — API-facing response models
+- `job.py` — background job handler
+
+This keeps tool-specific concerns isolated from the shared repository and service layers. A tool's table may reference shared tables (like `AsyncJob`) via foreign keys and relationships.
 
 ## Parameter Ordering Convention
 

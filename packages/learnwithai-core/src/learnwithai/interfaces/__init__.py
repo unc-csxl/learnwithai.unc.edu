@@ -4,6 +4,7 @@ from .jobs import (
     JobNotifier,
     JobQueue,
     JobUpdate,
+    NotifierCloseable,
     SupportsJobType,
     TrackedJob,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "JobNotifier",
     "JobQueue",
     "JobUpdate",
+    "NotifierCloseable",
     "SupportsJobType",
     "TrackedJob",
 ]

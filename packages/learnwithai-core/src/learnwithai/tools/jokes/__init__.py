@@ -1,24 +1,25 @@
-"""Joke generation tool — entities, service, and OpenAI wrapper.
+"""Joke generation tool — models, tables, and service.
 
-The ``JokeGenerationJobHandler`` is intentionally **not** re-exported
-here to avoid a circular import with ``learnwithai.jobs``. Import it
-directly from ``learnwithai.tools.jokes.job`` when needed.
+``JokeGenerationService`` and ``JokeGenerationJobHandler`` are
+intentionally **not** re-exported here to avoid circular imports with
+the repository layer.  Import them directly from their modules:
+
+    from learnwithai.tools.jokes.service import JokeGenerationService
+    from learnwithai.tools.jokes.job import JokeGenerationJobHandler
 """
 
-from .entities import (
+from .models import (
     JOKE_GENERATION_KIND,
     JokeGenerationInput,
     JokeGenerationJob,
     JokeGenerationOutput,
 )
-from .openai_service import OpenAIService
-from .service import JokeGenerationService
+from .tables import Joke
 
 __all__ = [
     "JOKE_GENERATION_KIND",
+    "Joke",
     "JokeGenerationInput",
     "JokeGenerationJob",
     "JokeGenerationOutput",
-    "JokeGenerationService",
-    "OpenAIService",
 ]

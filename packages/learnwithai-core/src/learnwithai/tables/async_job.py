@@ -42,8 +42,9 @@ class AsyncJob(SQLModel, table=True):
     course_id: int = Field(
         sa_column=Column(Integer, ForeignKey("course.id"), nullable=False),
     )
-    created_by_pid: int = Field(
-        sa_column=Column(Integer, nullable=False),
+    created_by_pid: int | None = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("user.pid"), nullable=True),
     )
     kind: str = Field(
         sa_column=Column(String(64), nullable=False),

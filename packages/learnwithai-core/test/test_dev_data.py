@@ -8,6 +8,7 @@ from learnwithai.dev_data import seed
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import MembershipState, MembershipType
+from learnwithai.tools.jokes.tables import Joke
 
 
 def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
@@ -25,6 +26,8 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
         # Simulate the database assigning an auto-increment id on flush
         if isinstance(obj, Course):
             obj.id = 1
+        if isinstance(obj, AsyncJob):
+            obj.id = 1
 
     session.add.side_effect = _track_add
 
@@ -32,11 +35,11 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     # add_all called twice: once for users, once for memberships
     assert session.add_all.call_count == 2
-    # add called twice: for the course and the joke job
-    assert session.add.call_count == 2
-    # flush called four times:
-    # after users, after course, after memberships, after joke job
-    assert session.flush.call_count == 4
+    # add called three times: course, joke job, joke request
+    assert session.add.call_count == 3
+    # flush called five times:
+    # after users, after course, after memberships, after joke job, after joke request
+    assert session.flush.call_count == 5
 
     # Verify users
     users = added[0]
@@ -69,3 +72,10 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
     assert joke_job.input_data["prompt"] == "Tell me 3 jokes about software engineering"
     assert joke_job.output_data is not None
     assert len(joke_job.output_data["jokes"]) == 3
+
+    # Verify joke request
+    joke_request = added_single[2]
+    assert isinstance(joke_request, Joke)
+    assert joke_request.prompt == "Tell me 3 jokes about software engineering"
+    assert len(joke_request.jokes) == 3
+    assert joke_request.async_job_id == joke_job.id

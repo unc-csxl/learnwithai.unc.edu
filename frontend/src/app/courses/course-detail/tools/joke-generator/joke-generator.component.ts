@@ -84,7 +84,9 @@ export class JokeGenerator implements OnDestroy {
       this.form.reset();
       this.successSnackbar.open('Joke request submitted!');
       this.requests.update((prev) => [created, ...prev]);
-      this.watchJob(created.id);
+      if (created.job) {
+        this.watchJob(created.job.id, created.id);
+      }
     } catch {
       this.errorMessage.set('Failed to submit joke request.');
     } finally {
@@ -102,24 +104,24 @@ export class JokeGenerator implements OnDestroy {
     }
   }
 
-  protected statusLabel(status: string): string {
+  protected statusLabel(status: string | undefined): string {
     const labels: Record<string, string> = {
       pending: 'Pending',
       processing: 'Processing',
       completed: 'Completed',
       failed: 'Failed',
     };
-    return labels[status] ?? status;
+    return (status && labels[status]) ?? 'Unknown';
   }
 
-  protected statusIcon(status: string): string {
+  protected statusIcon(status: string | undefined): string {
     const icons: Record<string, string> = {
       pending: 'schedule',
       processing: 'sync',
       completed: 'check_circle',
       failed: 'error',
     };
-    return icons[status] ?? 'help';
+    return (status && icons[status]) ?? 'help';
   }
 
   // ------------------------------------------------------------------
@@ -132,8 +134,8 @@ export class JokeGenerator implements OnDestroy {
       this.requests.set(items);
       this.loaded.set(true);
       for (const item of items) {
-        if (item.status === 'pending' || item.status === 'processing') {
-          this.watchJob(item.id);
+        if (item.job && (item.job.status === 'pending' || item.job.status === 'processing')) {
+          this.watchJob(item.job.id, item.id);
         }
       }
     } catch {
@@ -142,8 +144,8 @@ export class JokeGenerator implements OnDestroy {
     }
   }
 
-  private watchJob(jobId: number): void {
-    const jobSignal = this.jobUpdateService.updateForJob(jobId);
+  private watchJob(asyncJobId: number, jokeId: number): void {
+    const jobSignal = this.jobUpdateService.updateForJob(asyncJobId);
     const effectRef = effect(
       async () => {
         const update = jobSignal();
@@ -151,17 +153,17 @@ export class JokeGenerator implements OnDestroy {
         if (update.status !== 'completed' && update.status !== 'failed') return;
 
         effectRef.destroy();
-        await this.refreshJob(jobId);
+        await this.refreshJob(jokeId);
       },
       { injector: this.injector },
     );
     this.destroyRef.onDestroy(() => effectRef.destroy());
   }
 
-  private async refreshJob(jobId: number): Promise<void> {
+  private async refreshJob(jokeId: number): Promise<void> {
     try {
-      const updated = await this.jokeService.get(this.courseId, jobId);
-      this.requests.update((prev) => prev.map((r) => (r.id === jobId ? updated : r)));
+      const updated = await this.jokeService.get(this.courseId, jokeId);
+      this.requests.update((prev) => prev.map((r) => (r.id === jokeId ? updated : r)));
     } catch {
       /* Silently ignore refresh errors; the list still shows the old state. */
     }

@@ -7,14 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { JokeRequestResponse } from '../../models/joke-request-response';
+import { JokeResponse } from '../../models/joke-response';
 
 export interface GetJokeRequest$Params {
   job_id: number;
   course_id: number;
 }
 
-export function getJokeRequest(http: HttpClient, rootUrl: string, params: GetJokeRequest$Params, context?: HttpContext): Observable<StrictHttpResponse<JokeRequestResponse>> {
+export function getJokeRequest(http: HttpClient, rootUrl: string, params: GetJokeRequest$Params, context?: HttpContext): Observable<StrictHttpResponse<JokeResponse>> {
   const rb = new RequestBuilder(rootUrl, getJokeRequest.PATH, 'get');
   if (params) {
     rb.path('job_id', params.job_id, {});
@@ -26,7 +26,7 @@ export function getJokeRequest(http: HttpClient, rootUrl: string, params: GetJok
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<JokeRequestResponse>;
+      return r as StrictHttpResponse<JokeResponse>;
     })
   );
 }

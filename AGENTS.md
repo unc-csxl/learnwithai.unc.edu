@@ -48,6 +48,12 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 - Write Google-style docstrings for Python modules, classes, and functions that are part of the maintained codebase.
 - Keep comments high signal. Explain why or clarify non-obvious behavior, not line-by-line mechanics.
 
+## SQLModel and Relationship Rules
+
+- When a table has a foreign key to another table, define a unidirectional SQLModel `Relationship` on the owning side. Use `selectinload` for eager loading in repository queries instead of writing manual joins.
+- **Do not** use `from __future__ import annotations` in any file that defines a SQLModel `Relationship`. Postponed evaluation prevents SQLAlchemy from resolving forward-reference strings at class-creation time. Use `Optional["RelatedModel"]` from `typing` for forward references instead of `RelatedModel | None`.
+- Repository methods that load related objects via eager loading should return domain objects directly (`list[Model]`), not tuples.
+
 ## Testing Expectations
 
 - New and changed behavior must be covered by automated tests.
@@ -55,6 +61,7 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 - Python changes should maintain the repository's 100% coverage expectation.
 - Frontend changes should include or update Angular tests when behavior changes.
 - Prefer targeted tests while developing, then run the full repository QA check before you stop.
+- Keep shared test fixtures (like DB session fixtures) in the nearest common `conftest.py`. Do not duplicate fixtures across subdirectory conftest files.
 
 ## Validation Workflow
 

@@ -22,7 +22,8 @@ from learnwithai.services.csxl_auth_service import (
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.course import Course
 from learnwithai.tables.user import User
-from learnwithai.tools.jokes import JokeGenerationService
+from learnwithai.tools.jokes.repository import JokeRepository
+from learnwithai.tools.jokes.service import JokeGenerationService
 from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 from sqlmodel import Session
 
@@ -34,6 +35,7 @@ __all__ = [
     "CourseRepositoryDI",
     "CourseServiceDI",
     "JokeGenerationServiceDI",
+    "JokeRepositoryDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
     "PaginationParamsDI",
@@ -51,6 +53,7 @@ __all__ = [
     "get_user_by_path_pid",
     "get_user_by_pid",
     "joke_generation_service_factory",
+    "joke_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
     "roster_upload_service_factory",
@@ -116,6 +119,14 @@ def async_job_repository_factory(session: SessionDI) -> AsyncJobRepository:
 
 
 AsyncJobRepositoryDI: TypeAlias = Annotated[AsyncJobRepository, Depends(async_job_repository_factory)]
+
+
+def joke_repository_factory(session: SessionDI) -> JokeRepository:
+    """Constructs a joke repository bound to the current request session."""
+    return JokeRepository(session)
+
+
+JokeRepositoryDI: TypeAlias = Annotated[JokeRepository, Depends(joke_repository_factory)]
 
 
 def course_service_factory(
@@ -261,11 +272,12 @@ RosterUploadServiceDI: TypeAlias = Annotated[RosterUploadService, Depends(roster
 
 
 def joke_generation_service_factory(
+    joke_repo: JokeRepositoryDI,
     async_job_repo: AsyncJobRepositoryDI,
     job_queue: JobQueueDI,
 ) -> JokeGenerationService:
     """Creates the joke generation service for the current request."""
-    return JokeGenerationService(async_job_repo, job_queue)
+    return JokeGenerationService(joke_repo, async_job_repo, job_queue)
 
 
 JokeGenerationServiceDI: TypeAlias = Annotated[JokeGenerationService, Depends(joke_generation_service_factory)]

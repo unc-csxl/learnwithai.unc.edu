@@ -16,6 +16,7 @@ from sqlmodel import Session
 
 from ..config import Settings
 from ..interfaces import JobHandler, JobNotifier, JobUpdate, TrackedJob
+from ..interfaces.jobs import NotifierCloseable
 from ..repositories.async_job_repository import AsyncJobRepository
 from ..tables.async_job import AsyncJobStatus
 
@@ -61,21 +62,25 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         settings = get_settings()
         notifier = self._build_notifier(settings)
 
-        engine = get_engine()
-        with _Session(engine) as session:
-            async_job_repo = AsyncJobRepository(session)
+        try:
+            engine = get_engine()
+            with _Session(engine) as session:
+                async_job_repo = AsyncJobRepository(session)
 
-            try:
-                self._set_processing(job.job_id, async_job_repo, session, notifier)
-                self._execute(job, session)
-                session.commit()
-                self._notify(notifier, job.job_id, async_job_repo)
-            except Exception:
-                session.rollback()
-                self._mark_failed(job.job_id, async_job_repo)
-                session.commit()
-                self._notify(notifier, job.job_id, async_job_repo)
-                raise
+                try:
+                    self._set_processing(job.job_id, async_job_repo, session, notifier)
+                    self._execute(job, session)
+                    session.commit()
+                    self._notify(notifier, job.job_id, async_job_repo)
+                except Exception:
+                    session.rollback()
+                    self._mark_failed(job.job_id, async_job_repo)
+                    session.commit()
+                    self._notify(notifier, job.job_id, async_job_repo)
+                    raise
+        finally:
+            if isinstance(notifier, NotifierCloseable):
+                notifier.close()
 
     @abstractmethod
     def _execute(self, job: JobT, session: Session) -> None:
@@ -182,7 +187,7 @@ class BaseJobHandler(JobHandler[JobT], Generic[JobT]):
         """
         try:
             reloaded = async_job_repo.get_by_id(job_id)
-            if reloaded is not None:
+            if reloaded is not None and reloaded.created_by_pid is not None:
                 notifier.notify(
                     JobUpdate(
                         job_id=job_id,

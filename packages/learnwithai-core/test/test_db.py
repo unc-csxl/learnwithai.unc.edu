@@ -70,7 +70,9 @@ def test_load_table_metadata_imports_tables_package() -> None:
         db.load_table_metadata()
 
     # Assert
-    import_module_mock.assert_called_once_with("learnwithai.tables")
+    assert import_module_mock.call_count == 2
+    import_module_mock.assert_any_call("learnwithai.tables")
+    import_module_mock.assert_any_call("learnwithai.tools.jokes.tables")
 
 
 def test_reset_db_and_tables_resets_postgresql_database_and_recreates_tables() -> None:
