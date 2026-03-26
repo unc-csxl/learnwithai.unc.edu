@@ -14,6 +14,7 @@ from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from api.di import (
     course_service_factory,
     get_authenticated_user,
+    get_course_by_path_id,
     joke_generation_service_factory,
 )
 from api.main import app
@@ -231,11 +232,13 @@ def client():
 @pytest.mark.integration
 def test_create_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
+    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.create_request.return_value = _stub_job(job_id=42)
 
     app.dependency_overrides[get_authenticated_user] = lambda: user
+    app.dependency_overrides[get_course_by_path_id] = lambda: course
     app.dependency_overrides[course_service_factory] = lambda: course_svc
     app.dependency_overrides[joke_generation_service_factory] = lambda: joke_svc
 
@@ -254,11 +257,13 @@ def test_create_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_list_joke_requests_endpoint(client: TestClient) -> None:
     user = _stub_user()
+    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.list_requests.return_value = [_stub_job(job_id=1)]
 
     app.dependency_overrides[get_authenticated_user] = lambda: user
+    app.dependency_overrides[get_course_by_path_id] = lambda: course
     app.dependency_overrides[course_service_factory] = lambda: course_svc
     app.dependency_overrides[joke_generation_service_factory] = lambda: joke_svc
 
@@ -273,11 +278,13 @@ def test_list_joke_requests_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_get_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
+    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = _stub_job(job_id=42, course_id=1)
 
     app.dependency_overrides[get_authenticated_user] = lambda: user
+    app.dependency_overrides[get_course_by_path_id] = lambda: course
     app.dependency_overrides[course_service_factory] = lambda: course_svc
     app.dependency_overrides[joke_generation_service_factory] = lambda: joke_svc
 
@@ -290,11 +297,13 @@ def test_get_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_delete_joke_request_endpoint(client: TestClient) -> None:
     user = _stub_user()
+    course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
     joke_svc.get_request.return_value = _stub_job(job_id=42, course_id=1)
 
     app.dependency_overrides[get_authenticated_user] = lambda: user
+    app.dependency_overrides[get_course_by_path_id] = lambda: course
     app.dependency_overrides[course_service_factory] = lambda: course_svc
     app.dependency_overrides[joke_generation_service_factory] = lambda: joke_svc
 
