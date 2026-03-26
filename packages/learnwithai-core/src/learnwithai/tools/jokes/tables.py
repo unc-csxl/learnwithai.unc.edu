@@ -49,7 +49,12 @@ class Joke(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("async_job.id"), nullable=True),
     )
     async_job: Optional["AsyncJob"] = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[Joke.async_job_id]", "lazy": "select"},
+        sa_relationship_kwargs={
+            "foreign_keys": "[Joke.async_job_id]",
+            "lazy": "select",
+            "cascade": "all, delete",
+            "single_parent": True,
+        },
     )
     created_at: datetime = Field(
         sa_column=Column(

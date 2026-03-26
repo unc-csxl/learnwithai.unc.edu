@@ -15,9 +15,14 @@
       "request": "launch",
       "cwd": "${workspaceFolder}",
       "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-      "args": ["run"],
+      "args": [
+        "run"
+      ],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }

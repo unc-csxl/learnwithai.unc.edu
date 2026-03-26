@@ -29,7 +29,7 @@ class JokeGenerationService:
         self._async_job_repo = async_job_repo
         self._job_queue = job_queue
 
-    def create_request(self, subject: User, course_id: int, prompt: str) -> Joke:
+    def create(self, subject: User, course_id: int, prompt: str) -> Joke:
         """Creates a joke, its async job, and enqueues it.
 
         Args:
@@ -63,7 +63,7 @@ class JokeGenerationService:
         self._job_queue.enqueue(JokeGenerationJob(job_id=async_job.id))
         return joke
 
-    def list_requests(self, course_id: int) -> list[Joke]:
+    def list_for_course(self, course_id: int) -> list[Joke]:
         """Returns all jokes for a course, newest first.
 
         Args:
@@ -74,7 +74,7 @@ class JokeGenerationService:
         """
         return self._joke_repo.list_by_course(course_id)
 
-    def list_requests_with_jobs(self, course_id: int) -> list[Joke]:
+    def list_for_course_with_jobs(self, course_id: int) -> list[Joke]:
         """Returns all jokes for a course with their async jobs pre-loaded.
 
         The ``async_job`` relationship is eagerly loaded so callers can
@@ -88,7 +88,7 @@ class JokeGenerationService:
         """
         return self._joke_repo.list_by_course_with_jobs(course_id)
 
-    def get_request(self, joke_id: int) -> Joke | None:
+    def get(self, joke_id: int) -> Joke | None:
         """Returns a single joke by ID.
 
         Args:
@@ -99,7 +99,7 @@ class JokeGenerationService:
         """
         return self._joke_repo.get_by_id(joke_id)
 
-    def delete_request(self, joke_id: int) -> None:
+    def delete(self, joke_id: int) -> None:
         """Deletes a joke and its linked async job.
 
         Args:
@@ -111,8 +111,4 @@ class JokeGenerationService:
         joke = self._joke_repo.get_by_id(joke_id)
         if joke is None:
             raise ValueError(f"Joke {joke_id} not found")
-        if joke.async_job_id is not None:
-            async_job = self._async_job_repo.get_by_id(joke.async_job_id)
-            if async_job is not None:
-                self._async_job_repo.delete(async_job)
         self._joke_repo.delete(joke)

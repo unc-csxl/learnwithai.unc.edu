@@ -17,6 +17,7 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder:api}/src"
       },
+      "envFile": "${workspaceFolder}/.env",
       "justMyCode": true
     }
   ]

@@ -6,7 +6,16 @@ import pytest
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course, Term
+from learnwithai.tables.user import User
 from sqlmodel import Session
+
+TEST_PIDS = (123456789, 111, 222, 333)
+
+
+def _seed_users(session: Session) -> None:
+    for pid in TEST_PIDS:
+        session.add(User(pid=pid, name=f"User {pid}", onyen=f"user{pid}"))
+    session.flush()
 
 
 def _seed_course(session: Session) -> Course:
@@ -22,6 +31,7 @@ def _seed_course(session: Session) -> Course:
 @pytest.mark.integration
 def test_create_persists_and_returns_job(session: Session) -> None:
     # Arrange
+    _seed_users(session)
     course = _seed_course(session)
     repo = AsyncJobRepository(session)
     assert course.id is not None
@@ -54,6 +64,7 @@ def test_create_persists_and_returns_job(session: Session) -> None:
 @pytest.mark.integration
 def test_get_by_id_returns_job(session: Session) -> None:
     # Arrange
+    _seed_users(session)
     course = _seed_course(session)
     repo = AsyncJobRepository(session)
     assert course.id is not None
@@ -95,6 +106,7 @@ def test_list_by_course_and_kind_returns_matching_jobs(
     session: Session,
 ) -> None:
     # Arrange
+    _seed_users(session)
     course = _seed_course(session)
     repo = AsyncJobRepository(session)
     assert course.id is not None
@@ -154,6 +166,7 @@ def test_list_by_course_and_kind_returns_empty_for_no_matches(
 @pytest.mark.integration
 def test_update_modifies_job_status(session: Session) -> None:
     # Arrange
+    _seed_users(session)
     course = _seed_course(session)
     repo = AsyncJobRepository(session)
     assert course.id is not None
@@ -182,6 +195,7 @@ def test_update_modifies_job_status(session: Session) -> None:
 @pytest.mark.integration
 def test_delete_removes_job(session: Session) -> None:
     # Arrange
+    _seed_users(session)
     course = _seed_course(session)
     repo = AsyncJobRepository(session)
     assert course.id is not None

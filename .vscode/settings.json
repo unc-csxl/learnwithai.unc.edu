@@ -1,8 +1,8 @@
 {
   "editor.codeActionsOnSave": {
-    "source.organizeImports": true,
-    "source.fixAll": true,
-    "source.fixAll.ruff": true
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit",
+    "source.fixAll.ruff": "explicit"
   },
   "files.exclude": {
     "**/.venv": true,
