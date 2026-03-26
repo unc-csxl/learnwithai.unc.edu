@@ -66,7 +66,7 @@ def create_joke_request(
     """
     course_svc.authorize_instructor(subject, course)
     assert course.id is not None
-    joke = joke_svc.create_request(subject, course.id, body.prompt)
+    joke = joke_svc.create(subject, course.id, body.prompt)
     return _build_response(joke)
 
 
@@ -93,7 +93,7 @@ def list_joke_requests(
     """
     course_svc.authorize_instructor(subject, course)
     assert course.id is not None
-    jokes = joke_svc.list_requests_with_jobs(course.id)
+    jokes = joke_svc.list_for_course_with_jobs(course.id)
     return [_build_response(joke) for joke in jokes]
 
 
@@ -120,7 +120,7 @@ def get_joke_request(
     Only instructors may view joke requests.
     """
     course_svc.authorize_instructor(subject, course)
-    joke = joke_svc.get_request(job_id)
+    joke = joke_svc.get(job_id)
     if joke is None:
         raise HTTPException(status_code=404, detail="Joke request not found.")
     assert course.id is not None
@@ -151,10 +151,10 @@ def delete_joke_request(
     Only instructors may delete joke requests.
     """
     course_svc.authorize_instructor(subject, course)
-    joke = joke_svc.get_request(job_id)
+    joke = joke_svc.get(job_id)
     if joke is None:
         raise HTTPException(status_code=404, detail="Joke request not found.")
     assert course.id is not None
     if joke.course_id != course.id:
         raise HTTPException(status_code=404, detail="Joke request not found.")
-    joke_svc.delete_request(job_id)
+    joke_svc.delete(job_id)

@@ -80,7 +80,7 @@ def test_create_joke_request_returns_accepted_response() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     created = _stub_joke(joke_id=42)
-    joke_svc.create_request.return_value = created
+    joke_svc.create.return_value = created
     body = MagicMock()
     body.prompt = "Jokes about recursion"
 
@@ -92,7 +92,7 @@ def test_create_joke_request_returns_accepted_response() -> None:
     assert result.job.status == AsyncJobStatus.PENDING
     assert result.prompt == "Jokes about recursion"
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
-    joke_svc.create_request.assert_called_once_with(subject, course.id, "Jokes about recursion")
+    joke_svc.create.assert_called_once_with(subject, course.id, "Jokes about recursion")
 
 
 def test_create_joke_request_raises_403_for_non_instructor() -> None:
@@ -114,7 +114,7 @@ def test_get_joke_request_returns_none_job_when_no_async_job() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1, async_job_id=None)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
@@ -127,7 +127,7 @@ def test_get_joke_request_returns_none_job_when_async_job_missing() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1, async_job_id=None)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
@@ -142,7 +142,7 @@ def test_list_joke_requests_returns_list() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
-    joke_svc.list_requests_with_jobs.return_value = [
+    joke_svc.list_for_course_with_jobs.return_value = [
         _stub_joke(joke_id=1, async_job_status=AsyncJobStatus.COMPLETED),
         _stub_joke(joke_id=2, jokes=["Ha!", "Ho!"], async_job_status=AsyncJobStatus.COMPLETED),
     ]
@@ -160,7 +160,7 @@ def test_list_joke_requests_returns_empty_list() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
-    joke_svc.list_requests_with_jobs.return_value = []
+    joke_svc.list_for_course_with_jobs.return_value = []
 
     result = list_joke_requests(subject, course, course_svc, joke_svc)
 
@@ -176,7 +176,7 @@ def test_get_joke_request_returns_job() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     result = get_joke_request(subject, course, course_svc, joke_svc, 42)
 
@@ -189,7 +189,7 @@ def test_get_joke_request_returns_404_when_not_found() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
-    joke_svc.get_request.return_value = None
+    joke_svc.get.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
         get_joke_request(subject, course, course_svc, joke_svc, 999)
@@ -202,7 +202,7 @@ def test_get_joke_request_returns_404_for_wrong_course() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=99)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     with pytest.raises(HTTPException) as exc_info:
         get_joke_request(subject, course, course_svc, joke_svc, 42)
@@ -218,11 +218,11 @@ def test_delete_joke_request_succeeds() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=1)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     delete_joke_request(subject, course, course_svc, joke_svc, 42)
 
-    joke_svc.delete_request.assert_called_once_with(42)
+    joke_svc.delete.assert_called_once_with(42)
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
 
 
@@ -231,7 +231,7 @@ def test_delete_joke_request_returns_404_when_not_found() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     joke_svc = MagicMock()
-    joke_svc.get_request.return_value = None
+    joke_svc.get.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
         delete_joke_request(subject, course, course_svc, joke_svc, 999)
@@ -244,7 +244,7 @@ def test_delete_joke_request_returns_404_for_wrong_course() -> None:
     course_svc = MagicMock()
     joke_svc = MagicMock()
     jr = _stub_joke(joke_id=42, course_id=99)
-    joke_svc.get_request.return_value = jr
+    joke_svc.get.return_value = jr
 
     with pytest.raises(HTTPException) as exc_info:
         delete_joke_request(subject, course, course_svc, joke_svc, 42)
@@ -278,7 +278,7 @@ def _override_common(
 @pytest.mark.integration
 def test_create_joke_request_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
-    joke_svc.create_request.return_value = _stub_joke(joke_id=42)
+    joke_svc.create.return_value = _stub_joke(joke_id=42)
     _override_common(joke_svc)
 
     response = client.post(
@@ -296,7 +296,7 @@ def test_create_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_list_joke_requests_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
-    joke_svc.list_requests_with_jobs.return_value = [
+    joke_svc.list_for_course_with_jobs.return_value = [
         _stub_joke(joke_id=1, async_job_status=AsyncJobStatus.PENDING),
     ]
     _override_common(joke_svc)
@@ -312,7 +312,7 @@ def test_list_joke_requests_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_get_joke_request_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
-    joke_svc.get_request.return_value = _stub_joke(joke_id=42, course_id=1)
+    joke_svc.get.return_value = _stub_joke(joke_id=42, course_id=1)
     _override_common(joke_svc)
 
     response = client.get("/api/courses/1/joke-requests/42")
@@ -324,13 +324,13 @@ def test_get_joke_request_endpoint(client: TestClient) -> None:
 @pytest.mark.integration
 def test_delete_joke_request_endpoint(client: TestClient) -> None:
     joke_svc = MagicMock()
-    joke_svc.get_request.return_value = _stub_joke(joke_id=42, course_id=1)
+    joke_svc.get.return_value = _stub_joke(joke_id=42, course_id=1)
     _override_common(joke_svc)
 
     response = client.delete("/api/courses/1/joke-requests/42")
 
     assert response.status_code == 204
-    joke_svc.delete_request.assert_called_once_with(42)
+    joke_svc.delete.assert_called_once_with(42)
 
 
 @pytest.mark.integration
@@ -341,7 +341,7 @@ def test_create_response_nests_status_inside_job_field(client: TestClient) -> No
     If the API flattens ``status`` onto the root, the frontend silently breaks.
     """
     joke_svc = MagicMock()
-    joke_svc.create_request.return_value = _stub_joke(
+    joke_svc.create.return_value = _stub_joke(
         joke_id=7,
         async_job_id=70,
         async_job_status=AsyncJobStatus.PENDING,
