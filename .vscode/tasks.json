@@ -39,7 +39,7 @@
         {
             "label": "job queue: run",
             "type": "shell",
-            "command": "uv run --package learnwithai-jobqueue dramatiq learnwithai_jobqueue.worker",
+            "command": "uv run --package learnwithai-jobqueue dramatiq --processes 1 --threads 2 learnwithai_jobqueue.worker",
             "options": {
                 "cwd": "${workspaceFolder:repo}"
             },

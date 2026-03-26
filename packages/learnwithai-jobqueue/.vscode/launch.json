@@ -7,7 +7,11 @@
       "request": "launch",
       "module": "dramatiq",
       "args": [
-        "learnwithai_jobqueue.worker"
+        "learnwithai_jobqueue.worker",
+        "--processes",
+        "1",
+        "--threads",
+        "2"
       ],
       "cwd": "${workspaceFolder:job_queue}",
       "env": {
