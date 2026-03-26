@@ -50,9 +50,7 @@ def reset_db_and_tables() -> None:
         engine.dispose()
         _reset_postgresql_database(database_url)
     else:
-        raise ValueError(
-            f"Unsupported database driver for reset: {database_url.drivername}"
-        )
+        raise ValueError(f"Unsupported database driver for reset: {database_url.drivername}")
 
     get_engine.cache_clear()
     create_db_and_tables()

@@ -54,9 +54,7 @@ class JokeGenerationService:
         Returns:
             A list of async jobs ordered by creation time descending.
         """
-        return self._async_job_repo.list_by_course_and_kind(
-            course_id, JOKE_GENERATION_KIND
-        )
+        return self._async_job_repo.list_by_course_and_kind(course_id, JOKE_GENERATION_KIND)
 
     def get_request(self, job_id: int) -> AsyncJob | None:
         """Returns a single joke generation job by ID.

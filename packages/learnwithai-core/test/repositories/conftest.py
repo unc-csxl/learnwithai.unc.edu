@@ -7,9 +7,7 @@ import os
 import pytest
 from sqlmodel import Session, SQLModel, create_engine
 
-DEFAULT_TEST_DB_URL = (
-    "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-)
+DEFAULT_TEST_DB_URL = "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
 TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
 
 

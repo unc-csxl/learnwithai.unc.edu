@@ -92,12 +92,8 @@ def seed(session: Session) -> None:
         output_data={
             "jokes": [
                 "Why do programmers prefer dark mode? Because light attracts bugs!",
-                "A QA engineer walks into a bar."
-                " Orders 1 beer. Orders 0 beers."
-                " Orders -1 beers. Orders a lizard.",
-                "There are only 10 types of people"
-                " who understand binary"
-                " and those who don't.",
+                "A QA engineer walks into a bar. Orders 1 beer. Orders 0 beers. Orders -1 beers. Orders a lizard.",
+                "There are only 10 types of people who understand binary and those who don't.",
             ]
         },
         created_at=datetime(2025, 1, 15, 10, 0, tzinfo=timezone.utc),

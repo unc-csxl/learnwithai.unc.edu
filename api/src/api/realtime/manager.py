@@ -30,9 +30,7 @@ class JobUpdateManager:
         # Secondary index keyed by (user_id, course_id) so broadcast can
         # locate exactly the sockets it needs in O(1) rather than scanning
         # every subscriber in the course.
-        self._user_subscriptions: defaultdict[tuple[int, int], set[WebSocket]] = (
-            defaultdict(set)
-        )
+        self._user_subscriptions: defaultdict[tuple[int, int], set[WebSocket]] = defaultdict(set)
 
     def register_connection(self, websocket: WebSocket, user_id: int) -> None:
         """Records the authenticated user identity for a connected socket.
@@ -141,15 +139,11 @@ class JobUpdateManager:
         for ws in stale:
             self.unsubscribe_all(ws)
 
-    def _index_subscription(
-        self, user_id: int, course_id: int, websocket: WebSocket
-    ) -> None:
+    def _index_subscription(self, user_id: int, course_id: int, websocket: WebSocket) -> None:
         """Adds a socket to the direct-lookup ``(user_id, course_id)`` index."""
         self._user_subscriptions[(user_id, course_id)].add(websocket)
 
-    def _discard_index_entry(
-        self, user_id: int, course_id: int, websocket: WebSocket
-    ) -> None:
+    def _discard_index_entry(self, user_id: int, course_id: int, websocket: WebSocket) -> None:
         """Removes a socket from the direct-lookup ``(user_id, course_id)`` index."""
         key = (user_id, course_id)
         subscribers = self._user_subscriptions.get(key)

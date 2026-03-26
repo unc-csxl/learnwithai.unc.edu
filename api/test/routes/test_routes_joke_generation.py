@@ -80,9 +80,7 @@ def test_create_joke_request_returns_accepted_response() -> None:
     assert result.status == AsyncJobStatus.PENDING
     assert result.prompt == "Jokes about recursion"
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
-    joke_svc.create_request.assert_called_once_with(
-        subject, course.id, "Jokes about recursion"
-    )
+    joke_svc.create_request.assert_called_once_with(subject, course.id, "Jokes about recursion")
 
 
 def test_create_joke_request_raises_403_for_non_instructor() -> None:

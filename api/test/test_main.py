@@ -36,9 +36,7 @@ def test_app_uses_settings_app_name_for_title() -> None:
 def test_app_registers_expected_routes() -> None:
     # Arrange
     dev_app = create_app(_development_settings())
-    route_paths = {
-        route.path for route in dev_app.routes if isinstance(route, APIRoute)
-    }
+    route_paths = {route.path for route in dev_app.routes if isinstance(route, APIRoute)}
 
     # Act
     has_health_route = "/api/health" in route_paths
@@ -67,15 +65,11 @@ def test_app_registers_expected_routes() -> None:
 
 def test_app_excludes_dev_routes_in_production() -> None:
     # Arrange
-    prod_settings = Settings.model_construct(
-        _fields_set=None, environment="production", app_name="learnwithai"
-    )
+    prod_settings = Settings.model_construct(_fields_set=None, environment="production", app_name="learnwithai")
 
     # Act
     prod_app = create_app(prod_settings)
-    route_paths = {
-        route.path for route in prod_app.routes if isinstance(route, APIRoute)
-    }
+    route_paths = {route.path for route in prod_app.routes if isinstance(route, APIRoute)}
 
     # Assert
     assert "/api/auth/as/{pid}" not in route_paths
@@ -106,12 +100,8 @@ def test_app_assigns_tags_to_current_routes() -> None:
     courses_list_tags = openapi["paths"]["/api/courses"]["get"]["tags"]
     courses_create_tags = openapi["paths"]["/api/courses"]["post"]["tags"]
     roster_tags = openapi["paths"]["/api/courses/{course_id}/roster"]["get"]["tags"]
-    add_member_tags = openapi["paths"]["/api/courses/{course_id}/members"]["post"][
-        "tags"
-    ]
-    drop_member_tags = openapi["paths"]["/api/courses/{course_id}/members/{pid}"][
-        "delete"
-    ]["tags"]
+    add_member_tags = openapi["paths"]["/api/courses/{course_id}/members"]["post"]["tags"]
+    drop_member_tags = openapi["paths"]["/api/courses/{course_id}/members/{pid}"]["delete"]["tags"]
     dev_login_tags = openapi["paths"]["/api/auth/as/{pid}"]["get"]["tags"]
     dev_reset_tags = openapi["paths"]["/api/dev/reset-db"]["post"]["tags"]
 
@@ -161,9 +151,7 @@ def test_lifespan_context_skips_consumer_in_test_environment(
         nonlocal called
         called = True
 
-    monkeypatch.setattr(
-        lifespan_module, "consume_job_updates", fake_consume_job_updates
-    )
+    monkeypatch.setattr(lifespan_module, "consume_job_updates", fake_consume_job_updates)
     monkeypatch.setattr(
         lifespan_module,
         "Settings",
@@ -199,9 +187,7 @@ def test_lifespan_context_starts_and_cancels_consumer_in_non_test_environment(
             cancelled.set()
             raise
 
-    monkeypatch.setattr(
-        lifespan_module, "consume_job_updates", fake_consume_job_updates
-    )
+    monkeypatch.setattr(lifespan_module, "consume_job_updates", fake_consume_job_updates)
     monkeypatch.setattr(
         lifespan_module,
         "Settings",

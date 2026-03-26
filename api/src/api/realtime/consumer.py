@@ -52,9 +52,7 @@ async def consume_job_updates(  # pragma: no cover — requires live RabbitMQ
         try:
             connection = await aio_pika.connect(settings.effective_rabbitmq_url)
             channel = await connection.channel()
-            exchange = await channel.declare_exchange(
-                exchange_name, aio_pika.ExchangeType.FANOUT, durable=True
-            )
+            exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.FANOUT, durable=True)
             queue = await channel.declare_queue(exclusive=True)
             await queue.bind(exchange)
 

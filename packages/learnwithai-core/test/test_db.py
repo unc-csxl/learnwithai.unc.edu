@@ -16,9 +16,7 @@ def test_get_engine_builds_engine_from_settings() -> None:
     # Act
     with (
         patch("learnwithai.db.get_settings", return_value=expected_settings),
-        patch(
-            "learnwithai.db.create_engine", return_value="engine"
-        ) as create_engine_mock,
+        patch("learnwithai.db.create_engine", return_value="engine") as create_engine_mock,
     ):
         db.get_engine.cache_clear()
         engine = db.get_engine()
@@ -38,9 +36,7 @@ def test_get_engine_returns_cached_engine() -> None:
     # Act
     with (
         patch("learnwithai.db.get_settings", return_value=expected_settings),
-        patch(
-            "learnwithai.db.create_engine", return_value="engine"
-        ) as create_engine_mock,
+        patch("learnwithai.db.create_engine", return_value="engine") as create_engine_mock,
     ):
         db.get_engine.cache_clear()
         first_engine = db.get_engine()
@@ -80,9 +76,7 @@ def test_load_table_metadata_imports_tables_package() -> None:
 def test_reset_db_and_tables_resets_postgresql_database_and_recreates_tables() -> None:
     # Arrange
     expected_settings = SimpleNamespace(
-        effective_database_url=(
-            "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai"
-        )
+        effective_database_url=("postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai")
     )
     engine = MagicMock()
 
@@ -103,9 +97,7 @@ def test_reset_db_and_tables_resets_postgresql_database_and_recreates_tables() -
 
 def test_reset_db_and_tables_raises_for_unsupported_driver() -> None:
     # Arrange
-    expected_settings = SimpleNamespace(
-        effective_database_url="mysql://user:pass@localhost:3306/learnwithai"
-    )
+    expected_settings = SimpleNamespace(effective_database_url="mysql://user:pass@localhost:3306/learnwithai")
 
     # Act / Assert
     with (
@@ -122,17 +114,13 @@ def test_reset_db_and_tables_raises_for_unsupported_driver() -> None:
 
 def test_reset_postgresql_database_recreates_database() -> None:
     # Arrange
-    database_url = db.make_url(
-        "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai"
-    )
+    database_url = db.make_url("postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai")
     admin_engine = MagicMock()
     connection = MagicMock()
     admin_engine.connect.return_value.__enter__.return_value = connection
 
     # Act
-    with patch(
-        "learnwithai.db.create_engine", return_value=admin_engine
-    ) as create_engine_mock:
+    with patch("learnwithai.db.create_engine", return_value=admin_engine) as create_engine_mock:
         db._reset_postgresql_database(database_url)
 
     # Assert

@@ -33,9 +33,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     # Map domain authorization errors to 403 responses
     @application.exception_handler(AuthorizationError)
-    async def authorization_error_handler(
-        _request: Request, exc: AuthorizationError
-    ) -> JSONResponse:
+    async def authorization_error_handler(_request: Request, exc: AuthorizationError) -> JSONResponse:
         return JSONResponse(status_code=403, content={"detail": str(exc)})
 
     # Mount REST API routes under /api

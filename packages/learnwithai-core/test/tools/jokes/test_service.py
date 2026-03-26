@@ -52,9 +52,7 @@ def test_list_requests_delegates_to_repo() -> None:
     result = svc.list_requests(course_id=1)
 
     assert result is expected
-    async_job_repo.list_by_course_and_kind.assert_called_once_with(
-        1, JOKE_GENERATION_KIND
-    )
+    async_job_repo.list_by_course_and_kind.assert_called_once_with(1, JOKE_GENERATION_KIND)
 
 
 def test_get_request_delegates_to_repo() -> None:

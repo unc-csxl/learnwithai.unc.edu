@@ -12,9 +12,7 @@ from ..di import (
 )
 from ..models import RosterUploadResponse, RosterUploadStatusResponse
 
-router = APIRouter(
-    prefix="/courses/{course_id}/roster-uploads", tags=["Roster Uploads"]
-)
+router = APIRouter(prefix="/courses/{course_id}/roster-uploads", tags=["Roster Uploads"])
 
 
 @router.post(

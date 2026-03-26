@@ -55,9 +55,7 @@ def test_generate_jokes_strips_numbering(mock_openai_cls: MagicMock) -> None:
 def test_generate_jokes_limits_to_count(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
-    mock_client.chat.completions.create.return_value = _mock_completion(
-        "Joke A\nJoke B\nJoke C\nJoke D\nJoke E\n"
-    )
+    mock_client.chat.completions.create.return_value = _mock_completion("Joke A\nJoke B\nJoke C\nJoke D\nJoke E\n")
     svc = OpenAIService(api_key="sk-test")
 
     result = svc.generate_jokes("topic", count=3)
@@ -97,9 +95,7 @@ def test_generate_jokes_handles_none_content(mock_openai_cls: MagicMock) -> None
 def test_generate_jokes_skips_blank_lines(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
-    mock_client.chat.completions.create.return_value = _mock_completion(
-        "Joke A\n\n\nJoke B\n   \nJoke C"
-    )
+    mock_client.chat.completions.create.return_value = _mock_completion("Joke A\n\n\nJoke B\n   \nJoke C")
     svc = OpenAIService(api_key="sk-test")
 
     result = svc.generate_jokes("topic", count=5)
@@ -111,9 +107,7 @@ def test_generate_jokes_skips_blank_lines(mock_openai_cls: MagicMock) -> None:
 def test_generate_jokes_skips_numbering_only_lines(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
-    mock_client.chat.completions.create.return_value = _mock_completion(
-        "1. Joke A\n2.\n3. Joke C"
-    )
+    mock_client.chat.completions.create.return_value = _mock_completion("1. Joke A\n2.\n3. Joke C")
     svc = OpenAIService(api_key="sk-test")
 
     result = svc.generate_jokes("topic", count=5)

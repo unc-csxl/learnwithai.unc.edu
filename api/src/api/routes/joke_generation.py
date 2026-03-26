@@ -12,9 +12,7 @@ from ..di import (
 )
 from ..models import CreateJokeRequest, JokeRequestResponse
 
-router = APIRouter(
-    prefix="/courses/{course_id}/joke-requests", tags=["Instructor Tools"]
-)
+router = APIRouter(prefix="/courses/{course_id}/joke-requests", tags=["Instructor Tools"])
 
 
 def _build_response(job: object) -> JokeRequestResponse:

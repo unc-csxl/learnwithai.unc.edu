@@ -311,9 +311,7 @@ def test_noop_job_notifier_discards_update_silently() -> None:
 
     # Arrange
     notifier = NoOpJobNotifier()
-    update = JobUpdate(
-        job_id=1, course_id=1, user_id=111, kind="roster_upload", status="completed"
-    )
+    update = JobUpdate(job_id=1, course_id=1, user_id=111, kind="roster_upload", status="completed")
 
     # Act — should not raise
     notifier.notify(update)

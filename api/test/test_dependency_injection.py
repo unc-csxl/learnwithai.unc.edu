@@ -97,9 +97,7 @@ def test_roster_upload_service_factory_returns_service() -> None:
     membership_repo = MagicMock()
     job_queue = MagicMock()
 
-    result = roster_upload_service_factory(
-        async_job_repo, user_repo, membership_repo, job_queue
-    )
+    result = roster_upload_service_factory(async_job_repo, user_repo, membership_repo, job_queue)
 
     assert isinstance(result, RosterUploadService)
 

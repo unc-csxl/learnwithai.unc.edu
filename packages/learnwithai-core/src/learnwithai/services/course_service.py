@@ -102,9 +102,7 @@ class CourseService:
         Raises:
             AuthorizationError: If the user is not an instructor or TA.
         """
-        requester_membership = self._membership_repo.get_by_user_and_course(
-            subject, course
-        )
+        requester_membership = self._membership_repo.get_by_user_and_course(subject, course)
         self._require_membership(
             requester_membership,
             {MembershipType.INSTRUCTOR, MembershipType.TA},
@@ -152,9 +150,7 @@ class CourseService:
         Raises:
             AuthorizationError: If the requesting user is not an instructor.
         """
-        requester_membership = self._membership_repo.get_by_user_and_course(
-            subject, course
-        )
+        requester_membership = self._membership_repo.get_by_user_and_course(subject, course)
         self._require_membership(requester_membership, {MembershipType.INSTRUCTOR})
 
         if course.id is None:
@@ -191,9 +187,7 @@ class CourseService:
             AuthorizationError: If the user lacks permission.
             ValueError: If the target membership does not exist.
         """
-        requester_membership = self._membership_repo.get_by_user_and_course(
-            subject, course
-        )
+        requester_membership = self._membership_repo.get_by_user_and_course(subject, course)
         caller = self._require_membership(
             requester_membership,
             {
@@ -202,9 +196,7 @@ class CourseService:
                 MembershipType.STUDENT,
             },
         )
-        target_membership = self._membership_repo.get_by_user_and_course(
-            target_user, course
-        )
+        target_membership = self._membership_repo.get_by_user_and_course(target_user, course)
 
         if target_membership is None:
             course_id = course.id if course.id is not None else "unknown"

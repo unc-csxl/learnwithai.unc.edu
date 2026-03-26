@@ -77,18 +77,14 @@ async def test_upload_roster_csv_returns_accepted_response() -> None:
     file = _make_upload_file()
 
     # Act
-    result = await upload_roster_csv(
-        subject, course, course_svc, roster_upload_svc, file
-    )
+    result = await upload_roster_csv(subject, course, course_svc, roster_upload_svc, file)
 
     # Assert
     assert isinstance(result, RosterUploadResponse)
     assert result.id == 42
     assert result.status == AsyncJobStatus.PENDING
     course_svc.authorize_instructor.assert_called_once_with(subject, course)
-    roster_upload_svc.submit_upload.assert_called_once_with(
-        subject, course.id, "Student,ID,SIS User ID,SIS Login ID\n"
-    )
+    roster_upload_svc.submit_upload.assert_called_once_with(subject, course.id, "Student,ID,SIS User ID,SIS Login ID\n")
 
 
 @pytest.mark.anyio

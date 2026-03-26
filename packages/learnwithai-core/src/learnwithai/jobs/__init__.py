@@ -12,9 +12,7 @@ from .forbidden_job_queue import ForbiddenJobQueue
 from .noop_job_notifier import NoOpJobNotifier
 from .roster_upload import RosterUploadJob, RosterUploadJobHandler, RosterUploadOutput
 
-JobPayload: TypeAlias = Annotated[
-    Union[EchoJob, JokeGenerationJob, RosterUploadJob], Discriminator("type")
-]
+JobPayload: TypeAlias = Annotated[Union[EchoJob, JokeGenerationJob, RosterUploadJob], Discriminator("type")]
 
 job_payload_adapter: TypeAdapter[JobPayload] = TypeAdapter(JobPayload)
 

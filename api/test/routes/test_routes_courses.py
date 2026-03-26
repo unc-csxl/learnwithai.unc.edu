@@ -103,9 +103,7 @@ def test_create_course_returns_course_response() -> None:
     course = _stub_course()
     course_svc = MagicMock()
     course_svc.create_course.return_value = course
-    body = CreateCourseRequest(
-        course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026
-    )
+    body = CreateCourseRequest(course_number="COMP101", name="Intro to CS", term=Term.FALL, year=2026)
 
     # Act
     result = create_course(subject, body, course_svc)
@@ -117,9 +115,7 @@ def test_create_course_returns_course_response() -> None:
         type=MembershipType.INSTRUCTOR,
         state=MembershipState.ENROLLED,
     )
-    course_svc.create_course.assert_called_once_with(
-        subject, "COMP101", "Intro to CS", Term.FALL, 2026, ""
-    )
+    course_svc.create_course.assert_called_once_with(subject, "COMP101", "Intro to CS", Term.FALL, 2026, "")
 
 
 # ---- list_my_courses ----
@@ -368,9 +364,7 @@ def test_get_roster_returns_403_for_student(client: TestClient) -> None:
     app.dependency_overrides[get_authenticated_user] = lambda: user
     course = _stub_course()
     mock_svc = MagicMock()
-    mock_svc.get_course_roster.side_effect = AuthorizationError(
-        "Insufficient permissions"
-    )
+    mock_svc.get_course_roster.side_effect = AuthorizationError("Insufficient permissions")
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
     mock_course_repo = MagicMock()
     mock_course_repo.get_by_id.return_value = course
@@ -392,9 +386,7 @@ def test_add_member_endpoint(client: TestClient) -> None:
     course = _stub_course()
     target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
     mock_svc = MagicMock()
-    mock_svc.add_member.return_value = _stub_membership(
-        user_pid=999, state=MembershipState.PENDING
-    )
+    mock_svc.add_member.return_value = _stub_membership(user_pid=999, state=MembershipState.PENDING)
     app.dependency_overrides[course_service_factory] = lambda: mock_svc
     mock_course_repo = MagicMock()
     mock_course_repo.get_by_id.return_value = course

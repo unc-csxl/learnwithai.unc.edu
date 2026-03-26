@@ -57,9 +57,7 @@ class Settings(BaseSettings):
             return self.database_url
 
         if self.environment == "test":
-            return (
-                "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
-            )
+            return "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
 
         return "postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai"
 

@@ -25,9 +25,7 @@ def _build_service(
 
 
 def _make_user(pid: int = 123456789) -> User:
-    return User.model_construct(
-        _fields_set=None, pid=pid, name="Test User", onyen="testuser"
-    )
+    return User.model_construct(_fields_set=None, pid=pid, name="Test User", onyen="testuser")
 
 
 def _make_course(course_id: int = 1) -> Course:
@@ -277,9 +275,7 @@ def test_add_member_creates_pending_membership() -> None:
 
     # Assert
     assert result is new_m
-    membership_repo.get_by_user_and_course.assert_called_once_with(
-        requesting_user, course
-    )
+    membership_repo.get_by_user_and_course.assert_called_once_with(requesting_user, course)
     created = membership_repo.create.call_args.args[0]
     assert created.user_pid == target_user.pid
     assert created.course_id == course.id
@@ -307,9 +303,7 @@ def test_add_member_raises_for_unpersisted_course() -> None:
     # Arrange
     membership_repo = MagicMock(spec=MembershipRepository)
     instructor_m = _make_membership(type=MembershipType.INSTRUCTOR)
-    draft_course = Course(
-        course_number="COMP999", name="Draft", term=Term.FALL, year=2026
-    )
+    draft_course = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
     membership_repo.get_by_user_and_course.return_value = instructor_m
     svc = _build_service(membership_repo=membership_repo)
 
@@ -418,9 +412,7 @@ def test_update_course_updates_fields() -> None:
     subject = _make_user()
 
     # Act
-    result = svc.update_course(
-        subject, course, "COMP999", "New Name", Term.SPRING, 2027, "New desc"
-    )
+    result = svc.update_course(subject, course, "COMP999", "New Name", Term.SPRING, 2027, "New desc")
 
     # Assert
     assert result is updated_course
