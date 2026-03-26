@@ -4,7 +4,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="${1:-fix}"
-TEST_DB_URL="postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
+DEFAULT_TEST_DB_URL="postgresql+psycopg://postgres:postgres@postgres:5432/learnwithai_test"
+TEST_DB_URL="${TEST_DATABASE_URL:-$DEFAULT_TEST_DB_URL}"
 
 cd "$ROOT_DIR"
 
