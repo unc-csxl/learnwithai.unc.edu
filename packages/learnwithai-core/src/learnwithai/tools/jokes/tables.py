@@ -1,7 +1,7 @@
 """Database-backed joke table for the joke generation tool."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy.types import JSON
 from sqlmodel import (
@@ -10,10 +10,13 @@ from sqlmodel import (
     Field,
     ForeignKey,
     Integer,
+    Relationship,
     SQLModel,
     Text,
     func,
 )
+
+from ...tables.async_job import AsyncJob  # noqa: F401 — registered for relationship resolution
 
 
 class Joke(SQLModel, table=True):
@@ -21,7 +24,7 @@ class Joke(SQLModel, table=True):
 
     Stores the user-facing prompt and generated jokes. The async job
     lifecycle (status, timing) is tracked by the linked ``AsyncJob``
-    row.
+    row, accessible via the ``async_job`` relationship.
     """
 
     __tablename__: str = "joke_tool__joke"  # type: ignore[assignment]
@@ -44,6 +47,9 @@ class Joke(SQLModel, table=True):
     async_job_id: int | None = Field(
         default=None,
         sa_column=Column(Integer, ForeignKey("async_job.id"), nullable=True),
+    )
+    async_job: Optional["AsyncJob"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[Joke.async_job_id]", "lazy": "select"},
     )
     created_at: datetime = Field(
         sa_column=Column(
