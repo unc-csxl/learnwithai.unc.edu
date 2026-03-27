@@ -1,18 +1,25 @@
 <div class="landing-container mat-bg-surface-container">
   <mat-pane class="w-sm">
-    <mat-card-content class="flex flex-col h-48">
-      <div class="flex flex-col h-full flex-between">
-        <div class="flex flex-col items-center">
-          <span class="text-[2.4rem] font-extrabold tracking-[0.14em]">LEARN</span>
-          <span class="flex items-baseline gap-[0.35rem]">
-            <span class="text-[1.2rem] italic lowercase tracking-[0.08em] opacity-[0.88]"
-              >with</span
-            >
-            <span class="text-[1.6rem] font-extrabold tracking-[0.14em]">AI</span>
-          </span>
+    <mat-card-content class="flex h-48 flex-col">
+      <div class="flex-between flex h-full flex-col">
+        <div class="brand-lockup">
+          <div class="brand-text">
+            <span class="brand-learn">LEARN</span>
+            <span class="brand-line-two">
+              <span class="brand-with">with</span>
+              <span class="brand-ai">AI</span>
+            </span>
+          </div>
+          <img
+            [ngSrc]="logoAsset()"
+            alt="UNC Chapel Hill"
+            width="48"
+            height="38"
+            class="brand-logo"
+          />
         </div>
         @if (isDev && devUsers().length > 0) {
-          <div class="flex flex-row gap-2 w-full mt-auto">
+          <div class="mt-auto flex w-full flex-row gap-2">
             <button mat-stroked-button [matMenuTriggerFor]="devMenu" aria-label="Developer login">
               <mat-icon>developer_mode</mat-icon>
               Dev Login
@@ -30,7 +37,7 @@
             </button>
           </div>
         } @else {
-          <div class="w-full mt-auto">
+          <div class="mt-auto w-full">
             <button mat-flat-button (click)="auth.login()" class="w-full">
               <mat-icon>login</mat-icon>
               Login via UNC Onyen

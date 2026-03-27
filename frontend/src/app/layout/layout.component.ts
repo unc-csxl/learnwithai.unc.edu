@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { NgOptimizedImage } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AuthService } from '../auth.service';
@@ -28,6 +29,7 @@ import { LayoutNavigationService } from './layout-navigation.service';
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    NgOptimizedImage,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -48,6 +50,9 @@ export class Layout {
   protected readonly isHandset = toSignal(this.isHandset$, { initialValue: false });
   protected readonly sidenavMode = computed(() => (this.isHandset() ? 'over' : 'side'));
   protected readonly sidenavOpened = computed(() => !this.isHandset());
+  protected readonly logoAsset = computed(() =>
+    this.theme.isDark() ? 'unc-dark.svg' : 'unc-light.svg',
+  );
 
   protected readonly themeIcon = computed<string>(() => {
     const icons: Record<ThemeMode, string> = {

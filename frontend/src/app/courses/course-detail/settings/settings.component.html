@@ -1,7 +1,7 @@
 @if (errorMessage()) {
   <p class="text-red-600" role="alert">{{ errorMessage() }}</p>
 } @else if (loaded()) {
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 max-w-md">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex max-w-md flex-col gap-4">
     <app-course-form-fields [formGroup]="form" />
     <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">
       @if (saving()) {
