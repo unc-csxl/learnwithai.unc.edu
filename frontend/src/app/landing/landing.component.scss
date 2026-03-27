@@ -11,17 +11,55 @@
   justify-content: center;
 }
 
+.brand-lockup {
+  align-items: center;
+  display: inline-flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.brand-text {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 4.85rem;
+  justify-content: space-between;
+  transform: translateX(-0.24rem);
+}
+
+.brand-learn {
+  font-size: 2.45rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 0.9;
+}
+
+.brand-line-two {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.45rem;
+  line-height: 1;
+}
+
+.brand-with {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.28rem;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 0.95;
+  text-transform: lowercase;
+}
+
+.brand-ai {
+  font-size: 1.7rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 0.92;
+}
+
 .brand-logo {
-  height: 38px;
-  width: 48px;
-}
-
-:host-context(html.dark) .brand-logo {
-  filter: brightness(0) invert(1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :host-context(html:not(.light)) .brand-logo {
-    filter: brightness(0) invert(1);
-  }
+  flex: 0 0 auto;
+  height: 4.85rem;
+  width: auto;
 }

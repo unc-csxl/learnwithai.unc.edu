@@ -1,13 +1,13 @@
-<header class="flex items-center justify-end mb-4">
+<header class="mb-4 flex items-center justify-end">
   <a mat-flat-button routerLink="/courses/create">
     <mat-icon>add</mat-icon>
     Create Course
   </a>
 </header>
 @if (courses().length > 0) {
-  <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     @for (course of courses(); track course.id) {
-      <a [routerLink]="['/courses', course.id]" class="no-underline course-link">
+      <a [routerLink]="['/courses', course.id]" class="course-link no-underline">
         <mat-card appearance="outlined" class="course-card">
           <mat-card-header>
             <mat-card-title>{{ course.course_number }}: {{ course.name }}</mat-card-title>

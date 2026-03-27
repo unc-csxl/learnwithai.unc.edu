@@ -50,6 +50,9 @@ export class Layout {
   protected readonly isHandset = toSignal(this.isHandset$, { initialValue: false });
   protected readonly sidenavMode = computed(() => (this.isHandset() ? 'over' : 'side'));
   protected readonly sidenavOpened = computed(() => !this.isHandset());
+  protected readonly logoAsset = computed(() =>
+    this.theme.isDark() ? 'unc-dark.svg' : 'unc-light.svg',
+  );
 
   protected readonly themeIcon = computed<string>(() => {
     const icons: Record<ThemeMode, string> = {

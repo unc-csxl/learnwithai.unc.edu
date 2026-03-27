@@ -1,21 +1,21 @@
-<div class="flex flex-col gap-6 max-w-md">
+<div class="flex max-w-md flex-col gap-6">
   <section aria-label="Account information">
     <dl class="flex flex-col gap-2">
-      <div class="flex gap-3 items-baseline">
-        <dt class="text-sm w-20 shrink-0 text-[var(--mat-sys-on-surface-variant)]">PID</dt>
-        <dd class="text-sm font-medium m-0">{{ user()?.pid }}</dd>
+      <div class="flex items-baseline gap-3">
+        <dt class="w-20 shrink-0 text-sm text-[var(--mat-sys-on-surface-variant)]">PID</dt>
+        <dd class="m-0 text-sm font-medium">{{ user()?.pid }}</dd>
       </div>
-      <div class="flex gap-3 items-baseline">
-        <dt class="text-sm w-20 shrink-0 text-[var(--mat-sys-on-surface-variant)]">Onyen</dt>
-        <dd class="text-sm font-medium m-0">{{ user()?.onyen }}</dd>
+      <div class="flex items-baseline gap-3">
+        <dt class="w-20 shrink-0 text-sm text-[var(--mat-sys-on-surface-variant)]">Onyen</dt>
+        <dd class="m-0 text-sm font-medium">{{ user()?.onyen }}</dd>
       </div>
-      <div class="flex gap-3 items-baseline">
-        <dt class="text-sm w-20 shrink-0 text-[var(--mat-sys-on-surface-variant)]">Email</dt>
-        <dd class="text-sm font-medium m-0">{{ user()?.email }}</dd>
+      <div class="flex items-baseline gap-3">
+        <dt class="w-20 shrink-0 text-sm text-[var(--mat-sys-on-surface-variant)]">Email</dt>
+        <dd class="m-0 text-sm font-medium">{{ user()?.email }}</dd>
       </div>
-      <div class="flex gap-3 items-baseline">
-        <dt class="text-sm w-20 shrink-0 text-[var(--mat-sys-on-surface-variant)]">Name</dt>
-        <dd class="text-sm font-medium m-0">{{ user()?.name }}</dd>
+      <div class="flex items-baseline gap-3">
+        <dt class="w-20 shrink-0 text-sm text-[var(--mat-sys-on-surface-variant)]">Name</dt>
+        <dd class="m-0 text-sm font-medium">{{ user()?.name }}</dd>
       </div>
     </dl>
   </section>
@@ -29,7 +29,7 @@
       <input matInput formControlName="family_name" type="text" />
     </mat-form-field>
     @if (errorMessage()) {
-      <p class="text-red-600 text-sm" role="alert">{{ errorMessage() }}</p>
+      <p class="text-sm text-red-600" role="alert">{{ errorMessage() }}</p>
     }
     <button mat-flat-button type="submit" [disabled]="form.invalid || saving()">
       @if (saving()) {

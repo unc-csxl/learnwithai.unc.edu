@@ -17,7 +17,7 @@
               <span class="brand-ai">AI</span>
             </span>
           </span>
-          <img ngSrc="unc-interlocking-nc.svg" alt="" width="32" height="26" class="brand-logo" />
+          <img [ngSrc]="logoAsset()" alt="" width="32" height="26" class="brand-logo" />
         </a>
         @if (isHandset()) {
           <button

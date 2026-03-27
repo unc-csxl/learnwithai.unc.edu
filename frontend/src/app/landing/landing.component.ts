@@ -1,10 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '../auth.service';
+import { ThemeService } from '../theme.service';
 import { environment } from '../../environments/environment';
 import { User } from '../api/models';
 import { MatPane } from '../shared/mat-pane/mat-pane';
@@ -28,11 +29,15 @@ import { firstValueFrom } from 'rxjs';
 })
 export class Landing {
   protected auth = inject(AuthService);
+  protected theme = inject(ThemeService);
   private http = inject(HttpClient);
 
   protected readonly isDev = !environment.production;
   protected readonly devUsers = signal<User[]>([]);
   protected readonly currentYear = new Date().getFullYear();
+  protected readonly logoAsset = computed(() =>
+    this.theme.isDark() ? 'unc-dark.svg' : 'unc-light.svg',
+  );
 
   constructor() {
     /* v8 ignore start -- isDev is a compile-time constant; only one branch runs per build */
