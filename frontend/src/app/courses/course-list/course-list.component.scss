@@ -9,11 +9,11 @@
   overflow: hidden;
 }
 
-.course-card ::ng-deep .mat-card-header {
+.course-card .mat-mdc-card-header {
   padding: 20px 28px;
 }
 
-.course-card ::ng-deep .mat-card-title {
+.course-card .mat-mdc-card-title {
   font-size: 1.9rem;
   line-height: 1.05;
   margin: 0 0 6px 0;

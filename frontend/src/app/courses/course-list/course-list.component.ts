@@ -7,13 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
 import { PageTitleService } from '../../page-title.service';
-import { MatPane } from '../../shared/mat-pane/mat-pane';
 
 /** Displays a list of courses the current user is enrolled in. */
 @Component({
   selector: 'app-course-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TitleCasePipe, MatButtonModule, MatCardModule, MatIconModule, MatPane],
+  imports: [RouterLink, TitleCasePipe, MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './course-list.component.html',
   styleUrl: './course-list.component.scss',
 })
