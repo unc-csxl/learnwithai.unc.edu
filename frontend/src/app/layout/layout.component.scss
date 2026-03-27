@@ -56,7 +56,8 @@
   align-items: center;
   color: inherit;
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 10px;
   line-height: 1;
   text-align: center;
   text-decoration: none;
@@ -64,6 +65,29 @@
 
 .sidenav-brand:visited {
   color: inherit;
+}
+
+.brand-text {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-logo {
+  height: 26px;
+  width: 32px;
+}
+
+// In explicit dark mode, lighten the Carolina Blue logo
+:host-context(html.dark) .brand-logo {
+  filter: brightness(0) invert(1);
+}
+
+// System-preference dark mode (no explicit class)
+@media (prefers-color-scheme: dark) {
+  :host-context(html:not(.light)) .brand-logo {
+    filter: brightness(0) invert(1);
+  }
 }
 
 .sidenav-close {

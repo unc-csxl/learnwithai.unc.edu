@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 64" fill="#4B9CD3" role="img" aria-label="Interlocking NC">
+  <!-- Interlocking NC — UNC Chapel Hill brandmark -->
+  <!-- N letterform -->
+  <path d="M2 2 h12 v0 l22 38 V2 h12 v60 h-12 l-22-38 v38 H2 Z"/>
+  <!-- C letterform (interlocking) -->
+  <path d="M78 14.5 C73 5, 62 0, 50 0 C34 0, 22 13, 22 32 C22 51, 34 64, 50 64 C62 64, 73 59, 78 49.5 L66.5 44 C64 49, 58 52.5, 50 52.5 C40.5 52.5, 34 44, 34 32 C34 20, 40.5 11.5, 50 11.5 C58 11.5, 64 15, 66.5 20 Z"/>
+</svg>

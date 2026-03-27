@@ -2,21 +2,124 @@
 
 @use '@angular/material' as mat;
 @use './_theme-colors' as *;
-@use 'tailwindcss';
 
 @include mat.elevation-classes();
 @include mat.app-background();
 
+// ---------------------------------------------------------------------------
+// UNC Chapel Hill custom application tokens
+// ---------------------------------------------------------------------------
+@mixin unc-light-tokens {
+  --app-link-color: #007fae;
+  --app-link-hover: #13294b;
+  --app-shell-edge: rgba(19, 41, 75, 0.12);
+  --app-card-shadow: 0 18px 36px -28px rgba(19, 41, 75, 0.4);
+}
+
+@mixin unc-dark-tokens {
+  --app-link-color: #4b9cd3;
+  --app-link-hover: #8dc3e6;
+  --app-shell-edge: rgba(75, 156, 211, 0.18);
+  --app-card-shadow: 0 20px 40px -30px rgba(0, 0, 0, 0.75);
+}
+
+// ---------------------------------------------------------------------------
+// Light theme (default)
+// ---------------------------------------------------------------------------
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   @include mat.theme(
     (
-      color: $primary-palette,
+      color: (
+        primary: $primary-palette,
+        tertiary: $tertiary-palette,
+        theme-type: light,
+      ),
       typography: Roboto,
       density: 0,
     )
   );
-
-  // Includes system classes for material styling
   @include mat.system-classes();
+  @include unc-light-tokens;
+}
+
+// ---------------------------------------------------------------------------
+// Dark theme via explicit .dark class
+// ---------------------------------------------------------------------------
+html.dark {
+  color-scheme: dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: $primary-palette,
+        tertiary: $tertiary-palette,
+        theme-type: dark,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  @include unc-dark-tokens;
+}
+
+// ---------------------------------------------------------------------------
+// System-preference dark mode (no explicit class)
+// ---------------------------------------------------------------------------
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    color-scheme: dark;
+    @include mat.theme(
+      (
+        color: (
+          primary: $primary-palette,
+          tertiary: $tertiary-palette,
+          theme-type: dark,
+        ),
+        typography: Roboto,
+        density: 0,
+      )
+    );
+    @include unc-dark-tokens;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Global base styles
+// ---------------------------------------------------------------------------
+*:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--mat-sys-body-large-font), sans-serif;
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background);
+}
+
+a {
+  color: var(--app-link-color);
+}
+
+a:visited {
+  color: var(--app-link-color);
+}
+
+a:hover {
+  color: var(--app-link-hover);
+}
+
+.mat-mdc-card {
+  border: 1px solid var(--app-shell-edge);
+  box-shadow: var(--app-card-shadow);
+}
+
+.mat-drawer {
+  border-right: 1px solid var(--app-shell-edge);
+}
+
+.mat-mdc-tab-link.mdc-tab--active,
+.mat-mdc-tab-link.mat-mdc-tab-link-active {
+  color: var(--mat-sys-primary);
 }

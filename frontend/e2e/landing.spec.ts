@@ -13,17 +13,14 @@ test.describe('landing page', () => {
     await expect(page.getByText('with')).toBeVisible();
     await expect(page.getByText('AI')).toBeVisible();
 
+    // Interlocking NC logo
+    await expect(page.getByRole('img', { name: 'UNC Chapel Hill' })).toBeVisible();
+
     // Login button
     await expect(page.getByRole('button', { name: /Login via UNC Onyen/ })).toBeVisible();
 
     // Dev login button (development mode)
     await expect(page.getByRole('button', { name: 'Developer login' })).toBeVisible();
-
-    // Footer
-    const currentYear = new Date().getFullYear().toString();
-    await expect(page.getByText(currentYear)).toBeVisible();
-    await expect(page.getByText('Computer Science Experience Labs')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'csxl.unc.edu' })).toBeVisible();
   });
 
   test('redirects unauthenticated users from protected routes to landing', async ({ page }) => {

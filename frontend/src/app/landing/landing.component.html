@@ -2,14 +2,23 @@
   <mat-pane class="w-sm">
     <mat-card-content class="flex flex-col h-48">
       <div class="flex flex-col h-full flex-between">
-        <div class="flex flex-col items-center">
-          <span class="text-[2.4rem] font-extrabold tracking-[0.14em]">LEARN</span>
-          <span class="flex items-baseline gap-[0.35rem]">
-            <span class="text-[1.2rem] italic lowercase tracking-[0.08em] opacity-[0.88]"
-              >with</span
-            >
-            <span class="text-[1.6rem] font-extrabold tracking-[0.14em]">AI</span>
-          </span>
+        <div class="flex flex-row items-center justify-center gap-3">
+          <div class="flex flex-col items-center">
+            <span class="text-[2.4rem] font-extrabold tracking-[0.14em]">LEARN</span>
+            <span class="flex items-baseline gap-[0.35rem]">
+              <span class="text-[1.2rem] italic lowercase tracking-[0.08em] opacity-[0.88]"
+                >with</span
+              >
+              <span class="text-[1.6rem] font-extrabold tracking-[0.14em]">AI</span>
+            </span>
+          </div>
+          <img
+            ngSrc="unc-interlocking-nc.svg"
+            alt="UNC Chapel Hill"
+            width="48"
+            height="38"
+            class="brand-logo"
+          />
         </div>
         @if (isDev && devUsers().length > 0) {
           <div class="flex flex-row gap-2 w-full mt-auto">

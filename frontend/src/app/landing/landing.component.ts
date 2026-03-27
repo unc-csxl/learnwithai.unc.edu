@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '../auth.service';
 import { environment } from '../../environments/environment';
 import { User } from '../api/models';
@@ -14,7 +15,14 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, MatIconModule, MatMenuModule, MatPane],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MatMenuModule,
+    MatPane,
+    NgOptimizedImage,
+  ],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss',
 })

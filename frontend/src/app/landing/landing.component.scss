@@ -11,27 +11,17 @@
   justify-content: center;
 }
 
-// .landing-card {
-//   max-width: 400px;
-//   padding: 48px 32px 32px;
-//   text-align: center;
-//   width: 90vw;
-// }
+.brand-logo {
+  height: 38px;
+  width: 48px;
+}
 
-// .actions {
-//   display: flex;
-//   flex-direction: column;
-//   gap: 12px;
-// }
+:host-context(html.dark) .brand-logo {
+  filter: brightness(0) invert(1);
+}
 
-// .landing-footer {
-//   color: var(--mat-sys-on-background, #666);
-//   font-size: 0.82rem;
-//   margin-top: 32px;
-//   text-align: center;
-// }
-
-// .landing-footer a {
-//   color: inherit;
-//   text-decoration: underline;
-// }
+@media (prefers-color-scheme: dark) {
+  :host-context(html:not(.light)) .brand-logo {
+    filter: brightness(0) invert(1);
+  }
+}
