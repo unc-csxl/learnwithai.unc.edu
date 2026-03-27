@@ -1,6 +1,7 @@
 {
   "printWidth": 100,
   "singleQuote": true,
+  "tailwindStylesheet": "./src/styles/tailwind.css",
   "overrides": [
     {
       "files": "*.html",

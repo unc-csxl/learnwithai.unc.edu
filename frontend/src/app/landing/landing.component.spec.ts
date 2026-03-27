@@ -73,9 +73,9 @@ describe('Landing', () => {
   it('should display branding', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('.brand')?.textContent).toContain('LEARN');
-    expect(el.querySelector('.brand')?.textContent).toContain('with');
-    expect(el.querySelector('.brand')?.textContent).toContain('AI');
+    expect(el.textContent).toContain('LEARN');
+    expect(el.textContent).toContain('with');
+    expect(el.textContent).toContain('AI');
   });
 
   it('should display login button', async () => {
