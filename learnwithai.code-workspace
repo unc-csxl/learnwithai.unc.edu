@@ -26,7 +26,10 @@
     },
   ],
   "settings": {
-    "chat.mcp.autoStart": true,
+    "tailwindCSS.experimental.configFile": "frontend/src/styles/tailwind.css",
+    "tailwindCSS.includeLanguages": {
+      "scss": "css",
+    },
     "files.exclude": {
       "**/.git": true,
       "**/__pycache__": true,

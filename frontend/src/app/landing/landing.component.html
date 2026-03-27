@@ -1,36 +1,43 @@
-<div class="landing-container">
-  <mat-card class="landing-card">
-    <mat-card-content>
-      <div class="brand">
-        <span class="brand-learn">LEARN</span>
-        <span class="brand-line-two">
-          <span class="brand-with">with</span>
-          <span class="brand-ai">AI</span>
-        </span>
-      </div>
-      <div class="actions">
-        <button mat-flat-button (click)="auth.login()">
-          <mat-icon>login</mat-icon>
-          Login via UNC Onyen
-        </button>
+<div class="landing-container mat-bg-surface-container">
+  <mat-pane class="w-sm">
+    <mat-card-content class="flex flex-col h-48">
+      <div class="flex flex-col h-full flex-between">
+        <div class="flex flex-col items-center">
+          <span class="text-[2.4rem] font-extrabold tracking-[0.14em]">LEARN</span>
+          <span class="flex items-baseline gap-[0.35rem]">
+            <span class="text-[1.2rem] italic lowercase tracking-[0.08em] opacity-[0.88]"
+              >with</span
+            >
+            <span class="text-[1.6rem] font-extrabold tracking-[0.14em]">AI</span>
+          </span>
+        </div>
         @if (isDev && devUsers().length > 0) {
-          <button mat-stroked-button [matMenuTriggerFor]="devMenu" aria-label="Developer login">
-            <mat-icon>developer_mode</mat-icon>
-            Dev Login
-          </button>
-          <mat-menu #devMenu="matMenu">
-            @for (user of devUsers(); track user.pid) {
-              <button mat-menu-item (click)="devLoginAs(user)">
-                {{ user.name }} ({{ user.pid }})
-              </button>
-            }
-          </mat-menu>
+          <div class="flex flex-row gap-2 w-full mt-auto">
+            <button mat-stroked-button [matMenuTriggerFor]="devMenu" aria-label="Developer login">
+              <mat-icon>developer_mode</mat-icon>
+              Dev Login
+            </button>
+            <mat-menu #devMenu="matMenu">
+              @for (user of devUsers(); track user.pid) {
+                <button mat-menu-item (click)="devLoginAs(user)">
+                  {{ user.name }} ({{ user.pid }})
+                </button>
+              }
+            </mat-menu>
+            <button mat-flat-button (click)="auth.login()" class="flex-1">
+              <mat-icon>login</mat-icon>
+              Login via UNC Onyen
+            </button>
+          </div>
+        } @else {
+          <div class="w-full mt-auto">
+            <button mat-flat-button (click)="auth.login()" class="w-full">
+              <mat-icon>login</mat-icon>
+              Login via UNC Onyen
+            </button>
+          </div>
         }
       </div>
     </mat-card-content>
-  </mat-card>
-  <footer class="landing-footer">
-    &copy; {{ currentYear }} UNC Computer Science Experience Labs &mdash;
-    <a href="https://csxl.unc.edu" target="_blank" rel="noopener noreferrer">csxl.unc.edu</a>
-  </footer>
+  </mat-pane>
 </div>

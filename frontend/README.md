@@ -11,7 +11,7 @@ frontend/
 |- src/
 |  |- main.ts                  Angular bootstrap entrypoint
 |  |- theme.scss               UNC Chapel Hill Material theme (light + dark)
-|  |- styles.css               Global styles and Tailwind utilities
+|  |- styles/styles.scss       Global styles and Tailwind utilities
 |  `- app/
 |     |- app.component.ts      Root component (<router-outlet>)
 |     |- app.routes.ts         Top-level lazy routes

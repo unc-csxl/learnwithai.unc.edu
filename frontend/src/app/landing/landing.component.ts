@@ -6,6 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../auth.service';
 import { environment } from '../../environments/environment';
 import { User } from '../api/models';
+import { MatPane } from '../shared/mat-pane/mat-pane';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -13,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatCardModule, MatIconModule, MatMenuModule],
+  imports: [MatButtonModule, MatCardModule, MatIconModule, MatMenuModule, MatPane],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss',
 })
