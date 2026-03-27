@@ -23,6 +23,7 @@ def get_engine():
     return create_engine(
         settings.effective_database_url,
         echo=settings.db_echo,
+        pool_pre_ping=True,
     )
 
 

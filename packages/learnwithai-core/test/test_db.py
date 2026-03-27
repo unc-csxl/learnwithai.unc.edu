@@ -23,7 +23,11 @@ def test_get_engine_builds_engine_from_settings() -> None:
 
     # Assert
     assert engine == "engine"
-    create_engine_mock.assert_called_once_with("sqlite:///test.db", echo=True)
+    create_engine_mock.assert_called_once_with(
+        "sqlite:///test.db",
+        echo=True,
+        pool_pre_ping=True,
+    )
 
 
 def test_get_engine_returns_cached_engine() -> None:
@@ -44,7 +48,11 @@ def test_get_engine_returns_cached_engine() -> None:
 
     # Assert
     assert first_engine == second_engine == "engine"
-    create_engine_mock.assert_called_once_with("sqlite:///test.db", echo=False)
+    create_engine_mock.assert_called_once_with(
+        "sqlite:///test.db",
+        echo=False,
+        pool_pre_ping=True,
+    )
 
 
 def test_create_db_and_tables_uses_cached_engine() -> None:

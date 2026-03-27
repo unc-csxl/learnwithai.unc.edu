@@ -104,7 +104,9 @@ def test_dev_login_as_raises_404_for_unknown_user() -> None:
 @patch("api.routes.dev.Session")
 @patch("api.routes.dev.get_engine")
 @patch("api.routes.dev.reset_db_and_tables")
+@patch("api.routes.dev.flush_broker_queues")
 def test_dev_reset_db_calls_reset_and_seed(
+    mock_flush_broker_queues: MagicMock,
     mock_reset: MagicMock,
     mock_get_engine: MagicMock,
     mock_session_cls: MagicMock,
@@ -119,6 +121,7 @@ def test_dev_reset_db_calls_reset_and_seed(
     mock_reset.assert_called_once()
     mock_seed.assert_called_once_with(mock_session)
     mock_session.commit.assert_called_once()
+    assert mock_flush_broker_queues.call_count == 2
     assert result == {"detail": "Database reset and seeded."}
 
 
@@ -175,7 +178,9 @@ def test_dev_login_endpoint_returns_404_for_unknown_user(
 @patch("api.routes.dev.Session")
 @patch("api.routes.dev.get_engine")
 @patch("api.routes.dev.reset_db_and_tables")
+@patch("api.routes.dev.flush_broker_queues")
 def test_dev_reset_db_endpoint(
+    mock_flush_broker_queues: MagicMock,
     mock_reset: MagicMock,
     mock_get_engine: MagicMock,
     mock_session_cls: MagicMock,
@@ -190,6 +195,7 @@ def test_dev_reset_db_endpoint(
 
     assert response.status_code == 200
     assert response.json() == {"detail": "Database reset and seeded."}
+    assert mock_flush_broker_queues.call_count == 2
 
 
 @pytest.mark.integration

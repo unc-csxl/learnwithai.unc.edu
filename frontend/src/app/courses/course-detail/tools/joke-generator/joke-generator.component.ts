@@ -22,7 +22,7 @@ import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService } from '../../../../job-update.service';
 import { JokeGeneratorService } from '../joke-generator.service';
-import { JokeRequest } from '../../../../api/models';
+import { AsyncJobInfo, JokeRequest } from '../../../../api/models';
 
 /** Lets instructors generate AI-powered jokes for their course. */
 @Component({
@@ -124,9 +124,51 @@ export class JokeGenerator implements OnDestroy {
     return (status && icons[status]) ?? 'help';
   }
 
+  protected requestSubtitle(job: AsyncJobInfo | null | undefined): string {
+    if (!job) return 'Unknown';
+    if (job.status === 'completed') {
+      return job.completed_at ? this.formatCompletedAt(job.completed_at) : '';
+    }
+    return this.statusLabel(job.status);
+  }
+
   // ------------------------------------------------------------------
   // Private helpers
   // ------------------------------------------------------------------
+
+  private formatCompletedAt(completedAt: string): string {
+    const completedDate = new Date(completedAt);
+    if (Number.isNaN(completedDate.getTime())) return '';
+
+    const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(completedDate);
+    const day = completedDate.getDate();
+    const year = completedDate.getFullYear();
+    const hours = completedDate.getHours();
+    const minutes = completedDate.getMinutes();
+    const displayHour = hours % 12 || 12;
+    const meridiem = hours >= 12 ? 'pm' : 'am';
+    const time =
+      minutes === 0
+        ? `${displayHour}${meridiem}`
+        : `${displayHour}:${minutes.toString().padStart(2, '0')}${meridiem}`;
+
+    return `${month} ${day}${this.ordinalSuffix(day)}, ${year} at ${time}`;
+  }
+
+  private ordinalSuffix(day: number): string {
+    if (day >= 11 && day <= 13) return 'th';
+
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
 
   private async loadRequests(): Promise<void> {
     try {

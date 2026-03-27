@@ -8,7 +8,7 @@ import { JokeGeneratorService } from '../joke-generator.service';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService, JobUpdate } from '../../../../job-update.service';
-import { JokeRequest } from '../../../../api/models';
+import { AsyncJobInfo, JokeRequest } from '../../../../api/models';
 
 const fakeRequest: JokeRequest = {
   id: 1,
@@ -25,6 +25,38 @@ const fakePendingRequest: JokeRequest = {
   created_at: '2025-01-01T00:02:00Z',
   job: { id: 20, status: 'pending', completed_at: null },
 };
+
+function formatExpectedCompletedAt(completedAt: string): string {
+  const completedDate = new Date(completedAt);
+  const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(completedDate);
+  const day = completedDate.getDate();
+  const year = completedDate.getFullYear();
+  const hours = completedDate.getHours();
+  const minutes = completedDate.getMinutes();
+  const displayHour = hours % 12 || 12;
+  const meridiem = hours >= 12 ? 'pm' : 'am';
+  const time =
+    minutes === 0
+      ? `${displayHour}${meridiem}`
+      : `${displayHour}:${minutes.toString().padStart(2, '0')}${meridiem}`;
+
+  return `${month} ${day}${ordinalSuffix(day)}, ${year} at ${time}`;
+}
+
+function ordinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return 'th';
+
+  switch (day % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -104,8 +136,47 @@ describe('JokeGenerator', () => {
     expect(el.textContent).toContain(
       'Why do recursive functions never finish? Because they keep calling themselves!',
     );
-    expect(el.textContent).toContain('Completed');
-    expect(el.textContent).toContain('2025-01-01');
+    expect(el.textContent).toContain(formatExpectedCompletedAt('2025-01-01T00:01:00Z'));
+    expect(el.textContent).not.toContain('Completed');
+  });
+
+  it('should format completed requests with a local-time human subtitle', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+
+    expect(component['requestSubtitle'](fakeRequest.job)).toBe(
+      formatExpectedCompletedAt('2025-01-01T00:01:00Z'),
+    );
+    expect(component['requestSubtitle'](fakePendingRequest.job)).toBe('Pending');
+
+    const completedWithoutTimestamp: AsyncJobInfo = {
+      id: 99,
+      status: 'completed',
+      completed_at: null,
+    };
+    expect(component['requestSubtitle'](completedWithoutTimestamp)).toBe('');
+  });
+
+  it('should format ordinal suffixes and optional minutes correctly', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+
+    expect(component['formatCompletedAt']('2026-03-01T15:00:00Z')).toBe(
+      formatExpectedCompletedAt('2026-03-01T15:00:00Z'),
+    );
+    expect(component['formatCompletedAt']('2026-03-02T15:05:00Z')).toBe(
+      formatExpectedCompletedAt('2026-03-02T15:05:00Z'),
+    );
+    expect(component['formatCompletedAt']('2026-03-03T15:00:00Z')).toBe(
+      formatExpectedCompletedAt('2026-03-03T15:00:00Z'),
+    );
+    expect(component['formatCompletedAt']('2026-03-04T15:00:00Z')).toBe(
+      formatExpectedCompletedAt('2026-03-04T15:00:00Z'),
+    );
+    expect(component['formatCompletedAt']('2026-03-11T15:00:00Z')).toBe(
+      formatExpectedCompletedAt('2026-03-11T15:00:00Z'),
+    );
+    expect(component['formatCompletedAt']('not-a-date')).toBe('');
   });
 
   it('should show empty state when no requests exist', async () => {

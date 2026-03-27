@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 from learnwithai.db import get_engine, reset_db_and_tables
 from learnwithai.dev_data import seed
+from learnwithai_jobqueue import flush_broker_queues
 from sqlmodel import Session
 
 from ..di import CSXLAuthServiceDI, UserRepositoryDI
@@ -77,8 +78,10 @@ def dev_reset_db() -> dict[str, str]:
     Returns:
         A simple status message confirming the reset.
     """
+    flush_broker_queues()
     reset_db_and_tables()
     with Session(get_engine()) as session:
         seed(session)
         session.commit()
+    flush_broker_queues()
     return {"detail": "Database reset and seeded."}

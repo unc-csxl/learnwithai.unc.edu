@@ -35,14 +35,7 @@
               {{ statusIcon(request.job?.status) }}
             </mat-icon>
             <mat-card-title>{{ request.prompt }}</mat-card-title>
-            <mat-card-subtitle>
-              {{ statusLabel(request.job?.status) }}
-              @if (request.job; as job) {
-                @if (job.completed_at) {
-                  &middot; Completed {{ job.completed_at }}
-                }
-              }
-            </mat-card-subtitle>
+            <mat-card-subtitle>{{ requestSubtitle(request.job) }}</mat-card-subtitle>
           </mat-card-header>
 
           @if (request.jokes && request.jokes.length > 0) {

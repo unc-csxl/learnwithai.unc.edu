@@ -27,6 +27,18 @@ def test_configure_broker_builds_and_registers_rabbitmq_broker() -> None:
     set_broker_mock.assert_called_once_with(expected_broker)
 
 
+def test_flush_broker_queues_flushes_all_declared_queues() -> None:
+    # Arrange
+    broker_mock = Mock()
+
+    # Act
+    with patch("learnwithai_jobqueue.broker.configure_broker", return_value=broker_mock):
+        broker.flush_broker_queues()
+
+    # Assert
+    broker_mock.flush_all.assert_called_once_with()
+
+
 def test_package_initialization_exports_and_runs_configure_broker() -> None:
     # Arrange
     configure_broker_mock = Mock()
@@ -36,5 +48,5 @@ def test_package_initialization_exports_and_runs_configure_broker() -> None:
         reloaded_package = importlib.reload(learnwithai_jobqueue)
 
     # Assert
-    assert reloaded_package.__all__ == ["configure_broker"]
+    assert reloaded_package.__all__ == ["configure_broker", "flush_broker_queues"]
     configure_broker_mock.assert_called_once_with()
