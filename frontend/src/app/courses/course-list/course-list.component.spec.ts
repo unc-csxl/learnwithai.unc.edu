@@ -51,7 +51,7 @@ describe('CourseList', () => {
   it('should display courses when available', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    const cards = el.querySelectorAll('mat-card');
+    const cards = el.querySelectorAll('mat-card.course-card');
     expect(cards.length).toBe(2);
     expect(cards[0].textContent).toContain('Intro to CS');
   });

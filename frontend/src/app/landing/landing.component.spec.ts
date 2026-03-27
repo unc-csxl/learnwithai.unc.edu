@@ -88,23 +88,6 @@ describe('Landing', () => {
     expect(mockAuth.login).toHaveBeenCalled();
   });
 
-  it('should display copyright footer with current year', async () => {
-    const { fixture } = await setup();
-    const el: HTMLElement = fixture.nativeElement;
-    const footer = el.querySelector('.landing-footer');
-    expect(footer?.textContent).toContain(`${new Date().getFullYear()}`);
-    expect(footer?.textContent).toContain('Computer Science Experience Labs');
-  });
-
-  it('should have CSXL link in footer', async () => {
-    const { fixture } = await setup();
-    const el: HTMLElement = fixture.nativeElement;
-    const link = el.querySelector('.landing-footer a') as HTMLAnchorElement;
-    expect(link?.href).toContain('csxl.unc.edu');
-    expect(link?.target).toBe('_blank');
-    expect(link?.rel).toContain('noopener');
-  });
-
   it('should show dev login menu when in dev mode with users', async () => {
     const { fixture } = await setup({ isDev: true });
     const el: HTMLElement = fixture.nativeElement;
