@@ -1,4 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+  InjectionToken,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +18,10 @@ import { User } from '../api/models';
 import { MatPane } from '../shared/mat-pane/mat-pane';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+
+export const IS_DEV_MODE = new InjectionToken<boolean>('IS_DEV_MODE', {
+  factory: () => !environment.production,
+});
 
 /** Landing page shown to unauthenticated users. */
 @Component({
@@ -32,7 +43,7 @@ export class Landing {
   protected theme = inject(ThemeService);
   private http = inject(HttpClient);
 
-  protected readonly isDev = !environment.production;
+  protected readonly isDev = inject(IS_DEV_MODE);
   protected readonly devUsers = signal<User[]>([]);
   protected readonly currentYear = new Date().getFullYear();
   protected readonly logoAsset = computed(() =>
@@ -40,9 +51,7 @@ export class Landing {
   );
 
   constructor() {
-    /* v8 ignore start -- isDev is a compile-time constant; only one branch runs per build */
     if (this.isDev) {
-      /* v8 ignore stop */
       this.loadDevUsers();
     }
   }

@@ -1,10 +1,10 @@
-import { signal } from '@angular/core';
+import { EnvironmentProviders, Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Landing } from './landing.component';
+import { IS_DEV_MODE, Landing } from './landing.component';
 import { AuthService } from '../auth.service';
 import { User } from '../api/models';
 
@@ -36,14 +36,20 @@ describe('Landing', () => {
       logout: vi.fn(),
     };
 
+    const providers: Array<Provider | EnvironmentProviders> = [
+      provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: AuthService, useValue: mockAuth },
+    ];
+
+    if (options.isDev !== undefined) {
+      providers.push({ provide: IS_DEV_MODE, useValue: options.isDev });
+    }
+
     TestBed.configureTestingModule({
       imports: [Landing, NoopAnimationsModule],
-      providers: [
-        provideRouter([]),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: AuthService, useValue: mockAuth },
-      ],
+      providers,
     });
 
     const httpTesting = TestBed.inject(HttpTestingController);
@@ -76,6 +82,18 @@ describe('Landing', () => {
     expect(el.textContent).toContain('LEARN');
     expect(el.textContent).toContain('with');
     expect(el.textContent).toContain('AI');
+  });
+
+  it('should switch the logo asset when dark mode is enabled', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+
+    expect(component['logoAsset']()).toBe('unc-light.svg');
+
+    component['theme'].isDark.set(true);
+    fixture.detectChanges();
+
+    expect(component['logoAsset']()).toBe('unc-dark.svg');
   });
 
   it('should display login button', async () => {

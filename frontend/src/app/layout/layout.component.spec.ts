@@ -146,6 +146,27 @@ describe('Layout', () => {
     expect(mockTheme.toggle).toHaveBeenCalled();
   });
 
+  it('should update theme icon and tooltip for light and dark modes', () => {
+    const { fixture, mockTheme } = setup();
+    const component = fixture.componentInstance;
+
+    expect(component['themeIcon']()).toBe('computer');
+    expect(component['themeTooltip']()).toBe('Theme: System');
+    expect(component['logoAsset']()).toBe('unc-light.svg');
+
+    mockTheme.mode.set('light');
+    fixture.detectChanges();
+    expect(component['themeIcon']()).toBe('light_mode');
+    expect(component['themeTooltip']()).toBe('Theme: Light');
+
+    mockTheme.mode.set('dark');
+    mockTheme.isDark.set(true);
+    fixture.detectChanges();
+    expect(component['themeIcon']()).toBe('dark_mode');
+    expect(component['themeTooltip']()).toBe('Theme: Dark');
+    expect(component['logoAsset']()).toBe('unc-dark.svg');
+  });
+
   it('should show courses nav link in sidenav', () => {
     const { fixture } = setup();
     const el: HTMLElement = fixture.nativeElement;
