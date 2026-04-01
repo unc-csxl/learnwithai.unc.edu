@@ -28,6 +28,5 @@
     "**/dist": true,
     "**/.angular": true
   },
-  "vitest.rootConfig": "vitest.config.ts",
   "testing.automaticallyOpenTestResults": "openOnTestFailure"
 }

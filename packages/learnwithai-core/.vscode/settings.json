@@ -2,16 +2,10 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [],
-    "python-envs.pythonProjects": [
-        {
-            "path": ".",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
-        }
-    ],
+    "python-envs.pythonProjects": [],
     "editor.codeActionsOnSave": {
-    "source.organizeImports": "always",
-    "source.fixAll": "always",
-    "source.fixAll.ruff": "always"
-  },
+        "source.organizeImports": "always",
+        "source.fixAll": "always",
+        "source.fixAll.ruff": "always"
+    },
 }

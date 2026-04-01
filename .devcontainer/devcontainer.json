@@ -68,6 +68,7 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "angular.ng-template",
+        "vitest.explorer",
         "ms-playwright.playwright"
       ]
     }

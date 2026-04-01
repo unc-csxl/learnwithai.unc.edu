@@ -16,14 +16,18 @@
   },
   "python-envs.pythonProjects": [
     {
-      "path": ".",
+      "path": "packages/learnwithai-core",
+      "envManager": "ms-python.python:venv",
+      "alwaysUseUv": true
+    },
+    {
+      "path": "packages/learnwithai-jobqueue",
       "envManager": "ms-python.python:venv",
       "alwaysUseUv": true
     }
   ],
-  "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python",
+  "python.defaultInterpreterPath": "/workspaces/learnwithai/packages/learnwithai-core/.venv/bin/python",
   "python.analysis.extraPaths": [
-    "/workspaces/learnwithai/api/src",
     "/workspaces/learnwithai/packages/learnwithai-core/src",
     "/workspaces/learnwithai/packages/learnwithai-jobqueue/src"
   ],

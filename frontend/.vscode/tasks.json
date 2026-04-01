@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "start",
+      "label": "frontend: run",
       "type": "shell",
       "command": "pnpm start",
       "isBackground": true,
@@ -22,7 +22,7 @@
       }
     },
     {
-      "label": "test",
+      "label": "frontend: test",
       "type": "shell",
       "command": "pnpm test",
       "isBackground": true,
@@ -41,7 +41,7 @@
       }
     },
     {
-      "label": "test:e2e",
+      "label": "frontend: test:e2e",
       "type": "shell",
       "command": "pnpm test:e2e",
       "problemMatcher": []
