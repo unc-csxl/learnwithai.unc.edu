@@ -8,17 +8,12 @@ import { ActivityService } from './activity.service';
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('Activities', () => {
-  it('should set the page title and list activities', async () => {
-    const mockPageTitle = {
-      title: vi.fn(),
-      setTitle: vi.fn(),
-    };
-
-    const mockCourseService = {
+  function setup(overrides: { courseService?: object; activityService?: object } = {}) {
+    const mockPageTitle = { title: vi.fn(), setTitle: vi.fn() };
+    const mockCourseService = overrides.courseService ?? {
       getMyCourses: vi.fn(() => Promise.resolve([{ id: 1, membership: { type: 'instructor' } }])),
     };
-
-    const mockActivityService = {
+    const mockActivityService = overrides.activityService ?? {
       list: vi.fn(() =>
         Promise.resolve([
           {
@@ -34,7 +29,6 @@ describe('Activities', () => {
         ]),
       ),
     };
-
     const mockRoute = {
       parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
     };
@@ -52,10 +46,75 @@ describe('Activities', () => {
 
     const fixture = TestBed.createComponent(Activities);
     fixture.detectChanges();
+
+    return { fixture, mockPageTitle };
+  }
+
+  it('should set the page title and list activities for instructor', async () => {
+    const { fixture, mockPageTitle } = setup();
     await flush();
     fixture.detectChanges();
 
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Student Activities');
     expect(fixture.nativeElement.textContent).toContain('Test Activity');
+    expect(fixture.nativeElement.textContent).toContain('Create IYOW Activity');
+  });
+
+  it('should show empty state when no activities', async () => {
+    const { fixture } = setup({
+      activityService: { list: vi.fn(() => Promise.resolve([])) },
+    });
+    await flush();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('No activities yet.');
+  });
+
+  it('should hide create button for students', async () => {
+    const { fixture } = setup({
+      courseService: {
+        getMyCourses: vi.fn(() => Promise.resolve([{ id: 1, membership: { type: 'student' } }])),
+      },
+    });
+    await flush();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Create IYOW Activity');
+  });
+
+  it('should show error on load failure', async () => {
+    const { fixture } = setup({
+      courseService: { getMyCourses: vi.fn(() => Promise.reject(new Error('fail'))) },
+      activityService: { list: vi.fn(() => Promise.reject(new Error('fail'))) },
+    });
+    await flush();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Failed to load activities.');
+  });
+
+  it('should show late_date chip when present', async () => {
+    const { fixture } = setup({
+      activityService: {
+        list: vi.fn(() =>
+          Promise.resolve([
+            {
+              id: 10,
+              title: 'Late Activity',
+              type: 'iyow',
+              due_date: '2025-12-01T00:00:00Z',
+              release_date: '2025-11-01T00:00:00Z',
+              late_date: '2025-12-15T00:00:00Z',
+              course_id: 1,
+              created_at: '2025-11-01T00:00:00Z',
+            },
+          ]),
+        ),
+      },
+    });
+    await flush();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Late until');
   });
 });
