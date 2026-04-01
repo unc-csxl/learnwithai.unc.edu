@@ -1,54 +1,58 @@
 # Packages Workspace
 
-This workspace contains shared Python packages that sit underneath the API adapter.
+This workspace contains the shared Python packages that sit underneath the API layer.
 
-The goal of the `packages/` directory is separation of concerns:
+If you are new to the repository, this is where most reusable backend logic lives.
 
-- `learnwithai-core` contains reusable domain and application logic
-- `learnwithai-jobqueue` contains background job and broker integration
-
-Keeping these packages separate makes the system easier to test, reason about, and reuse.
-
-## Workspace Layout
+## What Lives Here
 
 ```text
 packages/
 |- learnwithai-core/
-|  |- src/learnwithai/         Shared configuration, models, repositories, services, jobs
-|  `- test/                    Tests for the core package
+|  |- src/learnwithai/          Shared config, models, repositories, services, jobs, and tools
+|  `- test/                     Tests for shared backend logic
 `- learnwithai-jobqueue/
-   |- src/learnwithai_jobqueue/ Broker wiring and worker entrypoints
-   `- test/                     Tests for queue integration
+   |- src/learnwithai_jobqueue/ RabbitMQ and Dramatiq integration
+   `- test/                     Tests for queue wiring
 ```
 
-## `learnwithai-core`
+## Which Package Owns What?
 
-This package is where shared backend logic should usually go first.
+### `learnwithai-core`
 
-It currently contains areas such as:
+Put code here when it is shared backend logic and should not depend on FastAPI request handling.
 
-- `config.py` for environment-backed settings
-- `db.py` for database support
-- `models/` for domain models
-- `repositories/` for persistence access
-- `services/` for application and integration logic
-- `jobs/` for job definitions that can be queued
+Common examples:
 
-If you are tempted to put domain logic into a FastAPI route, stop and consider whether it belongs here instead.
+- settings and environment handling
+- database session helpers
+- domain models and tables
+- repositories
+- services
+- job definitions
+- AI tool packages
 
-## `learnwithai-jobqueue`
+If you find yourself writing business logic directly in an API route, stop and check whether it belongs here instead.
 
-This package connects the core job abstractions to Dramatiq and the message broker.
+### `learnwithai-jobqueue`
 
-It currently contains:
+Put code here when it connects shared jobs to infrastructure.
 
-- `broker.py` for broker setup
-- `dramatiq_job_queue.py` for queue adapter wiring
-- `worker.py` for the worker process entrypoint
+Common examples:
+
+- Dramatiq broker setup
+- queue adapter implementations
+- RabbitMQ-based job notifications
+- worker process entrypoints
+
+## A Simple Rule Of Thumb
+
+- If the code explains what the system does, it usually belongs in `learnwithai-core`.
+- If the code explains how a background job gets delivered or executed, it usually belongs in `learnwithai-jobqueue`.
 
 ## How To Work In This Workspace
 
-Run focused tests from the repository root:
+Run package-focused tests from the repository root:
 
 ```bash
 uv run pytest packages/learnwithai-core/test
@@ -63,8 +67,9 @@ When you finish backend package work, run:
 
 ## Good First Files To Read
 
+- `learnwithai-core/README.md`
 - `learnwithai-core/src/learnwithai/config.py`
 - `learnwithai-core/src/learnwithai/services/`
 - `learnwithai-core/src/learnwithai/jobs/`
-- `learnwithai-jobqueue/src/learnwithai_jobqueue/dramatiq_job_queue.py`
+- `learnwithai-jobqueue/README.md`
 - `learnwithai-jobqueue/src/learnwithai_jobqueue/worker.py`

@@ -25,7 +25,7 @@ If guidance conflicts, the more local `AGENTS.md` wins.
 
 ## Service Design Conventions
 
-Services in `learnwithai-core` are classes that declare all their dependencies (repositories, `JobQueue`, etc.) in `__init__`. There are no module-level helper functions — all parsing, formatting, and private logic live as `_private` methods on the class.
+Services in `learnwithai-core` are classes that declare all their dependencies (repositories, `JobQueue`, etc.) in `__init__`.
 
 Write services in **literate code style**: public methods first (big picture), private helpers last (details). This means readers encounter the entry points before the implementation details.
 
@@ -50,9 +50,8 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 
 ## SQLModel and Relationship Rules
 
-- When a table has a foreign key to another table, define a unidirectional SQLModel `Relationship` on the owning side. Use `selectinload` for eager loading in repository queries instead of writing manual joins.
 - **Do not** use `from __future__ import annotations` in any file that defines a SQLModel `Relationship`. Postponed evaluation prevents SQLAlchemy from resolving forward-reference strings at class-creation time. Use `Optional["RelatedModel"]` from `typing` for forward references instead of `RelatedModel | None`.
-- Repository methods that load related objects via eager loading should return domain objects directly (`list[Model]`), not tuples.
+- Repository methods that load related objects via eager loading should return domain objects directly (`list[Model]`).
 
 ## Testing Expectations
 
@@ -60,7 +59,7 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 - The repository target is full confidence, not minimal smoke coverage.
 - Python changes should maintain the repository's 100% coverage expectation.
 - Frontend changes should include or update Angular tests when behavior changes.
-- Prefer targeted tests while developing, then run the full repository QA check before you stop.
+- Prefer targeted tests while developing, then run the full repository QA check before you complete a task.
 - Keep shared test fixtures (like DB session fixtures) in the nearest common `conftest.py`. Do not duplicate fixtures across subdirectory conftest files.
 
 ## Validation Workflow

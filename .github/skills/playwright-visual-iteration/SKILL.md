@@ -31,7 +31,7 @@ Do not use this as a substitute for normal unit or e2e coverage. This is a visua
 
 ### 1. Make sure the frontend is running
 
-Prefer the existing `start` task for the frontend workspace.
+Prefer the existing `frontend: run` task for the frontend workspace.
 
 ### 2. Run commands from `frontend/`
 

@@ -1,118 +1,52 @@
-Read the repository root `AGENTS.md` first. This file adds frontend-specific guidance.
+Read the repository root `AGENTS.md` first. This file adds frontend-specific rules.
 
-## Frontend Contribution Rules
+## Scope
 
-- Keep UI concerns in the frontend. Move shared business rules to backend packages when appropriate.
-- New or changed behavior should include Angular tests.
-- Keep TypeScript strict. Do not introduce `any` without a strong documented reason.
-- Validate frontend changes with `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
-- The final repository-level validation is `./scripts/qa.sh --check` from the root.
+This workspace owns browser UI, route composition, forms, and frontend-side coordination with the generated API client.
 
-## App Shell and Page Titles
+Keep reusable business rules out of this layer when they belong in the backend packages.
 
-The `Layout` component provides the responsive shell (toolbar + sidenav). Every routed component must call `PageTitleService.setTitle()` to set the toolbar heading and browser tab title. Do not add `<h1>` headings for page titles in component templates — the toolbar displays the title centrally.
+## Validation
 
-## Theming
+- Add or update Angular tests for new or changed behavior.
+- Run `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
+- Finish with `./scripts/qa.sh --check` from the repository root.
 
-The light and dark themes use the UNC Chapel Hill brand palette defined in `src/theme.scss`. Use the `ThemeService` to read or toggle the current mode. Custom properties from the theme are available globally. Do not hard-code brand colours — reference theme tokens instead.
+## App Shell And Titles
+
+- `Layout` owns the authenticated shell.
+- Every routed component must call `PageTitleService.setTitle()`.
+- Do not add page-title `<h1>` elements to routed pages. The toolbar already displays the page title.
 
 ## Generated API Client
 
-Frontend TypeScript models and HTTP client functions are auto-generated from the FastAPI OpenAPI spec using ng-openapi-gen. The generated code lives in `src/app/api/generated/`.
+- Do not edit `src/app/api/generated/`.
+- Import domain types from `src/app/api/models.ts`.
+- Use `Api.invoke(...)` with generated endpoint functions.
+- If backend request or response shapes change, run `pnpm api:sync` and update affected frontend code.
 
-- Do **not** edit files inside `src/app/api/generated/`. They are overwritten on every regeneration.
-- Import domain types from `api/models` (e.g. `Course`, `User`, `Membership`), **not** from `api/generated/models/`. The barrel file `src/app/api/models.ts` maps generated wire-format names to clean domain names.
-- When new models are generated, add domain aliases to `src/app/api/models.ts`.
-- Use the generated `Api` service's `invoke(fn, params)` method with generated endpoint functions (e.g. `listMyCourses`, `createCourse`). Do **not** use `HttpClient` directly in services.
-- `Api.invoke` returns `Promise<T>`. Services return `Promise<T>` and components use `async`/`await`.
-- When backend routes or response shapes change, run `pnpm api:sync` to regenerate, then update affected services, the domain barrel, and components.
-- Do **not** create hand-written model interfaces for API shapes. Use the generated models via the domain barrel instead.
+## Frontend Conventions
 
-## Framework Guidance
-
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
-
-## TypeScript Best Practices
-
-- Use strict type checking
-- Prefer type inference when the type is obvious
-- Avoid the `any` type; use `unknown` when type is uncertain
-
-## Angular Best Practices
-
-- Always use standalone components over NgModules
-- Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
-- Use signals for state management
-- Implement lazy loading for feature routes
-- Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
-- Use `NgOptimizedImage` for all static images.
-  - `NgOptimizedImage` does not work for inline base64 images.
-
-## Accessibility Requirements
-
-- It MUST pass all AXE checks.
-- It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
-
-### Components
-
-- Keep components small and focused on a single responsibility
-- Use `input()` and `output()` functions instead of decorators
-- Use `computed()` for derived state
-- Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
-- Use external HTML template files (sibling `.html`) for all components except trivial ones (e.g. `<router-outlet />`)
-- Prefer Reactive forms instead of Template-driven ones
-- Do NOT use `ngClass`, use `class` bindings instead
-- Do NOT use `ngStyle`, use `style` bindings instead
-- When using external templates/styles, use paths relative to the component TS file.
-
-## State Management
-
-- Use signals for local component state
-- Use `computed()` for derived state
-- Keep state transformations pure and predictable
-- Do NOT use `mutate` on signals, use `update` or `set` instead
-
-## Templates
-
-- Keep templates simple and avoid complex logic
-- Use native control flow (`@if`, `@for`, `@switch`) instead of `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use the async pipe to handle observables
-- Do not assume globals like (`new Date()`) are available.
-
-## Services
-
-- Design services around a single responsibility
-- Use the `providedIn: 'root'` option for singleton services
-- Use the `inject()` function instead of constructor injection
+- Keep TypeScript strict. Do not introduce `any` without a strong reason.
+- Prefer signals for local state and `computed()` for derived state.
+- Use `ChangeDetectionStrategy.OnPush` on components.
+- Prefer Reactive Forms.
+- Use native control flow (`@if`, `@for`, `@switch`) in templates.
+- Keep theme usage on shared tokens through `ThemeService` and `src/theme.scss`. Do not hard-code brand colors.
 
 ## Real-Time Job Updates
 
-`JobUpdateService` (`src/app/job-update.service.ts`) is a singleton service that manages a WebSocket connection to `/api/ws/jobs` for receiving real-time background job status updates.
+`JobUpdateService` manages the WebSocket connection to `/api/ws/jobs`.
 
-- Call `subscribe(courseId)` to start receiving updates for a course. The WebSocket opens lazily on the first subscription.
-- Call `unsubscribe(courseId)` when leaving a course context. The WebSocket closes automatically when no subscriptions remain.
-- Use `updatesForCourse(courseId)` to get a `computed` signal of all updates for a course.
-- Use `updateForJob(jobId)` to get a `computed` signal tracking a single job's latest status.
-- The connection runs outside `NgZone`; message handling runs inside `NgZone` to trigger change detection.
-- Reconnects automatically after 5 seconds on connection loss.
+- Call `subscribe(courseId)` when entering a course context.
+- Call `unsubscribe(courseId)` when leaving that context.
+- Use `updatesForCourse(courseId)` or `updateForJob(jobId)` to read current status as signals.
 
-## Post-Save UX Pattern
+## Post-Save UX
 
-After any form successfully saves, the app must:
+After a successful save:
 
-1. Navigate the user to the next useful place (e.g. the course dashboard after updating course settings, the courses list after updating a profile).
-2. Show a success notification using `SuccessSnackbarService` (found at `src/app/success-snackbar.service.ts`). The snackbar auto-dismisses after 5 seconds.
+1. Show a success snackbar with `SuccessSnackbarService`.
+2. Navigate the user to the next useful page.
 
-Do **not** show inline "saved" messages inside the form. Use `SuccessSnackbarService` instead of injecting `MatSnackBar` directly so that duration and dismiss behaviour stay consistent across the app.
-
-```typescript
-// In a component that saves data:
-private successSnackbar = inject(SuccessSnackbarService);
-private router = inject(Router);
-
-protected async onSubmit(): Promise<void> {
-  // ... validate and call API ...
-  this.successSnackbar.open('Thing saved.');
-  await this.router.navigate(['/next/useful/route']);
-}
-```
+Do not leave users on the same page with an inline "saved" message.

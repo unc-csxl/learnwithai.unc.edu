@@ -1,47 +1,64 @@
 # API Workspace
 
-This workspace contains the FastAPI adapter for LearnWithAI. It is responsible for HTTP concerns such as routing, request parsing, dependency wiring, and response shaping.
+This workspace contains the FastAPI adapter for LearnWithAI. It owns HTTP and WebSocket concerns such as routing, request parsing, dependency wiring, and response models.
 
-The API layer should stay thin. If logic could reasonably be reused outside HTTP, it probably belongs in `packages/learnwithai-core/` instead of here.
+The API layer should stay thin. If code could be reused outside HTTP, move it into `packages/learnwithai-core/`.
 
 ## What Lives Here
 
 ```text
 api/
 |- src/api/
-|  |- main.py                  FastAPI application entrypoint
-|  |- context.py               Request/application context helpers
-|  |- di.py                    Shared DI definitions for routes
-|  `- routes/
-|     |- auth.py               Authentication endpoints
-|     |- courses.py            Course management endpoints
-|     `- health.py             Health and queue demo endpoints
-|- test/                       Pytest suite for the API adapter
-|  `- routes/                  Route handler tests grouped by router
-|- pyproject.toml              Package metadata and dependencies
+|  |- main.py                  FastAPI app creation
+|  |- lifespan.py              Startup and shutdown wiring
+|  |- di.py                    API-specific dependency factories
+|  |- openapi.py               OpenAPI metadata helpers
+|  |- spa.py                   SPA static-file setup
+|  |- realtime/                WebSocket update manager and broker consumer
+|  `- routes/                  HTTP and WebSocket route modules
+|- test/                       API adapter tests
+`- pyproject.toml              Package metadata
 ```
 
-## Current Entry Points
+## Current Route Modules
 
-- `src/api/main.py` creates the `FastAPI` app and registers routers.
-- `src/api/routes/health.py` exposes `/health` and `/queue`.
-- `src/api/routes/auth.py` exposes the authentication flow under `/auth`.
-- `src/api/routes/courses.py` exposes course creation, roster, and membership management.
-- `src/api/routes/ws.py` exposes `/ws/jobs` WebSocket endpoint for real-time job updates.
+All HTTP routes are mounted under `/api`.
 
-## WebSocket Infrastructure
+The main route files are:
 
-`src/api/job_update_manager.py` is an in-memory subscription manager that tracks which WebSocket connections are interested in updates for each course.
+- `routes/health.py`
+- `routes/auth.py`
+- `routes/me.py`
+- `routes/courses.py`
+- `routes/roster_uploads.py`
+- `routes/joke_generation.py`
+- `routes/ws.py` for `/api/ws/jobs`
 
-`src/api/routes/ws.py` accepts WebSocket connections authenticated via a JWT query parameter (`?token=<jwt>`). Clients send JSON `subscribe`/`unsubscribe` messages to register for course-level job updates.
+In development mode, `routes/dev.py` adds developer-only helpers.
 
-On startup, a background task (`_consume_job_updates` in `main.py`) connects to the `job_updates` RabbitMQ fanout exchange via `aio-pika` and broadcasts received `JobUpdate` messages to subscribed WebSocket clients through the `JobUpdateManager`. The consumer is skipped in test environments.
+## Realtime Job Updates
+
+Realtime job updates are split into two parts:
+
+- `src/api/routes/ws.py` accepts WebSocket clients and handles subscribe or unsubscribe messages.
+- `src/api/realtime/` manages in-process subscriptions and consumes job updates from RabbitMQ.
+
+This is a good example of how the API workspace handles transport concerns while the backend packages handle business logic.
+
+## How A Request Flows
+
+Most API work follows this path:
+
+1. Route function in `src/api/routes/`
+2. API-specific dependency factory in `src/api/di.py`
+3. Shared service or repository in `learnwithai-core`
+4. Response model returned from the route
+
+If you are debugging an endpoint, follow that path in order.
 
 ## How To Run The API
 
-Recommended from VS Code:
-
-- Run the `api: run` task from the repository workspace.
+The easiest option in VS Code is the `api: run` task from the `repo` workspace.
 
 Equivalent terminal command from the repository root:
 
@@ -51,56 +68,55 @@ uv run --package learnwithai-api uvicorn api.main:app --reload --host 0.0.0.0 --
 
 Once it is running, check `http://localhost:8000/api/health`.
 
-## How To Test The API
+## Testing And Validation
 
-Run the API-focused tests from the repository root:
+Run API tests from the repository root:
 
 ```bash
 uv run pytest api/test
 ```
 
-Before finishing broader backend work, run the repository QA check:
+Before finishing broader backend work, run:
 
 ```bash
 ./scripts/qa.sh --check
 ```
 
-## How To Add Or Change An Endpoint
+## Adding Or Changing An Endpoint
 
-Use this mental model:
+Use this checklist:
 
-1. Put the route in `src/api/routes/`.
-2. Keep the route focused on HTTP details. Use typed helpers in `src/api/di.py` for FastAPI dependency aliases and HTTP-specific dependencies. Instantiate shared repositories and services directly inside those adapter functions.
-3. Declare request body models directly in the route signature. Prefer `Annotated[..., Body()]` when you want the body contract to be explicit at the API layer.
-4. If a request body contains an identifier that requires a database lookup, do that lookup in the route logic and translate missing resources into the appropriate `404` response there instead of creating a body-driven DI helper.
-5. Use dependency injection for settings, current user resolution, and shared services. Do **not** inject the session into a route handler directly — the session is managed automatically by `get_session` in `learnwithai-core` and reaches repositories through their own factories.
-6. Move reusable logic into `learnwithai-core`.
-7. Add or update tests in `api/test/`, placing route tests under `api/test/routes/`.
-8. After changing routes or response models, regenerate the frontend client with `pnpm api:sync` from the `frontend/` directory.
+1. Add or update the route in `src/api/routes/`.
+2. Keep HTTP-specific logic in the route or `src/api/di.py`.
+3. Move reusable business logic into `learnwithai-core`.
+4. Keep request body models explicit in the route signature.
+5. Resolve body-driven lookups in the route, not in a body-derived dependency helper.
+6. Add or update tests in `api/test/`, usually under `api/test/routes/`.
+7. If the API contract changed, run `pnpm api:sync` from `frontend/`.
 
-## OpenAPI Specification
+## OpenAPI Export
 
-The API uses a custom `generate_unique_id_function` so that every operation ID matches the Python function name (e.g. `create_course`, not `create_course_api_courses_post`). This keeps the generated frontend client readable.
-
-To export the current OpenAPI spec without running the server:
+To export the current OpenAPI spec without starting the API server:
 
 ```bash
 uv run python scripts/export_openapi.py
 ```
 
-This writes `frontend/openapi.json`, which is consumed by ng-openapi-gen to produce TypeScript models and client functions.
+That writes `frontend/openapi.json`, which the frontend uses to regenerate its API client.
 
-## Transaction Boundaries
+## Transaction Boundary
 
-`get_session` is a yield-based FastAPI dependency. It commits when a route returns normally and rolls back on any unhandled exception. Route handlers must never call `session.commit()`, `session.rollback()`, or `session.begin()`. This keeps persistence lifecycle concerns in the infrastructure layer and out of HTTP handlers.
+Database transaction lifecycle is owned by `get_session` in `learnwithai-core`. Route handlers must not call `session.commit()`, `session.rollback()`, or `session.begin()`.
 
 ## Good First Files To Read
 
+If you are new to this workspace, start with:
+
 - `src/api/main.py`
+- `src/api/lifespan.py`
+- `src/api/di.py`
 - `src/api/routes/health.py`
 - `src/api/routes/auth.py`
-- `src/api/di.py`
+- `src/api/routes/courses.py`
 - `test/test_main.py`
 - `test/routes/test_routes_auth.py`
-
-Read those before making large API changes.
