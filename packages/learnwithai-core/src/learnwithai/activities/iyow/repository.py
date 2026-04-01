@@ -39,9 +39,7 @@ class IyowActivityRepository:
         Returns:
             The matching IYOW detail when found; otherwise, ``None``.
         """
-        stmt = select(IyowActivity).where(
-            IyowActivity.activity_id == activity_id
-        )
+        stmt = select(IyowActivity).where(IyowActivity.activity_id == activity_id)
         return self._session.exec(stmt).first()
 
     def update(self, iyow_activity: IyowActivity) -> IyowActivity:
@@ -93,9 +91,7 @@ class IyowSubmissionRepository:
         Returns:
             The matching IYOW detail when found; otherwise, ``None``.
         """
-        stmt = select(IyowSubmission).where(
-            IyowSubmission.submission_id == submission_id
-        )
+        stmt = select(IyowSubmission).where(IyowSubmission.submission_id == submission_id)
         return self._session.exec(stmt).first()
 
     def get_by_async_job_id(self, async_job_id: int) -> IyowSubmission | None:
@@ -107,9 +103,7 @@ class IyowSubmissionRepository:
         Returns:
             The matching IYOW submission when found; otherwise, ``None``.
         """
-        stmt = select(IyowSubmission).where(
-            IyowSubmission.async_job_id == async_job_id
-        )
+        stmt = select(IyowSubmission).where(IyowSubmission.async_job_id == async_job_id)
         return self._session.exec(stmt).first()
 
     def update(self, iyow_submission: IyowSubmission) -> IyowSubmission:

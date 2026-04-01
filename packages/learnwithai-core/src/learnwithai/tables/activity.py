@@ -20,9 +20,7 @@ class Activity(SQLModel, table=True):
     stores additional detail in its own table linked via ``activity_id``.
     """
 
-    __table_args__ = (
-        Index("ix_activity_course_id_type", "course_id", "type"),
-    )
+    __table_args__ = (Index("ix_activity_course_id_type", "course_id", "type"),)
 
     id: int | None = Field(
         default=None,

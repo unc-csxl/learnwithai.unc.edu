@@ -148,9 +148,7 @@ class IyowSubmissionService:
         self._authorize_member(subject, course)
         assert activity.id is not None
 
-        submission = self._submission_repo.get_active_for_student(
-            activity.id, subject.pid
-        )
+        submission = self._submission_repo.get_active_for_student(activity.id, subject.pid)
         if submission is None:
             return None
 
@@ -185,9 +183,7 @@ class IyowSubmissionService:
         self._authorize_member(subject, course)
         assert activity.id is not None
 
-        submissions = self._submission_repo.list_by_student_and_activity(
-            activity.id, subject.pid
-        )
+        submissions = self._submission_repo.list_by_student_and_activity(activity.id, subject.pid)
         results: list[tuple[Submission, IyowSubmission]] = []
         for sub in submissions:
             assert sub.id is not None
@@ -229,9 +225,7 @@ class IyowSubmissionService:
                 results.append((sub, iyow_detail))
         return results
 
-    def _validate_submission_window(
-        self, activity: Activity, now: datetime
-    ) -> None:
+    def _validate_submission_window(self, activity: Activity, now: datetime) -> None:
         """Verifies the activity is open for submissions.
 
         Args:

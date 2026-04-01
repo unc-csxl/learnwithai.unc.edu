@@ -53,16 +53,10 @@ class ActivityRepository:
         Returns:
             A list of activities ordered by creation time descending.
         """
-        stmt = (
-            select(Activity)
-            .where(Activity.course_id == course_id)
-            .order_by(col(Activity.created_at).desc())
-        )
+        stmt = select(Activity).where(Activity.course_id == course_id).order_by(col(Activity.created_at).desc())
         return list(self._session.exec(stmt).all())
 
-    def list_released_by_course(
-        self, course_id: int, now: datetime
-    ) -> list[Activity]:
+    def list_released_by_course(self, course_id: int, now: datetime) -> list[Activity]:
         """Returns released activities for a course, newest first.
 
         An activity is considered released when its ``release_date`` is

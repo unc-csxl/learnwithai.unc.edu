@@ -8,15 +8,14 @@ from datetime import datetime, timezone
 
 from sqlmodel import Session
 
+from .activities.iyow.tables import IyowActivity, IyowSubmission
+from .tables.activity import Activity, ActivityType
 from .tables.async_job import AsyncJob, AsyncJobStatus
 from .tables.course import Course, Term
 from .tables.membership import Membership, MembershipState, MembershipType
+from .tables.submission import Submission
 from .tables.user import User
 from .tools.jokes.tables import Joke
-
-from .tables.activity import Activity, ActivityType
-from .tables.submission import Submission
-from .activities.iyow.tables import IyowActivity, IyowSubmission
 
 
 def seed(session: Session) -> None:
@@ -139,8 +138,7 @@ def seed(session: Session) -> None:
     iyow_detail = IyowActivity(
         activity_id=iyow_activity_base.id,
         prompt=(
-            "In your own words, explain what dependency injection is "
-            "and why it is useful in software engineering."
+            "In your own words, explain what dependency injection is and why it is useful in software engineering."
         ),
         rubric=(
             "The student should mention: (1) the concept of passing "

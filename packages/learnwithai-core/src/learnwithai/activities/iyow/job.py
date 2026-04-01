@@ -46,10 +46,7 @@ class IyowFeedbackJobHandler(BaseJobHandler[IyowFeedbackJob]):
         """
         settings = get_settings()
         if not settings.openai_api_key:
-            raise RuntimeError(
-                "openai_api_key is not configured. "
-                "Set the OPENAI_API_KEY environment variable."
-            )
+            raise RuntimeError("openai_api_key is not configured. Set the OPENAI_API_KEY environment variable.")
 
         async_job_repo = AsyncJobRepository(session)
         async_job = async_job_repo.get_by_id(job.job_id)
@@ -59,9 +56,7 @@ class IyowFeedbackJobHandler(BaseJobHandler[IyowFeedbackJob]):
         iyow_submission_repo = IyowSubmissionRepository(session)
         iyow_submission = iyow_submission_repo.get_by_async_job_id(job.job_id)
         if iyow_submission is None:
-            raise ValueError(
-                f"IyowSubmission for AsyncJob {job.job_id} not found"
-            )
+            raise ValueError(f"IyowSubmission for AsyncJob {job.job_id} not found")
 
         iyow_activity_repo = IyowActivityRepository(session)
         # Walk from iyow_submission -> base submission -> activity
@@ -70,22 +65,14 @@ class IyowFeedbackJobHandler(BaseJobHandler[IyowFeedbackJob]):
         submission_repo = SubmissionRepository(session)
         base_submission = submission_repo.get_by_id(iyow_submission.submission_id)
         if base_submission is None:
-            raise ValueError(
-                f"Submission {iyow_submission.submission_id} not found"
-            )
+            raise ValueError(f"Submission {iyow_submission.submission_id} not found")
 
-        iyow_activity = iyow_activity_repo.get_by_activity_id(
-            base_submission.activity_id
-        )
+        iyow_activity = iyow_activity_repo.get_by_activity_id(base_submission.activity_id)
         if iyow_activity is None:
-            raise ValueError(
-                f"IyowActivity for activity {base_submission.activity_id} not found"
-            )
+            raise ValueError(f"IyowActivity for activity {base_submission.activity_id} not found")
 
         system_prompt = IYOW_SYSTEM_PROMPT.format(rubric=iyow_activity.rubric)
-        ai_svc = AiCompletionService(
-            api_key=settings.openai_api_key, model=settings.openai_model
-        )
+        ai_svc = AiCompletionService(api_key=settings.openai_api_key, model=settings.openai_model)
         feedback = ai_svc.complete(
             system_prompt=system_prompt,
             user_prompt=iyow_submission.response_text,
