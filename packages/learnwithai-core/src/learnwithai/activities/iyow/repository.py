@@ -44,6 +44,20 @@ class IyowActivityRepository:
         )
         return self._session.exec(stmt).first()
 
+    def update(self, iyow_activity: IyowActivity) -> IyowActivity:
+        """Persists changes to an existing IYOW activity detail.
+
+        Args:
+            iyow_activity: Instance with updated fields.
+
+        Returns:
+            The updated record with refreshed database state.
+        """
+        self._session.add(iyow_activity)
+        self._session.flush()
+        self._session.refresh(iyow_activity)
+        return iyow_activity
+
 
 class IyowSubmissionRepository:
     """Provides CRUD operations for IYOW submission detail records."""
