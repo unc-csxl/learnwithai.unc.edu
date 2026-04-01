@@ -37,6 +37,7 @@ def load_table_metadata() -> None:
     """Imports SQLModel table modules so their metadata is registered."""
     import_module("learnwithai.tables")
     import_module("learnwithai.tools.jokes.tables")
+    import_module("learnwithai.activities.iyow.tables")
 
 
 def reset_db_and_tables() -> None:

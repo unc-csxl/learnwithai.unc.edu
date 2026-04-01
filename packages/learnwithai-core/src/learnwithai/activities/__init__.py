@@ -1,0 +1,1 @@
+"""Student activities feature package."""
