@@ -6,20 +6,27 @@ from typing import Annotated, TypeAlias
 
 from fastapi import Depends, HTTPException, Path, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from learnwithai.activities.iyow.repository import IyowActivityRepository, IyowSubmissionRepository
+from learnwithai.activities.iyow.service import IyowActivityService
+from learnwithai.activities.iyow.submission_service import IyowSubmissionService
 from learnwithai.config import Settings, get_settings
 from learnwithai.db import get_session
 from learnwithai.interfaces import JobQueue
 from learnwithai.pagination import PaginationParams
+from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.repositories.submission_repository import SubmissionRepository
 from learnwithai.repositories.user_repository import UserRepository
+from learnwithai.services.activity_service import ActivityService
 from learnwithai.services.course_service import CourseService
 from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
 from learnwithai.services.roster_upload_service import RosterUploadService
+from learnwithai.tables.activity import Activity
 from learnwithai.tables.course import Course
 from learnwithai.tables.user import User
 from learnwithai.tools.jokes.repository import JokeRepository
@@ -28,12 +35,19 @@ from learnwithai_jobqueue.dramatiq_job_queue import DramatiqJobQueue
 from sqlmodel import Session
 
 __all__ = [
+    "ActivityByPathDI",
+    "ActivityRepositoryDI",
+    "ActivityServiceDI",
     "AsyncJobRepositoryDI",
     "AuthenticatedUserDI",
     "CSXLAuthServiceDI",
     "CourseByCourseIDPathDI",
     "CourseRepositoryDI",
     "CourseServiceDI",
+    "IyowActivityRepositoryDI",
+    "IyowActivityServiceDI",
+    "IyowSubmissionRepositoryDI",
+    "IyowSubmissionServiceDI",
     "JokeGenerationServiceDI",
     "JokeRepositoryDI",
     "JobQueueDI",
@@ -41,23 +55,32 @@ __all__ = [
     "PaginationParamsDI",
     "SessionDI",
     "SettingsDI",
+    "SubmissionRepositoryDI",
     "UserByPIDPathDI",
     "UserRepositoryDI",
+    "activity_repository_factory",
+    "activity_service_factory",
     "async_job_repository_factory",
     "course_repository_factory",
     "course_service_factory",
     "csxl_auth_service_factory",
+    "get_activity_by_path_id",
     "get_authenticated_user",
     "get_course_by_path_id",
     "get_pagination_params",
     "get_user_by_path_pid",
     "get_user_by_pid",
+    "iyow_activity_repository_factory",
+    "iyow_activity_service_factory",
+    "iyow_submission_repository_factory",
+    "iyow_submission_service_factory",
     "joke_generation_service_factory",
     "joke_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
     "roster_upload_service_factory",
     "settings_factory",
+    "submission_repository_factory",
     "user_repository_factory",
 ]
 
@@ -281,3 +304,110 @@ def joke_generation_service_factory(
 
 
 JokeGenerationServiceDI: TypeAlias = Annotated[JokeGenerationService, Depends(joke_generation_service_factory)]
+
+
+# ---- Activity / IYOW DI ----
+
+
+def activity_repository_factory(session: SessionDI) -> ActivityRepository:
+    """Constructs an activity repository bound to the current request session."""
+    return ActivityRepository(session)
+
+
+ActivityRepositoryDI: TypeAlias = Annotated[ActivityRepository, Depends(activity_repository_factory)]
+
+
+def submission_repository_factory(session: SessionDI) -> SubmissionRepository:
+    """Constructs a submission repository bound to the current request session."""
+    return SubmissionRepository(session)
+
+
+SubmissionRepositoryDI: TypeAlias = Annotated[SubmissionRepository, Depends(submission_repository_factory)]
+
+
+def iyow_activity_repository_factory(session: SessionDI) -> IyowActivityRepository:
+    """Constructs an IYOW activity repository bound to the current request session."""
+    return IyowActivityRepository(session)
+
+
+IyowActivityRepositoryDI: TypeAlias = Annotated[IyowActivityRepository, Depends(iyow_activity_repository_factory)]
+
+
+def iyow_submission_repository_factory(session: SessionDI) -> IyowSubmissionRepository:
+    """Constructs an IYOW submission repository bound to the current request session."""
+    return IyowSubmissionRepository(session)
+
+
+IyowSubmissionRepositoryDI: TypeAlias = Annotated[IyowSubmissionRepository, Depends(iyow_submission_repository_factory)]
+
+
+def activity_service_factory(
+    activity_repo: ActivityRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> ActivityService:
+    """Creates the activity service for the current request."""
+    return ActivityService(activity_repo, membership_repo)
+
+
+ActivityServiceDI: TypeAlias = Annotated[ActivityService, Depends(activity_service_factory)]
+
+
+def iyow_activity_service_factory(
+    activity_repo: ActivityRepositoryDI,
+    iyow_activity_repo: IyowActivityRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+) -> IyowActivityService:
+    """Creates the IYOW activity service for the current request."""
+    return IyowActivityService(activity_repo, iyow_activity_repo, membership_repo)
+
+
+IyowActivityServiceDI: TypeAlias = Annotated[IyowActivityService, Depends(iyow_activity_service_factory)]
+
+
+def iyow_submission_service_factory(
+    activity_repo: ActivityRepositoryDI,
+    iyow_activity_repo: IyowActivityRepositoryDI,
+    submission_repo: SubmissionRepositoryDI,
+    iyow_submission_repo: IyowSubmissionRepositoryDI,
+    async_job_repo: AsyncJobRepositoryDI,
+    membership_repo: MembershipRepositoryDI,
+    job_queue: JobQueueDI,
+) -> IyowSubmissionService:
+    """Creates the IYOW submission service for the current request."""
+    return IyowSubmissionService(
+        activity_repo,
+        iyow_activity_repo,
+        submission_repo,
+        iyow_submission_repo,
+        async_job_repo,
+        membership_repo,
+        job_queue,
+    )
+
+
+IyowSubmissionServiceDI: TypeAlias = Annotated[IyowSubmissionService, Depends(iyow_submission_service_factory)]
+
+
+def get_activity_by_path_id(
+    activity_id: Annotated[int, Path()],
+    activity_repo: ActivityRepositoryDI,
+) -> Activity:
+    """Loads an activity from the activity_id path parameter.
+
+    Args:
+        activity_id: Activity identifier from the request path.
+        activity_repo: Repository used to load activities.
+
+    Returns:
+        The matching activity.
+
+    Raises:
+        HTTPException: If the activity does not exist.
+    """
+    activity = activity_repo.get_by_id(activity_id)
+    if activity is None:
+        raise HTTPException(status_code=404, detail="Activity not found.")
+    return activity
+
+
+ActivityByPathDI: TypeAlias = Annotated[Activity, Depends(get_activity_by_path_id)]
