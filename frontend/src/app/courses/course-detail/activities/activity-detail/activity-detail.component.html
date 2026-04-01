@@ -1,0 +1,69 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (activity(); as a) {
+    <section class="mb-6" aria-label="Activity information">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>assignment</mat-icon>
+          <mat-card-title>{{ a.title }}</mat-card-title>
+          <mat-card-subtitle>IYOW Activity</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <dt class="opacity-75">Release date</dt>
+            <dd>{{ a.release_date | date: 'medium' }}</dd>
+            <dt class="opacity-75">Due date</dt>
+            <dd>{{ a.due_date | date: 'medium' }}</dd>
+            @if (a.late_date) {
+              <dt class="opacity-75">Late date</dt>
+              <dd>{{ a.late_date | date: 'medium' }}</dd>
+            }
+            <dt class="opacity-75">Prompt</dt>
+            <dd>{{ a.prompt }}</dd>
+            @if (a.rubric) {
+              <dt class="opacity-75">Rubric</dt>
+              <dd>{{ a.rubric }}</dd>
+            }
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section aria-label="Student submissions">
+      <h2 class="mb-3 text-lg font-medium">Submissions</h2>
+      @if (hasSubmissions()) {
+        @for (sub of submissions(); track sub.id) {
+          <mat-card appearance="outlined" class="mb-3">
+            <mat-card-header>
+              <mat-icon mat-card-avatar [class]="'status-' + (sub.job?.status ?? 'unknown')">
+                {{ statusIcon(sub.job?.status) }}
+              </mat-icon>
+              <mat-card-title>Student {{ sub.student_pid }}</mat-card-title>
+              <mat-card-subtitle
+                >Submitted {{ sub.submitted_at | date: 'medium' }}</mat-card-subtitle
+              >
+            </mat-card-header>
+            <mat-card-content class="mt-2">
+              <p class="text-sm opacity-75">Response:</p>
+              <p class="whitespace-pre-wrap">{{ sub.response_text }}</p>
+              @if (sub.feedback) {
+                <p class="mt-3 text-sm opacity-75">Feedback:</p>
+                <p class="whitespace-pre-wrap">{{ sub.feedback }}</p>
+              } @else if (sub.job?.status === 'pending' || sub.job?.status === 'processing') {
+                <div class="mt-3 flex items-center gap-2">
+                  <mat-spinner diameter="20" />
+                  <span class="text-sm opacity-75">Generating feedback&hellip;</span>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      } @else {
+        <p>No submissions yet.</p>
+      }
+    </section>
+  }
+}

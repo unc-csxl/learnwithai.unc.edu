@@ -1,0 +1,40 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (isStaff()) {
+    <div class="mb-4">
+      <a mat-flat-button [routerLink]="['create-iyow']">
+        <mat-icon>add</mat-icon>
+        Create IYOW Activity
+      </a>
+    </div>
+  }
+
+  @if (hasActivities()) {
+    <section class="grid gap-4" aria-label="Activities list">
+      @for (activity of activities(); track activity.id) {
+        <a [routerLink]="isStaff() ? [activity.id] : [activity.id, 'submit']" class="no-underline">
+          <mat-card appearance="outlined">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>assignment</mat-icon>
+              <mat-card-title>{{ activity.title }}</mat-card-title>
+              <mat-card-subtitle> Due {{ activity.due_date | date: 'medium' }} </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-chip-set aria-label="Activity details">
+                <mat-chip>{{ activity.type | uppercase }}</mat-chip>
+                @if (activity.late_date) {
+                  <mat-chip>Late until {{ activity.late_date | date: 'mediumDate' }}</mat-chip>
+                }
+              </mat-chip-set>
+            </mat-card-content>
+          </mat-card>
+        </a>
+      }
+    </section>
+  } @else {
+    <p>No activities yet.</p>
+  }
+}

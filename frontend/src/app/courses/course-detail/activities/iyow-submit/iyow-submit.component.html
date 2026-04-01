@@ -1,0 +1,63 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (activity(); as a) {
+    <mat-card appearance="outlined" class="mb-4">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>assignment</mat-icon>
+        <mat-card-title>{{ a.title }}</mat-card-title>
+        <mat-card-subtitle>Due {{ a.due_date | date: 'medium' }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="mt-2">{{ a.prompt }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    @if (activeSubmission(); as sub) {
+      <section class="mb-4" aria-label="Your submission">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>description</mat-icon>
+            <mat-card-title>Your Submission</mat-card-title>
+            <mat-card-subtitle>Submitted {{ sub.submitted_at | date: 'medium' }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content class="mt-2">
+            <p class="whitespace-pre-wrap">{{ sub.response_text }}</p>
+
+            @if (sub.feedback) {
+              <h3 class="mt-4 text-sm font-medium opacity-75">AI Feedback</h3>
+              <p class="mt-1 whitespace-pre-wrap">{{ sub.feedback }}</p>
+            } @else if (sub.job?.status === 'pending' || sub.job?.status === 'processing') {
+              <div class="mt-4 flex items-center gap-2">
+                <mat-spinner diameter="20" />
+                <span class="text-sm opacity-75">Generating feedback&hellip;</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </section>
+    }
+
+    <section aria-label="Submit response">
+      <h2 class="mb-2 text-lg font-medium">
+        {{ activeSubmission() ? 'Submit Again' : 'Your Response' }}
+      </h2>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Your response</mat-label>
+          <textarea matInput formControlName="response_text" rows="6"></textarea>
+          <mat-hint>Explain the concept in your own words (minimum 10 characters)</mat-hint>
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Submit
+          }
+        </button>
+      </form>
+    </section>
+  }
+}
