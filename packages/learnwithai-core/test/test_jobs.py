@@ -6,6 +6,7 @@ import pytest
 from learnwithai.jobs import (
     EchoJob,
     ForbiddenJobQueue,
+    IyowFeedbackJob,
     JobPayload,
     JokeGenerationJob,
     RosterUploadJob,
@@ -31,6 +32,7 @@ def test_jobs_package_exports_expected_symbols() -> None:
         "Job",
         "EchoJob",
         "ForbiddenJobQueue",
+        "IyowFeedbackJob",
         "JokeGenerationJob",
         "NoOpJobNotifier",
         "RosterUploadJob",
@@ -161,6 +163,24 @@ def test_job_handler_map_points_roster_upload_to_handler() -> None:
 
     # Assert
     assert isinstance(handler, RosterUploadJobHandler)
+
+
+# ---- IyowFeedbackJob ----
+
+
+def test_job_adapter_builds_iyow_feedback_job_from_payload() -> None:
+    payload = {"type": "iyow_feedback", "job_id": 55}
+    job = job_adapter(payload)
+    assert isinstance(job, IyowFeedbackJob)
+    assert job.job_id == 55
+
+
+def test_job_handler_map_points_iyow_feedback_to_handler() -> None:
+    from learnwithai.activities.iyow.job import IyowFeedbackJobHandler
+
+    handler_class = get_job_handler_map()[IyowFeedbackJob]
+    handler = handler_class()
+    assert isinstance(handler, IyowFeedbackJobHandler)
 
 
 def test_forbidden_job_queue_enqueue_raises() -> None:

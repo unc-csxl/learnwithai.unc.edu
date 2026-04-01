@@ -42,9 +42,7 @@ class SubmissionRepository:
         """
         return self._session.get(Submission, submission_id)
 
-    def get_active_for_student(
-        self, activity_id: int, student_pid: int
-    ) -> Submission | None:
+    def get_active_for_student(self, activity_id: int, student_pid: int) -> Submission | None:
         """Returns the active submission for a student on an activity.
 
         Args:
@@ -80,9 +78,7 @@ class SubmissionRepository:
         )
         return list(self._session.exec(stmt).all())
 
-    def list_by_student_and_activity(
-        self, activity_id: int, student_pid: int
-    ) -> list[Submission]:
+    def list_by_student_and_activity(self, activity_id: int, student_pid: int) -> list[Submission]:
         """Returns all submissions (active and inactive) for a student on an activity.
 
         Args:
@@ -115,9 +111,9 @@ class SubmissionRepository:
         stmt = (
             update(Submission)
             .where(
-                Submission.activity_id == activity_id,
-                Submission.student_pid == student_pid,
-                Submission.is_active == True,  # noqa: E712
+                col(Submission.activity_id) == activity_id,
+                col(Submission.student_pid) == student_pid,
+                col(Submission.is_active) == True,  # noqa: E712
             )
             .values(is_active=False)
         )
