@@ -41,7 +41,7 @@ export class Activities {
 
   constructor() {
     this.titleService.setTitle('Student Activities');
-    this.courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
+    this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
     this.loadData();
   }
 

@@ -30,7 +30,7 @@ describe('Activities', () => {
       ),
     };
     const mockRoute = {
-      parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
+      parent: { parent: { snapshot: { paramMap: new Map([['id', '1']]) } } },
     };
 
     TestBed.configureTestingModule({
