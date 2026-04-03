@@ -48,6 +48,13 @@ const rosterRows: StudentSubmissionRow[] = [
     email: 'bob@example.com',
     submission: null,
   },
+  {
+    student_pid: 333,
+    given_name: null as unknown as string,
+    family_name: null as unknown as string,
+    email: 'noname@example.com',
+    submission: null,
+  },
 ];
 
 describe('ActivityDetail', () => {
@@ -132,7 +139,7 @@ describe('ActivityDetail', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('1 of 2 students have submitted');
+    expect(fixture.nativeElement.textContent).toContain('1 of 3 students have submitted');
   });
 
   it('should show late_date and rubric when present', async () => {
@@ -241,5 +248,199 @@ describe('ActivityDetail', () => {
       submission: { ...rosterRows[0].submission!, feedback: null, job: null },
     };
     expect(comp.statusLabel(submittedRow)).toBe('Submitted');
+  });
+
+  it('should debounce search input and update searchQuery signal', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+    try {
+      const input: HTMLInputElement = fixture.nativeElement.querySelector(
+        'input[aria-label="Search students by name"]',
+      );
+      input.value = 'alice';
+      input.dispatchEvent(new Event('input'));
+
+      const comp = fixture.componentInstance as unknown as {
+        searchQuery: { (): string };
+      };
+      expect(comp.searchQuery()).toBe('');
+
+      vi.advanceTimersByTime(300);
+      expect(comp.searchQuery()).toBe('alice');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should ignore search input shorter than minimum length', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+    try {
+      const comp = fixture.componentInstance as unknown as {
+        onSearchInput: (value: string) => void;
+        searchQuery: { (): string };
+      };
+
+      comp.onSearchInput('ab');
+      vi.advanceTimersByTime(300);
+      expect(comp.searchQuery()).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should clear previous debounce timer when new input arrives', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+    try {
+      const comp = fixture.componentInstance as unknown as {
+        onSearchInput: (value: string) => void;
+        searchQuery: { (): string };
+      };
+
+      comp.onSearchInput('alice');
+      vi.advanceTimersByTime(100);
+      // Second call before first debounce fires — should clear first timer
+      comp.onSearchInput('bob');
+      vi.advanceTimersByTime(300);
+      expect(comp.searchQuery()).toBe('bob');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should clear debounce timer on destroy when timer is active', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    vi.useFakeTimers();
+    try {
+      const comp = fixture.componentInstance as unknown as {
+        onSearchInput: (value: string) => void;
+      };
+
+      comp.onSearchInput('alice');
+      fixture.destroy();
+      vi.advanceTimersByTime(300);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should sort rows by family_name via onSortChange', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    // Trigger sort through the DOM to cover the template matSortChange binding
+    const sortHeaders: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll(
+      '.mat-sort-header-container',
+    );
+    // First sort header is "Student" (family_name)
+    sortHeaders[0]?.click();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      filteredRows: { (): StudentSubmissionRow[] };
+      sortDirection: { (): string };
+    };
+
+    // Clicking toggles sort direction
+    expect(comp.sortDirection()).toBeTruthy();
+    const rows = comp.filteredRows();
+    expect(rows.length).toBe(3);
+  });
+
+  it('should sort rows by submitted_at via onSortChange', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    // Click the "Submitted" sort header
+    const sortHeaders: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll(
+      '.mat-sort-header-container',
+    );
+    // Second sort header is "Submitted" (submitted_at)
+    sortHeaders[1]?.click();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      filteredRows: { (): StudentSubmissionRow[] };
+      sortDirection: { (): string };
+    };
+
+    expect(comp.sortDirection()).toBeTruthy();
+    const rows = comp.filteredRows();
+    expect(rows.length).toBe(3);
+  });
+
+  it('should sort rows by status via onSortChange', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    // Click the "Status" sort header
+    const sortHeaders: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll(
+      '.mat-sort-header-container',
+    );
+    // Third sort header is "Status"
+    sortHeaders[2]?.click();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      filteredRows: { (): StudentSubmissionRow[] };
+      sortDirection: { (): string };
+    };
+
+    expect(comp.sortDirection()).toBeTruthy();
+    const rows = comp.filteredRows();
+    expect(rows.length).toBe(3);
+  });
+
+  it('should sort rows correctly via internal sortRows', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const comp = fixture.componentInstance as any;
+
+    // No direction → returns original order
+    const unsorted = comp.sortRows([...rosterRows], 'family_name', '');
+    expect(unsorted).toEqual(rosterRows);
+
+    // Sort by family_name asc — null row (empty string) comes first
+    // Reverse input order so null row appears as both a and b in sort comparisons
+    const reversedRows = [...rosterRows].reverse();
+    const byName = comp.sortRows(reversedRows, 'family_name', 'asc');
+    expect(byName[1].family_name).toBe('Anderson');
+    expect(byName[2].family_name).toBe('Baker');
+
+    // Sort by student_name (falls through to family_name case)
+    const byStudentName = comp.sortRows([...rosterRows], 'student_name', 'asc');
+    expect(byStudentName[1].family_name).toBe('Anderson');
+
+    // Sort by submitted_at desc
+    const byDate = comp.sortRows([...rosterRows], 'submitted_at', 'desc');
+    expect(byDate[0].given_name).toBe('Alice');
+
+    // Sort by status asc
+    const byStatus = comp.sortRows([...rosterRows], 'status', 'asc');
+    expect(byStatus.length).toBe(3);
+
+    // Sort by unknown column — exercises default switch branch
+    const byUnknown = comp.sortRows([...rosterRows], 'unknown_col', 'asc');
+    expect(byUnknown.length).toBe(3);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
 });

@@ -238,4 +238,37 @@ describe('SubmissionDetail', () => {
       }),
     );
   });
+
+  it('should select and clear a prior submission', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      selectPriorSubmission: (sub: (typeof historySubmissions)[0]) => void;
+      clearSelectedPrior: () => void;
+      selectedPriorSub: { (): (typeof historySubmissions)[0] | null };
+    };
+
+    expect(comp.selectedPriorSub()).toBeNull();
+
+    comp.selectPriorSubmission(historySubmissions[1]);
+    expect(comp.selectedPriorSub()).toEqual(historySubmissions[1]);
+
+    comp.clearSelectedPrior();
+    expect(comp.selectedPriorSub()).toBeNull();
+  });
+
+  it('should hide rubric row when rubric is null', async () => {
+    const noRubricActivity = { ...baseActivity, rubric: null };
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve(noRubricActivity)),
+      getStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
+    };
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Rubric');
+  });
 });

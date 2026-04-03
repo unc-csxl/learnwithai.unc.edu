@@ -171,6 +171,21 @@ describe('EditIyow', () => {
     expect(comp.submitting()).toBe(false);
   });
 
+  it('should populate form with empty rubric when activity rubric is null', async () => {
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity, rubric: null })),
+      updateIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+    };
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      form: { getRawValue: () => Record<string, string> };
+    };
+    expect(comp.form.getRawValue()['rubric']).toBe('');
+  });
+
   it('should set layout navigation with back link', async () => {
     const { fixture, mockLayoutNavigation } = setup();
     await flush();
