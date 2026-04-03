@@ -179,18 +179,14 @@ describe('EditIyow', () => {
     expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
       expect.objectContaining({
         label: 'Edit: Test IYOW',
-        items: expect.arrayContaining([
-          expect.objectContaining({ label: 'Back to Activity' }),
-        ]),
+        items: expect.arrayContaining([expect.objectContaining({ label: 'Back to Activity' })]),
       }),
     );
   });
 
   it('should handle late_date in form population', async () => {
     const mockActivityService = {
-      get: vi.fn(() =>
-        Promise.resolve({ ...baseActivity, late_date: '2025-07-01T12:30:00Z' }),
-      ),
+      get: vi.fn(() => Promise.resolve({ ...baseActivity, late_date: '2025-07-01T12:30:00Z' })),
       updateIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
     };
     const { fixture } = setup({ activityService: mockActivityService });

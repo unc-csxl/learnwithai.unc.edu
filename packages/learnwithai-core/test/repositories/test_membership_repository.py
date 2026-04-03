@@ -558,3 +558,68 @@ def test_get_roster_page_raises_for_unpersisted_course(session: Session) -> None
     # Act / Assert
     with pytest.raises(ValueError, match="Course must be persisted"):
         repo.get_roster_page(draft, PaginationParams())
+
+
+# --- get_enrolled_students ---
+
+
+@pytest.mark.integration
+def test_get_enrolled_students_returns_only_enrolled_students(
+    session: Session,
+) -> None:
+    # Arrange
+    course = _seed_course(session)
+    repo = MembershipRepository(session)
+
+    student = User(pid=100000001, onyen="student1", name="Alice Student")
+    instructor = User(pid=100000002, onyen="instr1", name="Ina Instructor")
+    dropped = User(pid=100000003, onyen="drop1", name="Dave Dropped")
+    session.add_all([student, instructor, dropped])
+    session.flush()
+
+    repo.create(
+        Membership(
+            user_pid=student.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    repo.create(
+        Membership(
+            user_pid=instructor.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.INSTRUCTOR,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    repo.create(
+        Membership(
+            user_pid=dropped.pid,
+            course_id=course.id,  # type: ignore[arg-type]
+            type=MembershipType.STUDENT,
+            state=MembershipState.DROPPED,
+        )
+    )
+
+    # Act
+    result = repo.get_enrolled_students(course)
+
+    # Assert — only the enrolled student, not instructor or dropped
+    assert len(result) == 1
+    assert result[0].user_pid == student.pid
+    assert result[0].user is not None
+    assert result[0].user.name == "Alice Student"
+
+
+@pytest.mark.integration
+def test_get_enrolled_students_raises_for_unpersisted_course(
+    session: Session,
+) -> None:
+    # Arrange
+    repo = MembershipRepository(session)
+    draft = Course(course_number="COMP999", name="Draft", term=Term.FALL, year=2026)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Course must be persisted"):
+        repo.get_enrolled_students(draft)

@@ -25,9 +25,7 @@
     </section>
 
     <section aria-label="Student submission">
-      <h2 class="mb-3 text-lg font-medium">
-        Submissions for Student {{ studentPid }}
-      </h2>
+      <h2 class="mb-3 text-lg font-medium">Submissions for Student {{ studentPid }}</h2>
       @for (sub of submissions(); track sub.id; let idx = $index; let count = $count) {
         <mat-card appearance="outlined" class="mb-3">
           <mat-card-header>
