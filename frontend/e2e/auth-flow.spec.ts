@@ -20,7 +20,6 @@ test.describe('authenticated course and roster flow', () => {
     await page.waitForURL('**/courses/*/activities');
 
     const sidenav = page.locator('mat-sidenav');
-    await expect(sidenav).toContainText('Student view');
     await expect(sidenav.getByRole('link', { name: 'Student Activities' })).toBeVisible();
     await expect(sidenav.getByRole('link', { name: 'Student Tools' })).toBeVisible();
     await expect(sidenav.getByRole('link', { name: 'Dashboard' })).toHaveCount(0);

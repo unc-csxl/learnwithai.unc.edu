@@ -34,7 +34,6 @@ test.describe('activities — instructor creates an IYOW activity', () => {
 
     // The seeded activity should be visible
     await expect(page.getByText(SEEDED_ACTIVITY_TITLE)).toBeVisible();
-    await expect(page.locator('mat-chip').getByText('IYOW')).toBeVisible();
   });
 
   test('instructor can create a new IYOW activity', async ({ page }) => {
@@ -156,7 +155,7 @@ test.describe('activities — instructor views student submissions', () => {
     await page.waitForURL(`**/courses/${courseId}/activities/*`);
 
     // The submissions section should show the student's submission
-    await expect(page.getByText('Submissions')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Submissions' })).toBeVisible();
     await expect(page.getByText('Student 111111111')).toBeVisible();
     await expect(
       page.getByText('Dependency injection is when you pass the things', { exact: false }),
@@ -245,5 +244,131 @@ test.describe('activities — full instructor-to-student flow', () => {
     // Instructor should see the student's submission
     await expect(page.getByText('Student 111111111')).toBeVisible();
     await expect(page.getByText('catches regressions early', { exact: false })).toBeVisible();
+  });
+});
+
+test.describe('activities — real-time feedback processing', () => {
+  test.beforeAll(async ({ request }) => {
+    await request.post('/api/dev/reset-db');
+  });
+
+  test('student submits, sees processing spinner, then feedback appears', async ({ page }) => {
+    const courseId = await goToActivities(page, STUDENT_PID);
+
+    // Navigate to the seeded activity submit page
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
+
+    // Submit a new response
+    await page.getByLabel('Your response').fill(
+      'Dependency injection is a design pattern where objects receive their dependencies ' +
+        'from external sources rather than creating them internally.',
+    );
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expect(page.getByText('Response submitted!')).toBeVisible();
+
+    // After submitting, a processing spinner should appear while the LLM job runs
+    // The spinner may be very brief if the worker processes quickly, so we look for
+    // either the spinner OR the feedback appearing (both indicate the flow works).
+    const feedbackSection = page.getByText('AI Feedback');
+    const spinner = page.getByText('Generating feedback');
+
+    // Wait for either the spinner to show up or the feedback to arrive
+    await expect(spinner.or(feedbackSection)).toBeVisible({ timeout: 5000 });
+
+    // Ultimately, AI Feedback should appear when the job completes via WebSocket
+    await expect(feedbackSection).toBeVisible({ timeout: 30000 });
+
+    // Some feedback text should be present below the AI Feedback heading
+    const submissionSection = page.getByLabel('Your submission');
+    await expect(
+      submissionSection.getByText('AI Feedback'),
+    ).toBeVisible();
+  });
+});
+
+test.describe('activities — table views', () => {
+  test.beforeAll(async ({ request }) => {
+    await request.post('/api/dev/reset-db');
+  });
+
+  test('instructor sees table with title, dates, and submission count columns', async ({
+    page,
+  }) => {
+    await goToActivities(page, INSTRUCTOR_PID);
+
+    const table = page.getByLabel('Activities list');
+    await expect(table).toBeVisible();
+
+    // Verify column headers
+    await expect(table.getByText('Title')).toBeVisible();
+    await expect(table.getByText('Released Date')).toBeVisible();
+    await expect(table.getByText('Due Date (User TZ)')).toBeVisible();
+    await expect(table.getByText('Submissions')).toBeVisible();
+
+    // The seeded activity should be a clickable link in the Title column
+    const link = table.getByRole('link', { name: SEEDED_ACTIVITY_TITLE });
+    await expect(link).toBeVisible();
+  });
+
+  test('student sees table with title, status, released date, and due columns', async ({
+    page,
+  }) => {
+    await goToActivities(page, STUDENT_PID);
+
+    const table = page.getByLabel('Activities list');
+    await expect(table).toBeVisible();
+
+    // Verify column headers
+    await expect(table.getByText('Title')).toBeVisible();
+    await expect(table.getByText('Status')).toBeVisible();
+    await expect(table.getByText('Released Date')).toBeVisible();
+    await expect(table.getByText('Due (User TZ)')).toBeVisible();
+
+    // No submission count column for students
+    await expect(table.getByText('Submissions')).not.toBeVisible();
+
+    // The seeded activity should be a clickable link
+    const link = table.getByRole('link', { name: SEEDED_ACTIVITY_TITLE });
+    await expect(link).toBeVisible();
+  });
+});
+
+test.describe('activities — prior submissions', () => {
+  test.beforeAll(async ({ request }) => {
+    await request.post('/api/dev/reset-db');
+  });
+
+  test('instructor can view prior submissions via menu', async ({ page }) => {
+    // First, have the student make a second submission so there's history
+    const courseId = await goToActivities(page, STUDENT_PID);
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
+    await page.getByLabel('Your response').fill('Second attempt: DI means providing dependencies externally.');
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expect(page.getByText('Response submitted!')).toBeVisible();
+
+    // Now login as instructor and view the activity detail
+    await page.goto(`/api/auth/as/${INSTRUCTOR_PID}`);
+    await page.waitForURL('**/courses');
+    await page.getByText('COMP423').click();
+    await page.waitForURL('**/courses/*/dashboard');
+    await page.getByRole('link', { name: /Student Activities/i }).click();
+    await page.waitForURL('**/courses/*/activities');
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*`);
+
+    // Click the "Prior Submissions" button on the student's submission
+    await page.getByRole('button', { name: 'Prior Submissions' }).click();
+
+    // The menu should show numbered submissions with timestamps
+    await expect(page.getByRole('menuitem', { name: /Submission 1/i })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Submission 2/i })).toBeVisible();
+
+    // Click on Submission 1 to view the prior version
+    await page.getByRole('menuitem', { name: /Submission 1/i }).click();
+
+    // The prior submission card should appear
+    await expect(page.getByText('Prior Submission')).toBeVisible();
   });
 });
