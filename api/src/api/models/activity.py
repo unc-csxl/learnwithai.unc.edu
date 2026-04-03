@@ -40,6 +40,7 @@ class ActivityResponse(BaseModel):
     due_date: datetime
     late_date: datetime | None
     created_at: datetime
+    active_submission_count: int | None = None
 
 
 class IyowActivityResponse(BaseModel):

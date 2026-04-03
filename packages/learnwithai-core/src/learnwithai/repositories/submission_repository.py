@@ -1,6 +1,6 @@
 """Persistence helpers for submission records."""
 
-from sqlmodel import col, select, update
+from sqlmodel import col, func, select, update
 
 from ..db import Session
 from ..tables.submission import Submission
@@ -118,6 +118,26 @@ class SubmissionRepository:
             .values(is_active=False)
         )
         self._session.exec(stmt)  # type: ignore[call-overload]
+
+    def count_active_by_activity(self, activity_id: int) -> int:
+        """Returns the count of active submissions for an activity.
+
+        Args:
+            activity_id: The activity to count for.
+
+        Returns:
+            The number of active submissions.
+        """
+        stmt = (
+            select(func.count())
+            .select_from(Submission)
+            .where(
+                Submission.activity_id == activity_id,
+                Submission.is_active == True,  # noqa: E712
+            )
+        )
+        result = self._session.exec(stmt).one()
+        return int(result)
 
     def update(self, submission: Submission) -> Submission:
         """Merges changes to an existing submission and refreshes state.

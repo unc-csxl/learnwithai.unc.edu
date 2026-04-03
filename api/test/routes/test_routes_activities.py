@@ -21,6 +21,7 @@ from api.routes.activities import (
     delete_activity,
     get_active_submission,
     get_activity,
+    get_student_submission_history,
     list_activities,
     list_submissions,
     submit_iyow_response,
@@ -83,10 +84,12 @@ def _stub_submission(
 def _stub_iyow_submission(
     response_text: str = "My response",
     feedback: str | None = None,
+    async_job: MagicMock | None = None,
 ) -> MagicMock:
     mock = MagicMock()
     mock.response_text = response_text
     mock.feedback = feedback
+    mock.async_job = async_job
     return mock
 
 
@@ -104,11 +107,32 @@ def test_list_activities_returns_list() -> None:
     course = _stub_course()
     activity_svc = MagicMock()
     activity_svc.list_activities.return_value = [_stub_activity(), _stub_activity(activity_id=11)]
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.INSTRUCTOR)
+    submission_repo = MagicMock()
+    submission_repo.count_active_by_activity.return_value = 3
 
-    result = list_activities(subject, course, activity_svc)
+    result = list_activities(subject, course, activity_svc, membership_repo, submission_repo)
 
     assert len(result) == 2
     assert all(isinstance(r, ActivityResponse) for r in result)
+    assert result[0].active_submission_count == 3
+
+
+def test_list_activities_student_no_count() -> None:
+    subject = _stub_user()
+    course = _stub_course()
+    activity_svc = MagicMock()
+    activity_svc.list_activities.return_value = [_stub_activity()]
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.STUDENT)
+    submission_repo = MagicMock()
+
+    result = list_activities(subject, course, activity_svc, membership_repo, submission_repo)
+
+    assert len(result) == 1
+    assert result[0].active_submission_count is None
+    submission_repo.count_active_by_activity.assert_not_called()
 
 
 def test_list_activities_returns_empty_list() -> None:
@@ -116,8 +140,11 @@ def test_list_activities_returns_empty_list() -> None:
     course = _stub_course()
     activity_svc = MagicMock()
     activity_svc.list_activities.return_value = []
+    membership_repo = MagicMock()
+    membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.INSTRUCTOR)
+    submission_repo = MagicMock()
 
-    result = list_activities(subject, course, activity_svc)
+    result = list_activities(subject, course, activity_svc, membership_repo, submission_repo)
 
     assert result == []
 
@@ -391,3 +418,25 @@ def test_build_submission_response_includes_job_info() -> None:
     assert result.job is not None
     assert result.job.id == 42
     assert result.job.status == AsyncJobStatus.COMPLETED
+
+
+# ---- get_student_submission_history ----
+
+
+def test_get_student_submission_history_returns_list() -> None:
+    subject = _stub_user()
+    course = _stub_course()
+    activity = _stub_activity()
+    iyow_sub_svc = MagicMock()
+    pairs = [
+        (_stub_submission(), _stub_iyow_submission(feedback="V2 feedback")),
+        (_stub_submission(submission_id=101), _stub_iyow_submission(response_text="Old answer")),
+    ]
+    iyow_sub_svc.get_student_submission_history.return_value = pairs
+
+    result = get_student_submission_history(subject, course, activity, 111111111, iyow_sub_svc)
+
+    assert len(result) == 2
+    assert result[0].feedback == "V2 feedback"
+    assert result[1].response_text == "Old answer"
+    iyow_sub_svc.get_student_submission_history.assert_called_once()

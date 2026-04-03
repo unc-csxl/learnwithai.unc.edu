@@ -17,6 +17,7 @@ from ..di import (
     IyowActivityServiceDI,
     IyowSubmissionServiceDI,
     MembershipRepositoryDI,
+    SubmissionRepositoryDI,
 )
 from ..models import (
     ActivityResponse,
@@ -34,7 +35,10 @@ router = APIRouter(prefix="/courses/{course_id}/activities", tags=["Activities"]
 # ---- Response builders ----
 
 
-def _build_activity_response(activity: Activity) -> ActivityResponse:
+def _build_activity_response(
+    activity: Activity,
+    active_submission_count: int | None = None,
+) -> ActivityResponse:
     return ActivityResponse(
         id=activity.id,  # type: ignore[arg-type]
         course_id=activity.course_id,
@@ -44,6 +48,7 @@ def _build_activity_response(activity: Activity) -> ActivityResponse:
         due_date=activity.due_date,
         late_date=activity.late_date,
         created_at=activity.created_at,
+        active_submission_count=active_submission_count,
     )
 
 
@@ -108,11 +113,27 @@ def list_activities(
     subject: AuthenticatedUserDI,
     course: CourseByCourseIDPathDI,
     activity_svc: ActivityServiceDI,
+    membership_repo: MembershipRepositoryDI,
+    submission_repo: SubmissionRepositoryDI,
 ) -> list[ActivityResponse]:
     """Returns activities visible to the authenticated user."""
     now = datetime.now(timezone.utc)
     activities = activity_svc.list_activities(subject, course, now)
-    return [_build_activity_response(a) for a in activities]
+
+    membership = membership_repo.get_by_user_and_course(subject, course)
+    is_staff = membership is not None and membership.type in {
+        MembershipType.INSTRUCTOR,
+        MembershipType.TA,
+    }
+
+    results: list[ActivityResponse] = []
+    for a in activities:
+        count = None
+        if is_staff:
+            assert a.id is not None
+            count = submission_repo.count_active_by_activity(a.id)
+        results.append(_build_activity_response(a, active_submission_count=count))
+    return results
 
 
 @router.post(
@@ -261,7 +282,7 @@ def submit_iyow_response(
         submission, iyow_detail = iyow_sub_svc.submit(subject, course, activity, body.response_text, now)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-    return _build_submission_response(submission, iyow_detail.response_text, None, None)
+    return _build_submission_response(submission, iyow_detail.response_text, None, iyow_detail.async_job)
 
 
 @router.get(
@@ -291,7 +312,10 @@ def list_submissions(
     else:
         pairs = iyow_sub_svc.get_student_submissions(subject, course, activity)
 
-    return [_build_submission_response(sub, detail.response_text, detail.feedback, None) for sub, detail in pairs]
+    return [
+        _build_submission_response(sub, detail.response_text, detail.feedback, detail.async_job)
+        for sub, detail in pairs
+    ]
 
 
 @router.get(
@@ -315,4 +339,34 @@ def get_active_submission(
     if result is None:
         return None
     submission, iyow_detail = result
-    return _build_submission_response(submission, iyow_detail.response_text, iyow_detail.feedback, None)
+    return _build_submission_response(
+        submission, iyow_detail.response_text, iyow_detail.feedback, iyow_detail.async_job
+    )
+
+
+@router.get(
+    "/{activity_id}/submissions/history/{student_pid}",
+    response_model=list[IyowSubmissionResponse],
+    summary="Get a student's full submission history",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Insufficient permissions."},
+        404: {"description": "Activity not found."},
+    },
+)
+def get_student_submission_history(
+    subject: AuthenticatedUserDI,
+    course: CourseByCourseIDPathDI,
+    activity: ActivityByPathDI,
+    student_pid: int,
+    iyow_sub_svc: IyowSubmissionServiceDI,
+) -> list[IyowSubmissionResponse]:
+    """Returns all submissions (active + inactive) for a student on an activity.
+
+    Only instructors and TAs may access this endpoint.
+    """
+    pairs = iyow_sub_svc.get_student_submission_history(subject, course, activity, student_pid)
+    return [
+        _build_submission_response(sub, detail.response_text, detail.feedback, detail.async_job)
+        for sub, detail in pairs
+    ]

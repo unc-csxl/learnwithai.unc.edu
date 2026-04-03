@@ -225,6 +225,42 @@ class IyowSubmissionService:
                 results.append((sub, iyow_detail))
         return results
 
+    def get_student_submission_history(
+        self,
+        subject: User,
+        course: Course,
+        activity: Activity,
+        student_pid: int,
+    ) -> list[tuple[Submission, IyowSubmission]]:
+        """Returns all submissions for a specific student (instructor view).
+
+        Includes both active and inactive submissions, newest first.
+        Only instructors and TAs may call this method.
+
+        Args:
+            subject: Authenticated instructor or TA.
+            course: Course the activity belongs to.
+            activity: The IYOW activity.
+            student_pid: PID of the student whose history is requested.
+
+        Returns:
+            A list of (base submission, IYOW detail) tuples.
+
+        Raises:
+            AuthorizationError: If the subject is not staff.
+        """
+        self._authorize_staff(subject, course)
+        assert activity.id is not None
+
+        submissions = self._submission_repo.list_by_student_and_activity(activity.id, student_pid)
+        results: list[tuple[Submission, IyowSubmission]] = []
+        for sub in submissions:
+            assert sub.id is not None
+            iyow_detail = self._iyow_submission_repo.get_by_submission_id(sub.id)
+            if iyow_detail is not None:
+                results.append((sub, iyow_detail))
+        return results
+
     def _validate_submission_window(self, activity: Activity, now: datetime) -> None:
         """Verifies the activity is open for submissions.
 
