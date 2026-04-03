@@ -6,6 +6,7 @@
  * Response for a single activity (shared fields only).
  */
 export interface ActivityResponse {
+  active_submission_count?: (number | null);
   course_id: number;
   created_at: string;
   due_date: string;

@@ -6,10 +6,6 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import HTTPException
-from learnwithai.tables.async_job import AsyncJobStatus
-from learnwithai.tables.membership import MembershipType
-
 from api.models import (
     ActivityResponse,
     IyowActivityResponse,
@@ -27,6 +23,9 @@ from api.routes.activities import (
     submit_iyow_response,
     update_iyow_activity,
 )
+from fastapi import HTTPException
+from learnwithai.tables.async_job import AsyncJobStatus
+from learnwithai.tables.membership import MembershipType
 
 # ---- helpers ----
 

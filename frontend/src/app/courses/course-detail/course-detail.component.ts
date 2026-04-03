@@ -63,7 +63,7 @@ export class CourseDetail implements OnDestroy {
     if (course.membership.type === 'student') {
       return {
         ...baseSection,
-        label: 'Student view',
+        label: `${course.course_number}: ${course.name}`,
         items: [
           {
             route: `/courses/${this.courseId}/activities`,
@@ -83,7 +83,7 @@ export class CourseDetail implements OnDestroy {
 
     return {
       ...baseSection,
-      label: 'Instructor view',
+      label: `${course.course_number}: ${course.name}`,
       items: [
         {
           route: `/courses/${this.courseId}/dashboard`,

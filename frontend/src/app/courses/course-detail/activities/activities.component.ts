@@ -1,10 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DatePipe, UpperCasePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatTableModule } from '@angular/material/table';
 import { PageTitleService } from '../../../page-title.service';
 import { CourseService } from '../../course.service';
 import { ActivityService } from './activity.service';
@@ -14,15 +13,7 @@ import { Activity } from '../../../api/models';
 @Component({
   selector: 'app-activities',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    RouterLink,
-    DatePipe,
-    UpperCasePipe,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatChipsModule,
-  ],
+  imports: [RouterLink, DatePipe, MatButtonModule, MatIconModule, MatTableModule],
   templateUrl: './activities.component.html',
 })
 export class Activities {
@@ -38,11 +29,22 @@ export class Activities {
   protected readonly isStaff = signal(false);
 
   protected readonly hasActivities = computed(() => this.activities().length > 0);
+  protected readonly studentColumns = ['title', 'status', 'release_date', 'due_date'];
+  protected readonly instructorColumns = [
+    'title',
+    'release_date',
+    'due_date',
+    'active_submission_count',
+  ];
 
   constructor() {
     this.titleService.setTitle('Student Activities');
     this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
     this.loadData();
+  }
+
+  protected activityLink(activity: Activity): string[] {
+    return this.isStaff() ? [String(activity.id)] : [String(activity.id), 'submit'];
   }
 
   private async loadData(): Promise<void> {

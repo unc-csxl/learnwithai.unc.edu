@@ -8,6 +8,7 @@ import { deleteActivity as deleteActivityFn } from '../../../api/generated/fn/ac
 import { submitIyowResponse } from '../../../api/generated/fn/activities/submit-iyow-response';
 import { listSubmissions } from '../../../api/generated/fn/activities/list-submissions';
 import { getActiveSubmission } from '../../../api/generated/fn/activities/get-active-submission';
+import { getStudentSubmissionHistory } from '../../../api/generated/fn/activities/get-student-submission-history';
 import {
   Activity,
   IyowActivity,
@@ -71,5 +72,18 @@ export class ActivityService {
   /** Gets the student's current active submission. */
   getActiveSubmission(courseId: number, activityId: number): Promise<IyowSubmission | null> {
     return this.api.invoke(getActiveSubmission, { course_id: courseId, activity_id: activityId });
+  }
+
+  /** Gets all submissions for a specific student on an activity (instructor). */
+  getStudentHistory(
+    courseId: number,
+    activityId: number,
+    studentPid: number,
+  ): Promise<IyowSubmission[]> {
+    return this.api.invoke(getStudentSubmissionHistory, {
+      course_id: courseId,
+      activity_id: activityId,
+      student_pid: studentPid,
+    });
   }
 }

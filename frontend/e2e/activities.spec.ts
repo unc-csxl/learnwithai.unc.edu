@@ -9,10 +9,7 @@ const SEEDED_PROMPT =
   'In your own words, explain what dependency injection is and why it is useful in software engineering.';
 
 /** Login as a specific user and navigate to the course's activities page. */
-async function goToActivities(
-  page: import('@playwright/test').Page,
-  pid: string,
-): Promise<number> {
+async function goToActivities(page: import('@playwright/test').Page, pid: string): Promise<number> {
   await page.goto(`/api/auth/as/${pid}`);
   await page.waitForURL('**/courses');
 
@@ -149,9 +146,7 @@ test.describe('activities — instructor views student submissions', () => {
 
     // Instructor should see the rubric
     await expect(content.getByText('Rubric')).toBeVisible();
-    await expect(
-      content.getByText('The student should mention', { exact: false }),
-    ).toBeVisible();
+    await expect(content.getByText('The student should mention', { exact: false })).toBeVisible();
   });
 
   test('instructor sees the seeded student submission with feedback', async ({ page }) => {
@@ -228,10 +223,12 @@ test.describe('activities — full instructor-to-student flow', () => {
     await expect(page.getByText('Explain why automated testing is important.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Your Response' })).toBeVisible();
 
-    await page.getByLabel('Your response').fill(
-      'Automated testing is important because it catches regressions early ' +
-        'and gives developers confidence when refactoring code.',
-    );
+    await page
+      .getByLabel('Your response')
+      .fill(
+        'Automated testing is important because it catches regressions early ' +
+          'and gives developers confidence when refactoring code.',
+      );
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
@@ -247,8 +244,6 @@ test.describe('activities — full instructor-to-student flow', () => {
 
     // Instructor should see the student's submission
     await expect(page.getByText('Student 111111111')).toBeVisible();
-    await expect(
-      page.getByText('catches regressions early', { exact: false }),
-    ).toBeVisible();
+    await expect(page.getByText('catches regressions early', { exact: false })).toBeVisible();
   });
 });

@@ -1120,6 +1120,85 @@
         }
       }
     },
+    "/api/courses/{course_id}/activities/{activity_id}/submissions/history/{student_pid}": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Get a student's full submission history",
+        "description": "Returns all submissions (active + inactive) for a student on an activity.\n\nOnly instructors and TAs may access this endpoint.",
+        "operationId": "get_student_submission_history",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Student Pid"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Activity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IyowSubmissionResponse"
+                  },
+                  "title": "Response Get Student Submission History"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Activity not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/courses/{course_id}/roster-uploads": {
       "post": {
         "tags": [
@@ -1651,6 +1730,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "active_submission_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Submission Count"
           }
         },
         "type": "object",

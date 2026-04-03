@@ -41,6 +41,8 @@ export type { SubmitIyowResponse$Params as SubmitIyowResponse$Params } from './f
 export { submitIyowResponse as submitIyowResponse } from './fn/activities/submit-iyow-response';
 export type { GetActiveSubmission$Params as GetActiveSubmission$Params } from './fn/activities/get-active-submission';
 export { getActiveSubmission as getActiveSubmission } from './fn/activities/get-active-submission';
+export type { GetStudentSubmissionHistory$Params as GetStudentSubmissionHistory$Params } from './fn/activities/get-student-submission-history';
+export { getStudentSubmissionHistory as getStudentSubmissionHistory } from './fn/activities/get-student-submission-history';
 export type { UploadRosterCsv$Params as UploadRosterCsv$Params } from './fn/roster-uploads/upload-roster-csv';
 export { uploadRosterCsv as uploadRosterCsv } from './fn/roster-uploads/upload-roster-csv';
 export type { GetRosterUploadStatus$Params as GetRosterUploadStatus$Params } from './fn/roster-uploads/get-roster-upload-status';
