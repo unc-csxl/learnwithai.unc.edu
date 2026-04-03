@@ -244,9 +244,7 @@ describe('ActivityDetail', () => {
     fixture.detectChanges();
 
     // Click the "Prior Submissions" button to open the menu (triggers menuOpened -> loadHistory)
-    const priorBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
-      'button[mat-button]',
-    );
+    const priorBtn: HTMLButtonElement = fixture.nativeElement.querySelector('button[mat-button]');
     priorBtn.click();
     await flush();
     fixture.detectChanges();

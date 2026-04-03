@@ -260,10 +260,12 @@ test.describe('activities — real-time feedback processing', () => {
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
 
     // Submit a new response
-    await page.getByLabel('Your response').fill(
-      'Dependency injection is a design pattern where objects receive their dependencies ' +
-        'from external sources rather than creating them internally.',
-    );
+    await page
+      .getByLabel('Your response')
+      .fill(
+        'Dependency injection is a design pattern where objects receive their dependencies ' +
+          'from external sources rather than creating them internally.',
+      );
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
@@ -281,9 +283,7 @@ test.describe('activities — real-time feedback processing', () => {
 
     // Some feedback text should be present below the AI Feedback heading
     const submissionSection = page.getByLabel('Your submission');
-    await expect(
-      submissionSection.getByText('AI Feedback'),
-    ).toBeVisible();
+    await expect(submissionSection.getByText('AI Feedback')).toBeVisible();
   });
 });
 
@@ -344,7 +344,9 @@ test.describe('activities — prior submissions', () => {
     const courseId = await goToActivities(page, STUDENT_PID);
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
-    await page.getByLabel('Your response').fill('Second attempt: DI means providing dependencies externally.');
+    await page
+      .getByLabel('Your response')
+      .fill('Second attempt: DI means providing dependencies externally.');
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByText('Response submitted!')).toBeVisible();
 

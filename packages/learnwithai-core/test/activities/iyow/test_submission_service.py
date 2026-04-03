@@ -407,9 +407,7 @@ def test_list_submissions_for_activity_raises_for_student() -> None:
 
 def test_get_student_history_returns_tuples_for_instructor() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
-    membership_repo.get_by_user_and_course.return_value = _make_membership(
-        MembershipType.INSTRUCTOR
-    )
+    membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.INSTRUCTOR)
     submission_repo = MagicMock(spec=SubmissionRepository)
     base_sub = _make_submission()
     submission_repo.list_by_student_and_activity.return_value = [base_sub]
@@ -422,9 +420,7 @@ def test_get_student_history_returns_tuples_for_instructor() -> None:
         iyow_submission_repo=iyow_sub_repo,
         membership_repo=membership_repo,
     )
-    result = svc.get_student_submission_history(
-        _make_user(), _make_course(), _make_activity(), student_pid=111111111
-    )
+    result = svc.get_student_submission_history(_make_user(), _make_course(), _make_activity(), student_pid=111111111)
 
     assert len(result) == 1
     assert result[0] == (base_sub, iyow_detail)
@@ -443,25 +439,19 @@ def test_get_student_history_skips_missing_iyow_detail() -> None:
         iyow_submission_repo=iyow_sub_repo,
         membership_repo=membership_repo,
     )
-    result = svc.get_student_submission_history(
-        _make_user(), _make_course(), _make_activity(), student_pid=111111111
-    )
+    result = svc.get_student_submission_history(_make_user(), _make_course(), _make_activity(), student_pid=111111111)
 
     assert len(result) == 0
 
 
 def test_get_student_history_raises_for_student() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
-    membership_repo.get_by_user_and_course.return_value = _make_membership(
-        MembershipType.STUDENT
-    )
+    membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.STUDENT)
 
     svc = _make_service(membership_repo=membership_repo)
 
     with pytest.raises(AuthorizationError):
-        svc.get_student_submission_history(
-            _make_user(), _make_course(), _make_activity(), student_pid=111111111
-        )
+        svc.get_student_submission_history(_make_user(), _make_course(), _make_activity(), student_pid=111111111)
 
 
 def test_list_submissions_for_activity_raises_for_non_member() -> None:

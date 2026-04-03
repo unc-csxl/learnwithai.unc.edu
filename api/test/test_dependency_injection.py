@@ -3,6 +3,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import HTTPException
+
 from api.di import (
     activity_repository_factory,
     activity_service_factory,
@@ -20,7 +22,6 @@ from api.di import (
     roster_upload_service_factory,
     submission_repository_factory,
 )
-from fastapi import HTTPException
 
 
 def test_get_course_by_path_id_returns_course() -> None:
