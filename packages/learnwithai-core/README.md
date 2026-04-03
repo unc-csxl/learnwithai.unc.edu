@@ -77,6 +77,14 @@ Services are classes. Their dependencies are injected through `__init__`. Public
 
 Repositories should handle database loading and saving. Services should not build SQL queries directly.
 
+For SQLModel-backed repositories, shared CRUD behavior now lives in `src/learnwithai/repositories/base_repository.py`.
+That means most repositories should subclass `BaseRepository[ModelT, IdentifierT]`, declare their `model_type`, and then add only the queries that are specific to that model.
+Avoid re-implementing `create`, `get_by_id`, `update`, or `delete` unless a repository has a documented exception.
+
+Repository `update` now assumes the caller is working with an object already loaded in the current session.
+Use the default `add` + `flush` + `refresh` behavior unless you can point to a real detached-instance workflow.
+If detached-instance handling ever becomes necessary, treat that as an explicit design choice: document it in the repository and cover it with tests.
+
 ### `subject` comes first
 
 When a service method accepts the authenticated user, the `subject` parameter must be first.

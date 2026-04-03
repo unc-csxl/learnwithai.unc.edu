@@ -2,45 +2,17 @@
 
 from sqlmodel import col, func, select, update
 
-from ..db import Session
 from ..tables.submission import Submission
+from .base_repository import BaseRepository
 
 
-class SubmissionRepository:
+class SubmissionRepository(BaseRepository[Submission, int]):
     """Provides submission lookup and persistence operations."""
 
-    def __init__(self, session: Session):
-        """Initializes the repository with a database session.
-
-        Args:
-            session: Session used to read and write submission records.
-        """
-        self._session = session
-
-    def create(self, submission: Submission) -> Submission:
-        """Persists a new submission and reloads database defaults.
-
-        Args:
-            submission: Submission instance to insert.
-
-        Returns:
-            The persisted submission with refreshed database state.
-        """
-        self._session.add(submission)
-        self._session.flush()
-        self._session.refresh(submission)
-        return submission
-
-    def get_by_id(self, submission_id: int) -> Submission | None:
-        """Looks up a submission by primary key.
-
-        Args:
-            submission_id: Submission identifier.
-
-        Returns:
-            The matching submission when found; otherwise, ``None``.
-        """
-        return self._session.get(Submission, submission_id)
+    @property
+    def model_type(self) -> type[Submission]:
+        """Returns the SQLModel class managed by this repository."""
+        return Submission
 
     def get_active_for_student(self, activity_id: int, student_pid: int) -> Submission | None:
         """Returns the active submission for a student on an activity.
@@ -138,17 +110,3 @@ class SubmissionRepository:
         )
         result = self._session.exec(stmt).one()
         return int(result)
-
-    def update(self, submission: Submission) -> Submission:
-        """Merges changes to an existing submission and refreshes state.
-
-        Args:
-            submission: Submission instance with updated fields.
-
-        Returns:
-            The updated submission with refreshed database state.
-        """
-        self._session.add(submission)
-        self._session.flush()
-        self._session.refresh(submission)
-        return submission

@@ -68,6 +68,18 @@ def test_iyow_activity_create_and_get(session: Session) -> None:
 
 
 @pytest.mark.integration
+def test_iyow_activity_get_by_id_returns_detail(session: Session) -> None:
+    _student, _course, activity = _seed_prereqs(session)
+    repo = IyowActivityRepository(session)
+    detail = repo.create(IyowActivity(activity_id=activity.id, prompt="Explain X", rubric="Be clear"))  # type: ignore[arg-type]
+
+    fetched = repo.get_by_id(detail.id)  # type: ignore[arg-type]
+
+    assert fetched is not None
+    assert fetched.id == detail.id
+
+
+@pytest.mark.integration
 def test_iyow_activity_get_returns_none(session: Session) -> None:
     repo = IyowActivityRepository(session)
     assert repo.get_by_activity_id(999999) is None
@@ -134,6 +146,24 @@ def test_iyow_submission_create_and_get(session: Session) -> None:
     fetched = repo.get_by_submission_id(base_sub.id)  # type: ignore[arg-type]
     assert fetched is not None
     assert fetched.response_text == "My explanation"
+
+
+@pytest.mark.integration
+def test_iyow_submission_get_by_id_returns_detail(session: Session) -> None:
+    _activity, base_sub, async_job = _seed_submission(session)
+    repo = IyowSubmissionRepository(session)
+    detail = repo.create(
+        IyowSubmission(
+            submission_id=base_sub.id,  # type: ignore[arg-type]
+            response_text="My explanation",
+            async_job_id=async_job.id,  # type: ignore[arg-type]
+        )
+    )
+
+    fetched = repo.get_by_id(detail.id)  # type: ignore[arg-type]
+
+    assert fetched is not None
+    assert fetched.id == detail.id
 
 
 @pytest.mark.integration

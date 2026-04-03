@@ -1,46 +1,19 @@
 """Persistence helpers for joke records."""
 
 from sqlalchemy.orm import selectinload
-from sqlmodel import Session, col, select
+from sqlmodel import col, select
 
+from ...repositories.base_repository import BaseRepository
 from .tables import Joke
 
 
-class JokeRepository:
+class JokeRepository(BaseRepository[Joke, int]):
     """Provides CRUD operations for joke records."""
 
-    def __init__(self, session: Session):
-        """Initializes the repository with a database session.
-
-        Args:
-            session: Session used to read and write joke records.
-        """
-        self._session = session
-
-    def create(self, joke: Joke) -> Joke:
-        """Persists a new joke.
-
-        Args:
-            joke: Instance to insert.
-
-        Returns:
-            The persisted joke with refreshed database state.
-        """
-        self._session.add(joke)
-        self._session.flush()
-        self._session.refresh(joke)
-        return joke
-
-    def get_by_id(self, joke_id: int) -> Joke | None:
-        """Looks up a joke by its primary key.
-
-        Args:
-            joke_id: Primary key of the joke.
-
-        Returns:
-            The matching joke when found; otherwise, ``None``.
-        """
-        return self._session.get(Joke, joke_id)
+    @property
+    def model_type(self) -> type[Joke]:
+        """Returns the SQLModel class managed by this repository."""
+        return Joke
 
     def get_by_async_job_id(self, async_job_id: int) -> Joke | None:
         """Looks up a joke by its linked async job ID.
@@ -86,26 +59,3 @@ class JokeRepository:
             .order_by(col(Joke.created_at).desc())
         )
         return list(self._session.exec(stmt).all())
-
-    def update(self, joke: Joke) -> Joke:
-        """Persists changes to an existing joke.
-
-        Args:
-            joke: Instance with updated fields.
-
-        Returns:
-            The updated joke with refreshed database state.
-        """
-        self._session.add(joke)
-        self._session.flush()
-        self._session.refresh(joke)
-        return joke
-
-    def delete(self, joke: Joke) -> None:
-        """Removes a joke from the database.
-
-        Args:
-            joke: Instance to delete.
-        """
-        self._session.delete(joke)
-        self._session.flush()

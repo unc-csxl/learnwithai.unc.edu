@@ -4,37 +4,20 @@ from sqlalchemy import String, func, or_
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 
-from ..db import Session
 from ..pagination import PaginatedResult, PaginationParams
 from ..tables.course import Course
 from ..tables.membership import Membership, MembershipState
 from ..tables.user import User
+from .base_repository import BaseRepository
 
 
-class MembershipRepository:
+class MembershipRepository(BaseRepository[Membership, tuple[int, int]]):
     """Provides membership lookup and persistence operations."""
 
-    def __init__(self, session: Session):
-        """Initializes the repository with a database session.
-
-        Args:
-            session: Session used to read and write membership records.
-        """
-        self._session = session
-
-    def create(self, membership: Membership) -> Membership:
-        """Persists a new membership and reloads database defaults.
-
-        Args:
-            membership: Membership instance to insert.
-
-        Returns:
-            The persisted membership with refreshed database state.
-        """
-        self._session.add(membership)
-        self._session.flush()
-        self._session.refresh(membership)
-        return membership
+    @property
+    def model_type(self) -> type[Membership]:
+        """Returns the SQLModel class managed by this repository."""
+        return Membership
 
     def get_by_user_and_course(self, user: User, course: Course) -> Membership | None:
         """Looks up a membership by user and course.
@@ -62,29 +45,6 @@ class MembershipRepository:
             The matching membership when found; otherwise, ``None``.
         """
         return self._session.get(Membership, (user_pid, course_id))
-
-    def update(self, membership: Membership) -> Membership:
-        """Merges changes to an existing membership and refreshes state.
-
-        Args:
-            membership: Membership instance with updated fields.
-
-        Returns:
-            The updated membership with refreshed database state.
-        """
-        merged = self._session.merge(membership)
-        self._session.flush()
-        self._session.refresh(merged)
-        return merged
-
-    def delete(self, membership: Membership) -> None:
-        """Deletes a membership.
-
-        Args:
-            membership: Membership instance to remove.
-        """
-        self._session.delete(membership)
-        self._session.flush()
 
     def get_active_by_user(self, user: User) -> list[Membership]:
         """Returns all non-dropped memberships for a user.

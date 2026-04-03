@@ -53,6 +53,14 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 - **Do not** use `from __future__ import annotations` in any file that defines a SQLModel `Relationship`. Postponed evaluation prevents SQLAlchemy from resolving forward-reference strings at class-creation time. Use `Optional["RelatedModel"]` from `typing` for forward references instead of `RelatedModel | None`.
 - Repository methods that load related objects via eager loading should return domain objects directly (`list[Model]`).
 
+## Repository Conventions
+
+- Shared CRUD behavior for SQLModel repositories lives in `packages/learnwithai-core/src/learnwithai/repositories/base_repository.py`.
+- New repositories should extend `BaseRepository[ModelT, IdentifierT]` instead of re-implementing `create`, `get_by_id`, `update`, or `delete`.
+- Concrete repositories should add only model-specific query and persistence methods that are not already covered by the base class.
+- Repository updates should use the current session with `add`/`flush`/`refresh` semantics by default. Do not introduce `merge` unless there is a real detached-instance workflow that requires it.
+- If a repository truly needs behavior beyond the base CRUD flow, document the reason in the repository docstring or method docstring and add tests that cover that special case.
+
 ## Testing Expectations
 
 - New and changed behavior must be covered by automated tests.
