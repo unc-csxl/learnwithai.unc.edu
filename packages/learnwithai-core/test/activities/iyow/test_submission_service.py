@@ -162,9 +162,7 @@ def test_submit_succeeds_for_instructor() -> None:
     )
 
     iyow_submission_repo = MagicMock(spec=IyowSubmissionRepository)
-    iyow_submission_repo.create.return_value = IyowSubmission(
-        id=1, submission_id=1, response_text="test text"
-    )
+    iyow_submission_repo.create.return_value = IyowSubmission(id=1, submission_id=1, response_text="test text")
 
     job_queue = MagicMock(spec=JobQueue)
 

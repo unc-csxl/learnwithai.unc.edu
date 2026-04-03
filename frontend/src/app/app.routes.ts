@@ -70,10 +70,24 @@ export const routes: Routes = [
                   ),
               },
               {
+                path: ':activityId/edit',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/edit-iyow/edit-iyow.component').then(
+                    (m) => m.EditIyow,
+                  ),
+              },
+              {
                 path: ':activityId/submit',
                 loadComponent: () =>
                   import('./courses/course-detail/activities/iyow-submit/iyow-submit.component').then(
                     (m) => m.IyowSubmit,
+                  ),
+              },
+              {
+                path: ':activityId/submissions/:studentPid',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/submission-detail/submission-detail.component').then(
+                    (m) => m.SubmissionDetail,
                   ),
               },
             ],

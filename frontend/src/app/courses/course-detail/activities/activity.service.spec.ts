@@ -89,6 +89,16 @@ describe('ActivityService', () => {
     expect(result).toBe(submissions);
   });
 
+  it('should list submissions roster', async () => {
+    const roster = [{ student_pid: 111, given_name: 'A', family_name: 'B', submission: null }];
+    mockApi.invoke.mockResolvedValue(roster);
+
+    const result = await service.listSubmissionsRoster(1, 10);
+
+    expect(result).toBe(roster);
+    expect(mockApi.invoke).toHaveBeenCalledOnce();
+  });
+
   it('should get the active submission', async () => {
     const active = { id: 100, is_active: true };
     mockApi.invoke.mockResolvedValue(active);

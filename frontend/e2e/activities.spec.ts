@@ -148,20 +148,40 @@ test.describe('activities — instructor views student submissions', () => {
     await expect(content.getByText('The student should mention', { exact: false })).toBeVisible();
   });
 
-  test('instructor sees the seeded student submission with feedback', async ({ page }) => {
+  test('instructor sees roster table with submitted and non-submitted students', async ({
+    page,
+  }) => {
     const courseId = await goToActivities(page, INSTRUCTOR_PID);
 
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*`);
 
-    // The submissions section should show the student's submission
-    await expect(page.getByRole('heading', { name: 'Submissions' })).toBeVisible();
-    await expect(page.getByText('Student 111111111')).toBeVisible();
+    // The submissions table should show enrolled students
+    const table = page.getByRole('table', { name: 'Student submissions' });
+    await expect(table).toBeVisible();
+
+    // Sally Student submitted — should be a link
+    await expect(table.getByRole('link', { name: 'Student, Sally' })).toBeVisible();
+
+    // The summary should show submission count
+    await expect(page.getByLabel('Submission summary')).toContainText('students have submitted');
+  });
+
+  test('instructor clicks student name to view submission detail', async ({ page }) => {
+    const courseId = await goToActivities(page, INSTRUCTOR_PID);
+
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*`);
+
+    // Click the student link
+    const table = page.getByRole('table', { name: 'Student submissions' });
+    await table.getByRole('link', { name: 'Student, Sally' }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/submissions/*`);
+
+    // Should see the submission detail with response text and feedback
     await expect(
       page.getByText('Dependency injection is when you pass the things', { exact: false }),
     ).toBeVisible();
-
-    // The feedback should be visible
     await expect(
       page.getByText('Great start! You correctly identified', { exact: false }),
     ).toBeVisible();
@@ -241,9 +261,9 @@ test.describe('activities — full instructor-to-student flow', () => {
     await page.getByText('Explain Testing').click();
     await page.waitForURL(`**/courses/${courseId}/activities/*`);
 
-    // Instructor should see the student's submission
-    await expect(page.getByText('Student 111111111')).toBeVisible();
-    await expect(page.getByText('catches regressions early', { exact: false })).toBeVisible();
+    // Instructor should see the student's submission in the roster table
+    const table = page.getByRole('table', { name: 'Student submissions' });
+    await expect(table.getByRole('link', { name: 'Student, Sally' })).toBeVisible();
   });
 });
 
@@ -334,12 +354,12 @@ test.describe('activities — table views', () => {
   });
 });
 
-test.describe('activities — prior submissions', () => {
+test.describe('activities — submission detail with history', () => {
   test.beforeAll(async ({ request }) => {
     await request.post('/api/dev/reset-db');
   });
 
-  test('instructor can view prior submissions via menu', async ({ page }) => {
+  test('instructor can view full submission history for a student', async ({ page }) => {
     // First, have the student make a second submission so there's history
     const courseId = await goToActivities(page, STUDENT_PID);
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
@@ -360,17 +380,51 @@ test.describe('activities — prior submissions', () => {
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*`);
 
-    // Click the "Prior Submissions" button on the student's submission
-    await page.getByRole('button', { name: 'Prior Submissions' }).click();
+    // Click the student name to go to submission detail
+    const table = page.getByRole('table', { name: 'Student submissions' });
+    await table.getByRole('link', { name: 'Student, Sally' }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/submissions/*`);
 
-    // The menu should show numbered submissions with timestamps
-    await expect(page.getByRole('menuitem', { name: /Submission 1/i })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /Submission 2/i })).toBeVisible();
+    // Should show both submissions (most recent first, numbered from top)
+    await expect(page.getByText('Submission 1')).toBeVisible();
+    await expect(page.getByText('Submission 2')).toBeVisible();
 
-    // Click on Submission 1 to view the prior version
-    await page.getByRole('menuitem', { name: /Submission 1/i }).click();
+    // Second attempt should be visible
+    await expect(
+      page.getByText('Second attempt: DI means providing dependencies externally.'),
+    ).toBeVisible();
+  });
+});
 
-    // The prior submission card should appear
-    await expect(page.getByText('Prior Submission')).toBeVisible();
+test.describe('activities — instructor edits activity', () => {
+  test.beforeAll(async ({ request }) => {
+    await request.post('/api/dev/reset-db');
+  });
+
+  test('instructor can edit an existing activity', async ({ page }) => {
+    const courseId = await goToActivities(page, INSTRUCTOR_PID);
+
+    // Go to activity detail
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*`);
+
+    // Navigate to the edit page via sidenav
+    await page.getByRole('link', { name: /Activity Editor/i }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/edit`);
+
+    // The form should be pre-populated
+    await expect(page.getByLabel('Title')).toHaveValue(SEEDED_ACTIVITY_TITLE);
+
+    // Update the title
+    await page.getByLabel('Title').fill('Updated: Explain DI');
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+
+    // Should redirect back to activity detail with success message
+    await expect(page.getByText('Activity updated!')).toBeVisible();
+    await page.waitForURL(`**/courses/${courseId}/activities/*`);
+
+    // Updated title should be visible in the activity info card
+    const activityInfo = page.getByLabel('Activity information');
+    await expect(activityInfo.getByText('Updated: Explain DI')).toBeVisible();
   });
 });

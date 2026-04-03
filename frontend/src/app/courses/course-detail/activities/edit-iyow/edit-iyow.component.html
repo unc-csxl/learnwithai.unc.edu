@@ -1,0 +1,47 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Prompt</mat-label>
+      <textarea matInput formControlName="prompt" rows="4"></textarea>
+      <mat-hint>The question students will answer in their own words</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Rubric</mat-label>
+      <textarea matInput formControlName="rubric" rows="4"></textarea>
+      <mat-hint>Hidden rubric guiding the AI feedback</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Release date</mat-label>
+      <input matInput type="datetime-local" formControlName="release_date" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Due date</mat-label>
+      <input matInput type="datetime-local" formControlName="due_date" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Late date (optional)</mat-label>
+      <input matInput type="datetime-local" formControlName="late_date" />
+    </mat-form-field>
+
+    <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
+      @if (submitting()) {
+        <mat-spinner diameter="20" />
+      } @else {
+        Save Changes
+      }
+    </button>
+  </form>
+}
