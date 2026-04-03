@@ -1046,6 +1046,76 @@
         }
       }
     },
+    "/api/courses/{course_id}/activities/{activity_id}/submissions/roster": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "List enrolled students with their submissions",
+        "description": "Returns every enrolled student paired with their active submission.\n\nStudents who have not submitted are included with a ``null`` submission.\nOnly instructors and TAs may access this endpoint.",
+        "operationId": "list_submissions_roster",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Activity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudentSubmissionRow"
+                  },
+                  "title": "Response List Submissions Roster"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Activity not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/courses/{course_id}/activities/{activity_id}/submissions/active": {
       "get": {
         "tags": [
@@ -2384,6 +2454,67 @@
         ],
         "title": "RosterUploadStatusResponse",
         "description": "Detailed status of a roster upload job."
+      },
+      "StudentSubmissionRow": {
+        "properties": {
+          "student_pid": {
+            "type": "integer",
+            "title": "Student Pid"
+          },
+          "given_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Given Name"
+          },
+          "family_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "submission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IyowSubmissionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_pid",
+          "given_name",
+          "family_name",
+          "email",
+          "submission"
+        ],
+        "title": "StudentSubmissionRow",
+        "description": "One row in the instructor submissions roster view.\n\nIncludes every enrolled student. Students who have not submitted\nhave ``None`` for the submission fields."
       },
       "SubmitIyowRequest": {
         "properties": {

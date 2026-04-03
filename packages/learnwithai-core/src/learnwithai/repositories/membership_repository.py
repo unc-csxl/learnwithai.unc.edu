@@ -6,7 +6,7 @@ from sqlmodel import col, select
 
 from ..pagination import PaginatedResult, PaginationParams
 from ..tables.course import Course
-from ..tables.membership import Membership, MembershipState
+from ..tables.membership import Membership, MembershipState, MembershipType
 from ..tables.user import User
 from .base_repository import BaseRepository
 
@@ -138,3 +138,28 @@ class MembershipRepository(BaseRepository[Membership, tuple[int, int]]):
             page=pagination.page,
             page_size=pagination.page_size,
         )
+
+    def get_enrolled_students(self, course: Course) -> list[Membership]:
+        """Returns all enrolled student memberships for a course with users.
+
+        Args:
+            course: Course whose enrolled students should be loaded.
+
+        Returns:
+            List of enrolled student memberships with their related user
+            loaded via eager loading.
+        """
+        if course.id is None:
+            raise ValueError("Course must be persisted before membership lookup")
+
+        query = (
+            select(Membership)
+            .join(User, col(Membership.user_pid) == col(User.pid))
+            .options(selectinload(Membership.user))  # type: ignore[arg-type]
+            .where(
+                col(Membership.course_id) == course.id,
+                col(Membership.type) == MembershipType.STUDENT,
+                col(Membership.state) == MembershipState.ENROLLED,
+            )
+        )
+        return list(self._session.exec(query).all())

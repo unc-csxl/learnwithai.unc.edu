@@ -13,12 +13,13 @@ from learnwithai.activities.iyow.repository import (
 from learnwithai.activities.iyow.submission_service import IyowSubmissionService
 from learnwithai.activities.iyow.tables import IyowSubmission
 from learnwithai.errors import AuthorizationError
+from learnwithai.interfaces import JobQueue
 from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai.repositories.submission_repository import SubmissionRepository
 from learnwithai.tables.activity import Activity, ActivityType
-from learnwithai.tables.async_job import AsyncJob
+from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course
 from learnwithai.tables.membership import MembershipType
 from learnwithai.tables.submission import Submission
@@ -146,14 +147,39 @@ def test_submit_raises_for_non_member() -> None:
         svc.submit(_make_user(), _make_course(), _make_activity(), "text", NOW)
 
 
-def test_submit_raises_for_instructor() -> None:
+def test_submit_succeeds_for_instructor() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.INSTRUCTOR)
 
-    svc = _make_service(membership_repo=membership_repo)
+    submission_repo = MagicMock(spec=SubmissionRepository)
+    submission_repo.create.return_value = Submission(
+        id=1, activity_id=1, student_pid=222, is_active=True, submitted_at=NOW
+    )
 
-    with pytest.raises(AuthorizationError, match="Only students"):
-        svc.submit(_make_user(), _make_course(), _make_activity(), "text", NOW)
+    async_job_repo = MagicMock(spec=AsyncJobRepository)
+    async_job_repo.create.return_value = AsyncJob(
+        id=1, course_id=1, created_by_pid=222, kind="iyow_feedback", status=AsyncJobStatus.PENDING, input_data={}
+    )
+
+    iyow_submission_repo = MagicMock(spec=IyowSubmissionRepository)
+    iyow_submission_repo.create.return_value = IyowSubmission(
+        id=1, submission_id=1, response_text="test text"
+    )
+
+    job_queue = MagicMock(spec=JobQueue)
+
+    svc = _make_service(
+        membership_repo=membership_repo,
+        submission_repo=submission_repo,
+        async_job_repo=async_job_repo,
+        iyow_submission_repo=iyow_submission_repo,
+        job_queue=job_queue,
+    )
+
+    sub, iyow_detail = svc.submit(_make_user(), _make_course(), _make_activity(), "test text", NOW)
+    assert sub is not None
+    assert iyow_detail is not None
+    job_queue.enqueue.assert_called_once()
 
 
 def test_submit_raises_for_wrong_activity_type() -> None:
@@ -462,3 +488,54 @@ def test_list_submissions_for_activity_raises_for_non_member() -> None:
 
     with pytest.raises(AuthorizationError):
         svc.list_submissions_for_activity(_make_user(), _make_course(), _make_activity())
+
+
+def test_list_submissions_with_roster_includes_non_submitters() -> None:
+    from learnwithai.tables.membership import Membership, MembershipState
+
+    student_a = User(pid=111, name="Alice A", onyen="aa", given_name="Alice", family_name="A")
+    student_b = User(pid=222, name="Bob B", onyen="bb", given_name="Bob", family_name="B")
+    mem_a = Membership(user_pid=111, course_id=1, type=MembershipType.STUDENT, state=MembershipState.ENROLLED)
+    mem_a.user = student_a  # type: ignore[assignment]
+    mem_b = Membership(user_pid=222, course_id=1, type=MembershipType.STUDENT, state=MembershipState.ENROLLED)
+    mem_b.user = student_b  # type: ignore[assignment]
+
+    membership_repo = MagicMock(spec=MembershipRepository)
+    membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.INSTRUCTOR)
+    membership_repo.get_enrolled_students.return_value = [mem_a, mem_b]
+
+    # Only student_a submitted
+    sub = Submission(id=10, activity_id=1, student_pid=111, is_active=True, submitted_at=NOW)
+    submission_repo = MagicMock(spec=SubmissionRepository)
+    submission_repo.list_by_activity.return_value = [sub]
+
+    iyow_sub = IyowSubmission(id=10, submission_id=10, response_text="answer")
+    iyow_submission_repo = MagicMock(spec=IyowSubmissionRepository)
+    iyow_submission_repo.get_by_submission_id.return_value = iyow_sub
+
+    svc = _make_service(
+        membership_repo=membership_repo,
+        submission_repo=submission_repo,
+        iyow_submission_repo=iyow_submission_repo,
+    )
+
+    result = svc.list_submissions_with_roster(_make_user(), _make_course(), _make_activity())
+
+    assert len(result) == 2
+    # Sorted by family name: "A" before "B"
+    assert result[0][0].pid == 111
+    assert result[0][1] is not None
+    assert result[0][2] is not None
+    assert result[1][0].pid == 222
+    assert result[1][1] is None
+    assert result[1][2] is None
+
+
+def test_list_submissions_with_roster_raises_for_student() -> None:
+    membership_repo = MagicMock(spec=MembershipRepository)
+    membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.STUDENT)
+
+    svc = _make_service(membership_repo=membership_repo)
+
+    with pytest.raises(AuthorizationError):
+        svc.list_submissions_with_roster(_make_user(), _make_course(), _make_activity())

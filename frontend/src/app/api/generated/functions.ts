@@ -39,6 +39,8 @@ export type { ListSubmissions$Params as ListSubmissions$Params } from './fn/acti
 export { listSubmissions as listSubmissions } from './fn/activities/list-submissions';
 export type { SubmitIyowResponse$Params as SubmitIyowResponse$Params } from './fn/activities/submit-iyow-response';
 export { submitIyowResponse as submitIyowResponse } from './fn/activities/submit-iyow-response';
+export type { ListSubmissionsRoster$Params as ListSubmissionsRoster$Params } from './fn/activities/list-submissions-roster';
+export { listSubmissionsRoster as listSubmissionsRoster } from './fn/activities/list-submissions-roster';
 export type { GetActiveSubmission$Params as GetActiveSubmission$Params } from './fn/activities/get-active-submission';
 export { getActiveSubmission as getActiveSubmission } from './fn/activities/get-active-submission';
 export type { GetStudentSubmissionHistory$Params as GetStudentSubmissionHistory$Params } from './fn/activities/get-student-submission-history';

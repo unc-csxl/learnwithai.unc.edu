@@ -25,6 +25,7 @@ from ..models import (
     CreateIyowActivityRequest,
     IyowActivityResponse,
     IyowSubmissionResponse,
+    StudentSubmissionRow,
     SubmitIyowRequest,
     UpdateIyowActivityRequest,
 )
@@ -316,6 +317,47 @@ def list_submissions(
         _build_submission_response(sub, detail.response_text, detail.feedback, detail.async_job)
         for sub, detail in pairs
     ]
+
+
+@router.get(
+    "/{activity_id}/submissions/roster",
+    response_model=list[StudentSubmissionRow],
+    summary="List enrolled students with their submissions",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Insufficient permissions."},
+        404: {"description": "Activity not found."},
+    },
+)
+def list_submissions_roster(
+    subject: AuthenticatedUserDI,
+    course: CourseByCourseIDPathDI,
+    activity: ActivityByPathDI,
+    iyow_sub_svc: IyowSubmissionServiceDI,
+) -> list[StudentSubmissionRow]:
+    """Returns every enrolled student paired with their active submission.
+
+    Students who have not submitted are included with a ``null`` submission.
+    Only instructors and TAs may access this endpoint.
+    """
+    rows = iyow_sub_svc.list_submissions_with_roster(subject, course, activity)
+    results: list[StudentSubmissionRow] = []
+    for user, sub, iyow_detail in rows:
+        submission_response: IyowSubmissionResponse | None = None
+        if sub is not None and iyow_detail is not None:
+            submission_response = _build_submission_response(
+                sub, iyow_detail.response_text, iyow_detail.feedback, iyow_detail.async_job
+            )
+        results.append(
+            StudentSubmissionRow(
+                student_pid=user.pid,
+                given_name=user.given_name,
+                family_name=user.family_name,
+                email=user.email,
+                submission=submission_response,
+            )
+        )
+    return results
 
 
 @router.get(

@@ -75,3 +75,17 @@ class IyowSubmissionResponse(BaseModel):
     response_text: str
     feedback: str | None
     job: AsyncJobInfo | None
+
+
+class StudentSubmissionRow(BaseModel):
+    """One row in the instructor submissions roster view.
+
+    Includes every enrolled student. Students who have not submitted
+    have ``None`` for the submission fields.
+    """
+
+    student_pid: int
+    given_name: str | None
+    family_name: str | None
+    email: str | None
+    submission: IyowSubmissionResponse | None

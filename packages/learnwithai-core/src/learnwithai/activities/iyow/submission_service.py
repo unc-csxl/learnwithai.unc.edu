@@ -79,7 +79,7 @@ class IyowSubmissionService:
             ValueError: If the activity is not released, past deadline,
                 or not an IYOW activity.
         """
-        self._authorize_student(subject, course)
+        self._authorize_submitter(subject, course)
         self._validate_submission_window(activity, now)
 
         assert activity.id is not None
@@ -225,6 +225,49 @@ class IyowSubmissionService:
                 results.append((sub, iyow_detail))
         return results
 
+    def list_submissions_with_roster(
+        self,
+        subject: User,
+        course: Course,
+        activity: Activity,
+    ) -> list[tuple[User, Submission | None, IyowSubmission | None]]:
+        """Returns every enrolled student paired with their active submission.
+
+        Students who have not submitted are included with ``None`` values
+        for the submission pair.  Only instructors and TAs may call this.
+
+        Args:
+            subject: Authenticated instructor or TA.
+            course: Course the activity belongs to.
+            activity: The IYOW activity.
+
+        Returns:
+            A list of (user, submission-or-None, iyow-detail-or-None) tuples
+            for every enrolled student, ordered by family name then given name.
+
+        Raises:
+            AuthorizationError: If the subject is not staff.
+        """
+        self._authorize_staff(subject, course)
+        assert activity.id is not None
+
+        enrolled = self._membership_repo.get_enrolled_students(course)
+        active_subs = self._submission_repo.list_by_activity(activity.id)
+        sub_by_pid: dict[int, Submission] = {s.student_pid: s for s in active_subs}
+
+        results: list[tuple[User, Submission | None, IyowSubmission | None]] = []
+        for membership in enrolled:
+            user = membership.user  # type: ignore[union-attr]
+            sub = sub_by_pid.get(user.pid)
+            iyow_detail: IyowSubmission | None = None
+            if sub is not None:
+                assert sub.id is not None
+                iyow_detail = self._iyow_submission_repo.get_by_submission_id(sub.id)
+            results.append((user, sub, iyow_detail))
+
+        results.sort(key=lambda t: ((t[0].family_name or "").lower(), (t[0].given_name or "").lower()))
+        return results
+
     def get_student_submission_history(
         self,
         subject: User,
@@ -279,21 +322,22 @@ class IyowSubmissionService:
         if now > cutoff:
             raise ValueError("Submission deadline has passed")
 
-    def _authorize_student(self, subject: User, course: Course) -> None:
-        """Verifies the subject is an enrolled student.
+    def _authorize_submitter(self, subject: User, course: Course) -> None:
+        """Verifies the subject is an enrolled course member who may submit.
+
+        Students, instructors, and TAs are all permitted to submit.
+        Staff submissions serve as preview / test runs.
 
         Args:
             subject: User to authorize.
             course: Course to check membership for.
 
         Raises:
-            AuthorizationError: If the subject is not an enrolled student.
+            AuthorizationError: If the subject is not a course member.
         """
         membership = self._membership_repo.get_by_user_and_course(subject, course)
         if membership is None:
             raise AuthorizationError("Not a member of this course")
-        if membership.type != MembershipType.STUDENT:
-            raise AuthorizationError("Only students can submit to activities")
 
     def _authorize_member(self, subject: User, course: Course) -> None:
         """Verifies the subject is a course member.

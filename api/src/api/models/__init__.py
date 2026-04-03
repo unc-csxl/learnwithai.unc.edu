@@ -3,6 +3,7 @@ from .activity import (
     CreateIyowActivityRequest,
     IyowActivityResponse,
     IyowSubmissionResponse,
+    StudentSubmissionRow,
     SubmitIyowRequest,
     UpdateIyowActivityRequest,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "RosterMemberResponse",
     "RosterUploadResponse",
     "RosterUploadStatusResponse",
+    "StudentSubmissionRow",
     "SubmitIyowRequest",
     "UpdateCourseRequest",
     "UpdateIyowActivityRequest",

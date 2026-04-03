@@ -24,6 +24,7 @@ from api.routes.activities import (
     get_student_submission_history,
     list_activities,
     list_submissions,
+    list_submissions_roster,
     submit_iyow_response,
     update_iyow_activity,
 )
@@ -440,3 +441,43 @@ def test_get_student_submission_history_returns_list() -> None:
     assert result[0].feedback == "V2 feedback"
     assert result[1].response_text == "Old answer"
     iyow_sub_svc.get_student_submission_history.assert_called_once()
+
+
+# ---- list_submissions_roster ----
+
+
+def test_list_submissions_roster_includes_non_submitters() -> None:
+    subject = _stub_user()
+    course = _stub_course()
+    activity = _stub_activity()
+    iyow_sub_svc = MagicMock()
+
+    user_a = MagicMock()
+    user_a.pid = 111
+    user_a.given_name = "Alice"
+    user_a.family_name = "A"
+    user_a.email = "alice@test.com"
+
+    user_b = MagicMock()
+    user_b.pid = 222
+    user_b.given_name = "Bob"
+    user_b.family_name = "B"
+    user_b.email = "bob@test.com"
+
+    sub = _stub_submission()
+    iyow_sub = _stub_iyow_submission()
+
+    iyow_sub_svc.list_submissions_with_roster.return_value = [
+        (user_a, sub, iyow_sub),
+        (user_b, None, None),
+    ]
+
+    result = list_submissions_roster(subject, course, activity, iyow_sub_svc)
+
+    assert len(result) == 2
+    assert result[0].student_pid == 111
+    assert result[0].submission is not None
+    assert result[0].given_name == "Alice"
+    assert result[1].student_pid == 222
+    assert result[1].submission is None
+    assert result[1].given_name == "Bob"

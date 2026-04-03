@@ -7,6 +7,7 @@ import { updateIyowActivity as updateIyowActivityFn } from '../../../api/generat
 import { deleteActivity as deleteActivityFn } from '../../../api/generated/fn/activities/delete-activity';
 import { submitIyowResponse } from '../../../api/generated/fn/activities/submit-iyow-response';
 import { listSubmissions } from '../../../api/generated/fn/activities/list-submissions';
+import { listSubmissionsRoster } from '../../../api/generated/fn/activities/list-submissions-roster';
 import { getActiveSubmission } from '../../../api/generated/fn/activities/get-active-submission';
 import { getStudentSubmissionHistory } from '../../../api/generated/fn/activities/get-student-submission-history';
 import {
@@ -15,6 +16,7 @@ import {
   IyowSubmission,
   CreateIyowActivity,
   UpdateIyowActivity,
+  StudentSubmissionRow,
 } from '../../../api/models';
 
 /** Handles HTTP communication with the student activities API. */
@@ -67,6 +69,14 @@ export class ActivityService {
   /** Lists submissions for an activity. */
   listSubmissions(courseId: number, activityId: number): Promise<IyowSubmission[]> {
     return this.api.invoke(listSubmissions, { course_id: courseId, activity_id: activityId });
+  }
+
+  /** Lists all enrolled students paired with their active submission (instructor view). */
+  listSubmissionsRoster(courseId: number, activityId: number): Promise<StudentSubmissionRow[]> {
+    return this.api.invoke(listSubmissionsRoster, {
+      course_id: courseId,
+      activity_id: activityId,
+    });
   }
 
   /** Gets the student's current active submission. */

@@ -33,3 +33,4 @@ export type { IyowSubmissionResponse as IyowSubmission } from './generated/model
 export type { CreateIyowActivityRequest as CreateIyowActivity } from './generated/models/create-iyow-activity-request';
 export type { UpdateIyowActivityRequest as UpdateIyowActivity } from './generated/models/update-iyow-activity-request';
 export type { SubmitIyowRequest as SubmitIyow } from './generated/models/submit-iyow-request';
+export type { StudentSubmissionRow } from './generated/models/student-submission-row';
