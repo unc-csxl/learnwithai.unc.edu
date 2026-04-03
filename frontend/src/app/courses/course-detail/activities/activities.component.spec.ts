@@ -115,6 +115,6 @@ describe('Activities', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Late until');
+    expect(fixture.nativeElement.textContent).toContain('Late Activity');
   });
 });

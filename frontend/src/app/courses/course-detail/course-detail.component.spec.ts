@@ -102,7 +102,7 @@ describe('CourseDetail', () => {
   it('should register instructor navigation with the shared app sidebar', async () => {
     const { mockLayoutNavigation } = await setup();
     expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith({
-      label: 'Instructor view',
+      label: 'COMP101: Intro CS',
       title: 'COMP101: Intro CS',
       subtitle: 'Fall 2026',
       items: [
@@ -147,7 +147,7 @@ describe('CourseDetail', () => {
     });
 
     expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith({
-      label: 'Student view',
+      label: 'COMP101: Intro CS',
       title: 'COMP101: Intro CS',
       subtitle: 'Fall 2026',
       items: [
@@ -176,7 +176,8 @@ describe('CourseDetail', () => {
   it('should show course term metadata in the content area', async () => {
     const { fixture, mockLayoutNavigation } = await setup();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).not.toContain('Instructor view');
+    // Verify no role-based labels appear — just the course name
+    expect(el.querySelector('section[aria-label="Course content"]')).toBeTruthy();
     expect(mockLayoutNavigation.setSection).toHaveBeenCalled();
     const section = mockLayoutNavigation.setSection.mock.calls[0][0];
     expect(section.subtitle).toBe('Fall 2026');

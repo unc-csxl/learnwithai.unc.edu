@@ -142,6 +142,33 @@ def test_list_by_student_and_activity_returns_all(session: Session) -> None:
     assert len(result) == 2
 
 
+# --- count_active ---
+
+
+@pytest.mark.integration
+def test_count_active_returns_count(session: Session) -> None:
+    student, course, activity = _seed_prereqs(session)
+    repo = SubmissionRepository(session)
+    repo.create(_make_submission(activity))
+    repo.create(_make_submission(activity, student_pid=INSTRUCTOR_PID))
+
+    result = repo.count_active_by_activity(activity.id)  # type: ignore[arg-type]
+
+    assert result == 2
+
+
+@pytest.mark.integration
+def test_count_active_excludes_inactive(session: Session) -> None:
+    student, course, activity = _seed_prereqs(session)
+    repo = SubmissionRepository(session)
+    repo.create(_make_submission(activity))
+    repo.create(_make_submission(activity, student_pid=INSTRUCTOR_PID, is_active=False))
+
+    result = repo.count_active_by_activity(activity.id)  # type: ignore[arg-type]
+
+    assert result == 1
+
+
 # --- deactivate_active ---
 
 

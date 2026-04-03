@@ -97,4 +97,14 @@ describe('ActivityService', () => {
 
     expect(result).toBe(active);
   });
+
+  it('should get student submission history', async () => {
+    const history = [{ id: 100 }, { id: 101 }];
+    mockApi.invoke.mockResolvedValue(history);
+
+    const result = await service.getStudentHistory(1, 10, 111111111);
+
+    expect(result).toBe(history);
+    expect(mockApi.invoke).toHaveBeenCalledOnce();
+  });
 });
