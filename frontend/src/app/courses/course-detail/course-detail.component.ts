@@ -4,6 +4,7 @@ import { CourseService } from '../course.service';
 import { Course } from '../../api/models';
 import { PageTitleService } from '../../page-title.service';
 import {
+  LayoutNavigationItem,
   LayoutNavigationSection,
   LayoutNavigationService,
 } from '../../layout/layout-navigation.service';
@@ -55,65 +56,72 @@ export class CourseDetail implements OnDestroy {
   }
 
   private buildNavigationSection(course: Course): LayoutNavigationSection {
-    const baseSection = {
-      title: `${course.course_number}: ${course.name}`,
-      subtitle: `${course.term.charAt(0).toUpperCase() + course.term.slice(1)} ${course.year}`,
+    const courseTerm = `${course.term.charAt(0).toUpperCase() + course.term.slice(1)} ${course.year}`;
+    const courseHomeItem: LayoutNavigationItem = {
+      route:
+        course.membership.type === 'student'
+          ? `/courses/${this.courseId}/student`
+          : `/courses/${this.courseId}/dashboard`,
+      label: course.course_number,
+      subtitle: courseTerm,
+      description:
+        course.membership.type === 'student'
+          ? `${course.name} student dashboard`
+          : `${course.name} dashboard`,
+      icon: 'dashboard',
     };
 
     if (course.membership.type === 'student') {
       return {
-        ...baseSection,
-        label: `${course.course_number}: ${course.name}`,
-        items: [
+        groups: [
           {
-            route: `/courses/${this.courseId}/activities`,
-            label: 'Student Activities',
-            description: 'Review your course activities and assigned work',
-            icon: 'assignment',
-          },
-          {
-            route: `/courses/${this.courseId}/student`,
-            label: 'Student Tools',
-            description: 'Open student-facing tools and workflows',
-            icon: 'build',
+            label: 'Course',
+            items: [
+              courseHomeItem,
+              {
+                route: `/courses/${this.courseId}/activities`,
+                label: 'Student Activities',
+                description: 'Review your course activities and assigned work',
+                icon: 'assignment',
+              },
+            ],
           },
         ],
       };
     }
 
     return {
-      ...baseSection,
-      label: `${course.course_number}: ${course.name}`,
-      items: [
+      groups: [
         {
-          route: `/courses/${this.courseId}/dashboard`,
-          label: 'Dashboard',
-          description: 'Course overview and quick links',
-          icon: 'dashboard',
-        },
-        {
-          route: `/courses/${this.courseId}/activities`,
-          label: 'Student Activities',
-          description: 'Review student-facing work and participation',
-          icon: 'assignment',
-        },
-        {
-          route: `/courses/${this.courseId}/tools`,
-          label: 'Instructor Tools',
-          description: 'Manage instructional workflows and tools',
-          icon: 'build',
-        },
-        {
-          route: `/courses/${this.courseId}/roster`,
-          label: 'Roster',
-          description: 'See current course membership',
-          icon: 'groups',
-        },
-        {
-          route: `/courses/${this.courseId}/settings`,
-          label: 'Course Settings',
-          description: 'Adjust course-level options and setup',
-          icon: 'settings',
+          label: 'Course',
+          items: [
+            courseHomeItem,
+            {
+              route: `/courses/${this.courseId}/activities`,
+              label: 'Student Activities',
+              description: 'Review student-facing work and participation',
+              icon: 'assignment',
+            },
+            {
+              route: `/courses/${this.courseId}/tools`,
+              label: 'Instructor Tools',
+              description: 'Manage instructional workflows and tools',
+              icon: 'build',
+              exact: false,
+            },
+            {
+              route: `/courses/${this.courseId}/roster`,
+              label: 'Roster',
+              description: 'See current course membership',
+              icon: 'groups',
+            },
+            {
+              route: `/courses/${this.courseId}/settings`,
+              label: 'Course Settings',
+              description: 'Adjust course-level options and setup',
+              icon: 'settings',
+            },
+          ],
         },
       ],
     };
@@ -125,6 +133,6 @@ export class CourseDetail implements OnDestroy {
       return;
     }
 
-    await this.router.navigate(['/courses', this.courseId, 'activities']);
+    await this.router.navigate(['/courses', this.courseId, 'student']);
   }
 }

@@ -61,6 +61,7 @@ export class SubmissionDetail implements OnDestroy {
 
   ngOnDestroy(): void {
     this.jobUpdateService.unsubscribe(this.courseId);
+    this.layoutNavigation.clearContext();
   }
 
   protected statusIcon(status: string | undefined): string {
@@ -91,25 +92,45 @@ export class SubmissionDetail implements OnDestroy {
       this.titleService.setTitle(`${activity.title} — Student ${this.studentPid}`);
       this.submissions.set(history);
       this.watchPendingJobs(history);
-      this.layoutNavigation.setSection({
-        label: `Student ${this.studentPid}`,
-        items: [
+      this.layoutNavigation.setContextSection({
+        visibleBaseRoutes: [
+          `/courses/${this.courseId}/dashboard`,
+          `/courses/${this.courseId}/activities`,
+        ],
+        groups: [
           {
-            route: `/courses/${this.courseId}/activities/${this.activityId}`,
-            label: 'Back to Submissions',
-            description: 'Return to submissions table',
-            icon: 'arrow_back',
+            label: 'Current activity',
+            items: [
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}`,
+                label: activity.title,
+                description: 'Return to the submissions table',
+                icon: 'assignment',
+              },
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
+                label: 'Activity Editor',
+                description: 'Edit this activity',
+                icon: 'edit',
+              },
+            ],
           },
           {
-            route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
-            label: 'Activity Editor',
-            description: 'Edit this activity',
-            icon: 'edit',
+            label: 'Submission',
+            items: [
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}/submissions/${this.studentPid}`,
+                label: `Student ${this.studentPid}`,
+                description: 'Review this student submission history',
+                icon: 'person',
+              },
+            ],
           },
         ],
       });
     } catch {
       this.errorMessage.set('Failed to load submission details.');
+      this.layoutNavigation.clearContext();
     } finally {
       this.loaded.set(true);
     }

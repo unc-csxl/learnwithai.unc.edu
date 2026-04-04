@@ -74,7 +74,7 @@ describe('ActivityDetail', () => {
       snapshot: { paramMap: new Map([['activityId', '10']]) },
     };
 
-    const mockLayoutNavigation = { setSection: vi.fn(), clear: vi.fn() };
+    const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [ActivityDetail],
@@ -105,11 +105,12 @@ describe('ActivityDetail', () => {
   });
 
   it('should subscribe to job updates on create and unsubscribe on destroy', () => {
-    const { fixture, mockJobUpdate } = setup();
+    const { fixture, mockJobUpdate, mockLayoutNavigation } = setup();
     expect(mockJobUpdate.subscribe).toHaveBeenCalledWith(1);
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
   });
 
   it('should show error on load failure', async () => {
@@ -214,12 +215,18 @@ describe('ActivityDetail', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: 'Test IYOW',
-        items: expect.arrayContaining([
-          expect.objectContaining({ label: 'Activity Editor' }),
-          expect.objectContaining({ label: 'Preview & Test' }),
+        visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],
+        groups: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Current activity',
+            items: expect.arrayContaining([
+              expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
+              expect.objectContaining({ label: 'Activity Editor' }),
+              expect.objectContaining({ label: 'Preview & Test' }),
+            ]),
+          }),
         ]),
       }),
     );

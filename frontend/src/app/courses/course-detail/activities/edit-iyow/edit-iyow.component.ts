@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,7 +24,7 @@ import { IyowActivity } from '../../../../api/models';
   ],
   templateUrl: './edit-iyow.component.html',
 })
-export class EditIyow {
+export class EditIyow implements OnDestroy {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -53,6 +53,10 @@ export class EditIyow {
     this.activityId = Number(this.route.snapshot.paramMap.get('activityId'));
     this.titleService.setTitle('Edit Activity');
     this.loadActivity();
+  }
+
+  ngOnDestroy(): void {
+    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {
@@ -84,19 +88,34 @@ export class EditIyow {
       const activity = await this.activityService.get(this.courseId, this.activityId);
       this.populateForm(activity);
       this.titleService.setTitle(`Edit: ${activity.title}`);
-      this.layoutNavigation.setSection({
-        label: `Edit: ${activity.title}`,
-        items: [
+      this.layoutNavigation.setContextSection({
+        visibleBaseRoutes: [
+          `/courses/${this.courseId}/dashboard`,
+          `/courses/${this.courseId}/activities`,
+        ],
+        groups: [
           {
-            route: `/courses/${this.courseId}/activities/${this.activityId}`,
-            label: 'Back to Activity',
-            description: 'Return to activity detail',
-            icon: 'arrow_back',
+            label: 'Current activity',
+            items: [
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}`,
+                label: activity.title,
+                description: 'Open this activity overview',
+                icon: 'assignment',
+              },
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
+                label: 'Activity Editor',
+                description: 'Edit this activity',
+                icon: 'edit',
+              },
+            ],
           },
         ],
       });
     } catch {
       this.errorMessage.set('Failed to load activity.');
+      this.layoutNavigation.clearContext();
     } finally {
       this.loaded.set(true);
     }

@@ -20,6 +20,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService } from '../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
+import { CourseService } from '../../../course.service';
 import { ActivityService } from '../activity.service';
 import { IyowActivity, IyowSubmission } from '../../../../api/models';
 
@@ -41,11 +43,13 @@ import { IyowActivity, IyowSubmission } from '../../../../api/models';
 })
 export class IyowSubmit implements OnDestroy {
   private activityService = inject(ActivityService);
+  private courseService = inject(CourseService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private titleService = inject(PageTitleService);
   private successSnackbar = inject(SuccessSnackbarService);
   private jobUpdateService = inject(JobUpdateService);
+  private layoutNavigation = inject(LayoutNavigationService);
   private injector = inject(Injector);
   private destroyRef = inject(DestroyRef);
 
@@ -70,6 +74,7 @@ export class IyowSubmit implements OnDestroy {
 
   ngOnDestroy(): void {
     this.jobUpdateService.unsubscribe(this.courseId);
+    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {
@@ -99,18 +104,53 @@ export class IyowSubmit implements OnDestroy {
 
   private async loadData(): Promise<void> {
     try {
-      const [activity, active] = await Promise.all([
+      const [activity, active, courses] = await Promise.all([
         this.activityService.get(this.courseId, this.activityId),
         this.activityService.getActiveSubmission(this.courseId, this.activityId),
+        this.courseService.getMyCourses(),
       ]);
+      const course = courses.find((candidate) => candidate.id === this.courseId);
+      const isStaff = course?.membership.type !== 'student';
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
       this.activeSubmission.set(active);
+      this.layoutNavigation.setContextSection({
+        visibleBaseRoutes: [
+          isStaff ? `/courses/${this.courseId}/dashboard` : `/courses/${this.courseId}/student`,
+          `/courses/${this.courseId}/activities`,
+        ],
+        groups: [
+          {
+            label: 'Current activity',
+            items: [
+              {
+                route: isStaff
+                  ? `/courses/${this.courseId}/activities/${this.activityId}`
+                  : `/courses/${this.courseId}/activities/${this.activityId}/submit`,
+                label: activity.title,
+                description: isStaff ? 'Open this activity overview' : 'Open this student activity',
+                icon: 'assignment',
+              },
+              ...(isStaff
+                ? [
+                    {
+                      route: `/courses/${this.courseId}/activities/${this.activityId}/submit`,
+                      label: 'Preview & Test',
+                      description: 'Preview and test this activity',
+                      icon: 'preview',
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ],
+      });
       if (active?.job && (active.job.status === 'pending' || active.job.status === 'processing')) {
         this.watchJob(active.job.id);
       }
     } catch {
       this.errorMessage.set('Failed to load activity.');
+      this.layoutNavigation.clearContext();
     } finally {
       this.loaded.set(true);
     }

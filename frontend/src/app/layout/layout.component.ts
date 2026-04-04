@@ -40,6 +40,8 @@ export class Layout {
   protected theme = inject(ThemeService);
   protected pageTitle = inject(PageTitleService);
   protected layoutNavigation = inject(LayoutNavigationService);
+  protected readonly exactLinkActiveOptions = { exact: true };
+  protected readonly subtreeLinkActiveOptions = { exact: false };
 
   protected readonly drawerRef = viewChild<MatSidenav>('drawer');
 

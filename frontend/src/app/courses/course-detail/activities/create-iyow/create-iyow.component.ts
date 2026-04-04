@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
 
 /** Form for instructors to create an In Your Own Words activity. */
@@ -22,13 +23,14 @@ import { ActivityService } from '../activity.service';
   ],
   templateUrl: './create-iyow.component.html',
 })
-export class CreateIyow {
+export class CreateIyow implements OnDestroy {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private titleService = inject(PageTitleService);
   private successSnackbar = inject(SuccessSnackbarService);
+  private layoutNavigation = inject(LayoutNavigationService);
 
   protected readonly courseId: number;
   protected readonly submitting = signal(false);
@@ -46,6 +48,29 @@ export class CreateIyow {
   constructor() {
     this.titleService.setTitle('Create IYOW Activity');
     this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
+    this.layoutNavigation.setContextSection({
+      visibleBaseRoutes: [
+        `/courses/${this.courseId}/dashboard`,
+        `/courses/${this.courseId}/activities`,
+      ],
+      groups: [
+        {
+          label: 'New activity',
+          items: [
+            {
+              route: `/courses/${this.courseId}/activities/create-iyow`,
+              label: 'Create IYOW Activity',
+              description: 'Create a new In Your Own Words activity',
+              icon: 'add_circle',
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {

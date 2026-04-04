@@ -3,7 +3,7 @@ import { StudentView } from './student-view.component';
 import { PageTitleService } from '../../../page-title.service';
 
 describe('StudentView', () => {
-  it('should set the page title and show student tools copy', () => {
+  it('should set the page title and show student dashboard copy', () => {
     const mockPageTitle = {
       setTitle: vi.fn(),
     };
@@ -15,7 +15,7 @@ describe('StudentView', () => {
 
     const fixture = TestBed.createComponent(StudentView);
     fixture.detectChanges();
-    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Student Tools');
-    expect(fixture.nativeElement.textContent).toContain('Student Tools');
+    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Student Dashboard');
+    expect(fixture.nativeElement.textContent).toContain('Student Dashboard');
   });
 });

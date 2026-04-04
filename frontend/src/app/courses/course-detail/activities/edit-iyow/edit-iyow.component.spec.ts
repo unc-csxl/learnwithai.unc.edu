@@ -34,7 +34,7 @@ describe('EditIyow', () => {
       parent: { parent: { snapshot: { paramMap: new Map([['id', '1']]) } } },
       snapshot: { paramMap: new Map([['activityId', '10']]) },
     };
-    const mockLayoutNavigation = { setSection: vi.fn(), clear: vi.fn() };
+    const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [EditIyow],
@@ -186,15 +186,23 @@ describe('EditIyow', () => {
     expect(comp.form.getRawValue()['rubric']).toBe('');
   });
 
-  it('should set layout navigation with back link', async () => {
+  it('should set layout navigation with activity context', async () => {
     const { fixture, mockLayoutNavigation } = setup();
     await flush();
     fixture.detectChanges();
 
-    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: 'Edit: Test IYOW',
-        items: expect.arrayContaining([expect.objectContaining({ label: 'Back to Activity' })]),
+        visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],
+        groups: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Current activity',
+            items: expect.arrayContaining([
+              expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
+              expect.objectContaining({ label: 'Activity Editor' }),
+            ]),
+          }),
+        ]),
       }),
     );
   });

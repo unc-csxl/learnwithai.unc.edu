@@ -6,9 +6,12 @@ import { PageTitleService } from '../../../page-title.service';
   selector: 'app-student-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section>
-      <p class="text-sm opacity-75">Student Tools</p>
-      <p>Student-facing course tools will live here soon.</p>
+    <section class="space-y-3">
+      <p class="text-sm opacity-75">Student Dashboard</p>
+      <p>
+        Your course home will live here. Use the sidebar to move between activities and future
+        student tools.
+      </p>
     </section>
   `,
 })
@@ -16,6 +19,6 @@ export class StudentView {
   private titleService = inject(PageTitleService);
 
   constructor() {
-    this.titleService.setTitle('Student Tools');
+    this.titleService.setTitle('Student Dashboard');
   }
 }

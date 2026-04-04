@@ -22,14 +22,27 @@ const fakeCourse: Course = {
 };
 
 const fakeSection = {
-  label: 'Instructor view',
-  title: 'COMP423: Foundations of Software Engineering',
-  subtitle: 'Spring 2026',
-  items: [],
+  groups: [
+    {
+      label: 'Course',
+      items: [
+        {
+          route: '/courses/1/dashboard',
+          label: 'COMP423',
+          subtitle: 'Spring 2026',
+          description: 'Foundations of Software Engineering dashboard',
+          icon: 'dashboard',
+        },
+      ],
+    },
+  ],
 };
 
 describe('Settings', () => {
-  function setup(courses: Course[] = [fakeCourse]) {
+  function setup(
+    courses: Course[] = [fakeCourse],
+    initialSection: typeof fakeSection | null = fakeSection,
+  ) {
     const mockCourseService = {
       getMyCourses: vi.fn(() => Promise.resolve(courses)),
       updateCourse: vi.fn(() => Promise.resolve(fakeCourse)),
@@ -48,10 +61,15 @@ describe('Settings', () => {
 
     const mockSuccessSnackbar = { open: vi.fn() };
 
-    const sectionSignal = signal<typeof fakeSection | null>(fakeSection);
+    const sectionSignal = signal<typeof fakeSection | null>(initialSection);
     const mockLayoutNavigation = {
       section: sectionSignal.asReadonly(),
-      setSection: vi.fn(),
+      updateSection: vi.fn((update: (section: typeof fakeSection) => typeof fakeSection) => {
+        const current = sectionSignal();
+        if (current !== null) {
+          sectionSignal.set(update(current));
+        }
+      }),
     };
 
     TestBed.configureTestingModule({
@@ -141,9 +159,10 @@ describe('Settings', () => {
       term: 'spring',
       year: 2026,
     });
-    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
+    expect(mockLayoutNavigation.updateSection).toHaveBeenCalled();
+    expect(readSection(mockLayoutNavigation.section).groups[0].items[0]).toEqual(
       expect.objectContaining({
-        title: 'COMP423: Foundations of Software Engineering',
+        label: 'COMP423',
         subtitle: 'Spring 2026',
       }),
     );
@@ -206,16 +225,75 @@ describe('Settings', () => {
     expect(mockRouter.navigate).toHaveBeenCalled();
   });
 
-  it('should not call setSection when no section is active', async () => {
+  it('should save successfully even when no base sidebar section is active', async () => {
     const { fixture, mockLayoutNavigation } = setup();
-    // Override the section signal to return null (no active nav section)
     mockLayoutNavigation.section = signal<null>(null).asReadonly();
+    mockLayoutNavigation.updateSection.mockImplementation(() => undefined);
     await flush();
     fixture.detectChanges();
 
     fixture.nativeElement.querySelector('button[type="submit"]').click();
     await flush();
 
-    expect(mockLayoutNavigation.setSection).not.toHaveBeenCalled();
+    expect(mockLayoutNavigation.updateSection).toHaveBeenCalled();
+  });
+
+  it('should leave an empty sidebar section unchanged when there is no course item to update', async () => {
+    const emptySection = { groups: [] };
+    const { fixture, mockLayoutNavigation } = setup([fakeCourse], emptySection);
+    await flush();
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    await flush();
+
+    expect(readSection(mockLayoutNavigation.section)).toEqual(emptySection);
+  });
+
+  it('should leave a section unchanged when the first group has no items', async () => {
+    const emptyCourseGroup = { groups: [{ label: 'Course', items: [] }] };
+    const { fixture, mockLayoutNavigation } = setup([fakeCourse], emptyCourseGroup);
+    await flush();
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    await flush();
+
+    expect(readSection(mockLayoutNavigation.section)).toEqual(emptyCourseGroup);
+  });
+
+  it('should update the student dashboard description when the course home route points to the student view', async () => {
+    const studentSection = {
+      groups: [
+        {
+          label: 'Course',
+          items: [
+            {
+              route: '/courses/1/student',
+              label: 'COMP423',
+              subtitle: 'Spring 2026',
+              description: 'Foundations of Software Engineering student dashboard',
+              icon: 'dashboard',
+            },
+          ],
+        },
+      ],
+    };
+    const { fixture, mockLayoutNavigation } = setup([fakeCourse], studentSection);
+    await flush();
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('button[type="submit"]').click();
+    await flush();
+
+    expect(readSection(mockLayoutNavigation.section).groups[0].items[0].description).toBe(
+      'Foundations of Software Engineering student dashboard',
+    );
   });
 });
+
+function readSection<T>(signalReader: () => T | null): T {
+  const section = signalReader();
+  expect(section).not.toBeNull();
+  return section as T;
+}

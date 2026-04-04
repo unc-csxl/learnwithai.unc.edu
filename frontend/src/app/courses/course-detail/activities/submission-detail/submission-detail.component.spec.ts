@@ -77,7 +77,7 @@ describe('SubmissionDetail', () => {
       },
     };
 
-    const mockLayoutNavigation = { setSection: vi.fn(), clear: vi.fn() };
+    const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [SubmissionDetail],
@@ -108,11 +108,12 @@ describe('SubmissionDetail', () => {
   });
 
   it('should subscribe to job updates on create and unsubscribe on destroy', () => {
-    const { fixture, mockJobUpdate } = setup();
+    const { fixture, mockJobUpdate, mockLayoutNavigation } = setup();
     expect(mockJobUpdate.subscribe).toHaveBeenCalledWith(1);
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
   });
 
   it('should show error on load failure', async () => {
@@ -223,17 +224,26 @@ describe('SubmissionDetail', () => {
     expect(comp.statusIcon('unknown')).toBe('help');
   });
 
-  it('should set layout navigation with back and edit links', async () => {
+  it('should set layout navigation with activity and submission context', async () => {
     const { fixture, mockLayoutNavigation } = setup();
     await flush();
     fixture.detectChanges();
 
-    expect(mockLayoutNavigation.setSection).toHaveBeenCalledWith(
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: 'Student 111',
-        items: expect.arrayContaining([
-          expect.objectContaining({ label: 'Back to Submissions' }),
-          expect.objectContaining({ label: 'Activity Editor' }),
+        visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],
+        groups: expect.arrayContaining([
+          expect.objectContaining({
+            label: 'Current activity',
+            items: expect.arrayContaining([
+              expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
+              expect.objectContaining({ label: 'Activity Editor' }),
+            ]),
+          }),
+          expect.objectContaining({
+            label: 'Submission',
+            items: expect.arrayContaining([expect.objectContaining({ label: 'Student 111' })]),
+          }),
         ]),
       }),
     );

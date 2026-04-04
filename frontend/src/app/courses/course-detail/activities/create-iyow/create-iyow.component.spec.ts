@@ -3,6 +3,7 @@ import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { CreateIyow } from './create-iyow.component';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -14,6 +15,7 @@ describe('CreateIyow', () => {
     const mockActivityService = overrides.activityService ?? {
       createIyow: vi.fn(() => Promise.resolve({ id: 10 })),
     };
+    const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
     const mockRoute = {
       parent: { parent: { snapshot: { paramMap: new Map([['id', '1']]) } } },
     };
@@ -24,6 +26,7 @@ describe('CreateIyow', () => {
         provideRouter([]),
         { provide: PageTitleService, useValue: mockPageTitle },
         { provide: SuccessSnackbarService, useValue: mockSnackbar },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
         { provide: ActivityService, useValue: mockActivityService },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
@@ -32,12 +35,17 @@ describe('CreateIyow', () => {
     const fixture = TestBed.createComponent(CreateIyow);
     fixture.detectChanges();
 
-    return { fixture, mockPageTitle, mockSnackbar, mockActivityService };
+    return { fixture, mockPageTitle, mockSnackbar, mockActivityService, mockLayoutNavigation };
   }
 
   it('should set the page title', () => {
-    const { mockPageTitle } = setup();
+    const { mockPageTitle, mockLayoutNavigation } = setup();
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Create IYOW Activity');
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],
+      }),
+    );
   });
 
   it('should submit the form via template and navigate', async () => {

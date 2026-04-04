@@ -5,7 +5,9 @@ import { IyowSubmit } from './iyow-submit.component';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService } from '../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
+import { CourseService } from '../../../course.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -50,6 +52,22 @@ describe('IyowSubmit', () => {
         }),
       ),
     };
+    const mockCourseService = {
+      getMyCourses: vi.fn(() =>
+        Promise.resolve([
+          {
+            id: 1,
+            course_number: 'COMP423',
+            name: 'Foundations of Software Engineering',
+            description: '',
+            term: 'spring',
+            year: 2026,
+            membership: { type: 'student', state: 'enrolled' },
+          },
+        ]),
+      ),
+    };
+    const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
     const mockRoute = {
       parent: { parent: { snapshot: { paramMap: new Map([['id', '1']]) } } },
       snapshot: { paramMap: new Map([['activityId', '10']]) },
@@ -62,6 +80,8 @@ describe('IyowSubmit', () => {
         { provide: PageTitleService, useValue: mockPageTitle },
         { provide: SuccessSnackbarService, useValue: mockSnackbar },
         { provide: JobUpdateService, useValue: mockJobUpdate },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
+        { provide: CourseService, useValue: mockCourseService },
         { provide: ActivityService, useValue: mockActivityService },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
@@ -70,24 +90,83 @@ describe('IyowSubmit', () => {
     const fixture = TestBed.createComponent(IyowSubmit);
     fixture.detectChanges();
 
-    return { fixture, mockPageTitle, mockSnackbar, mockJobUpdate, mockActivityService, jobSignals };
+    return {
+      fixture,
+      mockPageTitle,
+      mockSnackbar,
+      mockJobUpdate,
+      mockActivityService,
+      mockCourseService,
+      mockLayoutNavigation,
+      jobSignals,
+    };
   }
 
   it('should load activity and set title', async () => {
-    const { fixture, mockPageTitle } = setup();
+    const { fixture, mockPageTitle, mockLayoutNavigation } = setup();
     await flush();
     fixture.detectChanges();
 
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Test IYOW');
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        visibleBaseRoutes: ['/courses/1/student', '/courses/1/activities'],
+        groups: expect.arrayContaining([
+          expect.objectContaining({
+            items: expect.arrayContaining([
+              expect.objectContaining({ route: '/courses/1/activities/10/submit' }),
+            ]),
+          }),
+        ]),
+      }),
+    );
     expect(fixture.nativeElement.textContent).toContain('Explain X');
   });
 
+  it('should show preview and test context for staff users', async () => {
+    const { fixture, mockCourseService, mockLayoutNavigation } = setup();
+    mockCourseService.getMyCourses.mockResolvedValueOnce([
+      {
+        id: 1,
+        course_number: 'COMP423',
+        name: 'Foundations of Software Engineering',
+        description: '',
+        term: 'spring',
+        year: 2026,
+        membership: { type: 'instructor', state: 'enrolled' },
+      },
+    ]);
+
+    const newFixture = TestBed.createComponent(IyowSubmit);
+    newFixture.detectChanges();
+    await flush();
+    newFixture.detectChanges();
+
+    expect(mockLayoutNavigation.setContextSection).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],
+        groups: expect.arrayContaining([
+          expect.objectContaining({
+            items: expect.arrayContaining([
+              expect.objectContaining({ route: '/courses/1/activities/10' }),
+              expect.objectContaining({ label: 'Preview & Test' }),
+            ]),
+          }),
+        ]),
+      }),
+    );
+
+    fixture.destroy();
+    newFixture.destroy();
+  });
+
   it('should subscribe to job updates and unsubscribe on destroy', () => {
-    const { fixture, mockJobUpdate } = setup();
+    const { fixture, mockJobUpdate, mockLayoutNavigation } = setup();
     expect(mockJobUpdate.subscribe).toHaveBeenCalledWith(1);
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
   });
 
   it('should submit response via template and show snackbar', async () => {

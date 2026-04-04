@@ -91,6 +91,7 @@ export class ActivityDetail implements OnDestroy {
       clearTimeout(this.debounceTimer);
     }
     this.jobUpdateService.unsubscribe(this.courseId);
+    this.layoutNavigation.clearContext();
   }
 
   protected onSearchInput(value: string): void {
@@ -127,31 +128,40 @@ export class ActivityDetail implements OnDestroy {
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
       this.allRows.set(roster);
-      this.layoutNavigation.setSection({
-        label: activity.title,
-        items: [
+      this.layoutNavigation.setContextSection({
+        visibleBaseRoutes: [
+          `/courses/${this.courseId}/dashboard`,
+          `/courses/${this.courseId}/activities`,
+        ],
+        groups: [
           {
-            route: `/courses/${this.courseId}/activities`,
-            label: 'Student Activities',
-            description: 'Back to all activities',
-            icon: 'arrow_back',
-          },
-          {
-            route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
-            label: 'Activity Editor',
-            description: 'Edit this activity',
-            icon: 'edit',
-          },
-          {
-            route: `/courses/${this.courseId}/activities/${this.activityId}/submit`,
-            label: 'Preview & Test',
-            description: 'Preview and test this activity',
-            icon: 'preview',
+            label: 'Current activity',
+            items: [
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}`,
+                label: activity.title,
+                description: 'Open this activity overview',
+                icon: 'assignment',
+              },
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
+                label: 'Activity Editor',
+                description: 'Edit this activity',
+                icon: 'edit',
+              },
+              {
+                route: `/courses/${this.courseId}/activities/${this.activityId}/submit`,
+                label: 'Preview & Test',
+                description: 'Preview and test this activity',
+                icon: 'preview',
+              },
+            ],
           },
         ],
       });
     } catch {
       this.errorMessage.set('Failed to load activity details.');
+      this.layoutNavigation.clearContext();
     } finally {
       this.loaded.set(true);
     }
