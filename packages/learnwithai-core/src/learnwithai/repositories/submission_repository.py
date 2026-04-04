@@ -25,9 +25,9 @@ class SubmissionRepository(BaseRepository[Submission, int]):
             The active submission when one exists; otherwise, ``None``.
         """
         stmt = select(Submission).where(
-            Submission.activity_id == activity_id,
-            Submission.student_pid == student_pid,
-            Submission.is_active == True,  # noqa: E712
+            col(Submission.activity_id) == activity_id,
+            col(Submission.student_pid) == student_pid,
+            col(Submission.is_active),
         )
         return self._session.exec(stmt).first()
 
@@ -42,10 +42,7 @@ class SubmissionRepository(BaseRepository[Submission, int]):
         """
         stmt = (
             select(Submission)
-            .where(
-                Submission.activity_id == activity_id,
-                Submission.is_active == True,  # noqa: E712
-            )
+            .where(col(Submission.activity_id) == activity_id, col(Submission.is_active))
             .order_by(col(Submission.submitted_at).desc())
         )
         return list(self._session.exec(stmt).all())
@@ -63,8 +60,8 @@ class SubmissionRepository(BaseRepository[Submission, int]):
         stmt = (
             select(Submission)
             .where(
-                Submission.activity_id == activity_id,
-                Submission.student_pid == student_pid,
+                col(Submission.activity_id) == activity_id,
+                col(Submission.student_pid) == student_pid,
             )
             .order_by(col(Submission.submitted_at).desc())
         )
@@ -85,7 +82,7 @@ class SubmissionRepository(BaseRepository[Submission, int]):
             .where(
                 col(Submission.activity_id) == activity_id,
                 col(Submission.student_pid) == student_pid,
-                col(Submission.is_active) == True,  # noqa: E712
+                col(Submission.is_active),
             )
             .values(is_active=False)
         )
@@ -103,10 +100,7 @@ class SubmissionRepository(BaseRepository[Submission, int]):
         stmt = (
             select(func.count())
             .select_from(Submission)
-            .where(
-                Submission.activity_id == activity_id,
-                Submission.is_active == True,  # noqa: E712
-            )
+            .where(col(Submission.activity_id) == activity_id, col(Submission.is_active))
         )
         result = self._session.exec(stmt).one()
         return int(result)
