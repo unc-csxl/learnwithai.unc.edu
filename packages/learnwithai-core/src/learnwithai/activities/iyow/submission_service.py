@@ -216,14 +216,7 @@ class IyowSubmissionService:
         self._authorize_staff(subject, course)
         assert activity.id is not None
 
-        submissions = self._submission_repo.list_by_activity(activity.id)
-        results: list[tuple[Submission, IyowSubmission]] = []
-        for sub in submissions:
-            assert sub.id is not None
-            iyow_detail = self._iyow_submission_repo.get_by_submission_id(sub.id)
-            if iyow_detail is not None:
-                results.append((sub, iyow_detail))
-        return results
+        return self._list_active_submission_pairs(activity.id)
 
     def list_submissions_with_roster(
         self,
@@ -252,17 +245,16 @@ class IyowSubmissionService:
         assert activity.id is not None
 
         enrolled = self._membership_repo.get_enrolled_students(course)
-        active_subs = self._submission_repo.list_by_activity(activity.id)
-        sub_by_pid: dict[int, Submission] = {s.student_pid: s for s in active_subs}
+        active_submissions_by_pid = {
+            submission.student_pid: (submission, detail)
+            for submission, detail in self._list_active_submission_pairs(activity.id)
+        }
 
         results: list[tuple[User, Submission | None, IyowSubmission | None]] = []
         for membership in enrolled:
-            user = membership.user  # type: ignore[union-attr]
-            sub = sub_by_pid.get(user.pid)
-            iyow_detail: IyowSubmission | None = None
-            if sub is not None:
-                assert sub.id is not None
-                iyow_detail = self._iyow_submission_repo.get_by_submission_id(sub.id)
+            user = membership.user
+            assert user is not None
+            sub, iyow_detail = active_submissions_by_pid.get(user.pid, (None, None))
             results.append((user, sub, iyow_detail))
 
         results.sort(key=lambda t: ((t[0].family_name or "").lower(), (t[0].given_name or "").lower()))
@@ -302,6 +294,15 @@ class IyowSubmissionService:
             iyow_detail = self._iyow_submission_repo.get_by_submission_id(sub.id)
             if iyow_detail is not None:
                 results.append((sub, iyow_detail))
+        return results
+
+    def _list_active_submission_pairs(self, activity_id: int) -> list[tuple[Submission, IyowSubmission]]:
+        """Loads active submission/detail pairs for an activity in one query."""
+        results: list[tuple[Submission, IyowSubmission]] = []
+        for iyow_detail in self._iyow_submission_repo.list_active_for_activity(activity_id):
+            submission = iyow_detail.submission
+            assert submission is not None
+            results.append((submission, iyow_detail))
         return results
 
     def _validate_submission_window(self, activity: Activity, now: datetime) -> None:

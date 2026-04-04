@@ -16,6 +16,7 @@ from sqlmodel import (
 )
 
 from ...tables.async_job import AsyncJob  # noqa: F401 — registered for relationship resolution
+from ...tables.submission import Submission  # noqa: F401 — registered for relationship resolution
 
 
 class IyowActivity(SQLModel, table=True):
@@ -86,6 +87,15 @@ class IyowSubmission(SQLModel, table=True):
             "lazy": "select",
             "cascade": "all, delete",
             "single_parent": True,
+        },
+    )
+    submission: Optional["Submission"] = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "IyowSubmission.submission_id == Submission.id",
+            "foreign_keys": "[IyowSubmission.submission_id]",
+            "lazy": "select",
+            "viewonly": True,
+            "uselist": False,
         },
     )
     created_at: datetime = Field(

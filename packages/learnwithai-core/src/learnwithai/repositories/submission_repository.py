@@ -2,6 +2,8 @@
 
 from sqlmodel import col, func, select, update
 
+from ..tables.activity import Activity
+from ..tables.membership import Membership, MembershipState, MembershipType
 from ..tables.submission import Submission
 from .base_repository import BaseRepository
 
@@ -89,18 +91,31 @@ class SubmissionRepository(BaseRepository[Submission, int]):
         self._session.exec(stmt)  # type: ignore[call-overload]
 
     def count_active_by_activity(self, activity_id: int) -> int:
-        """Returns the count of active submissions for an activity.
+        """Returns the count of active enrolled-student submissions.
 
         Args:
             activity_id: The activity to count for.
 
         Returns:
-            The number of active submissions.
+            The number of active submissions from enrolled students in the
+            activity's course. Staff preview submissions and inactive
+            versions are excluded.
         """
         stmt = (
             select(func.count())
             .select_from(Submission)
-            .where(col(Submission.activity_id) == activity_id, col(Submission.is_active))
+            .join(Activity, col(Activity.id) == col(Submission.activity_id))
+            .join(
+                Membership,
+                (col(Membership.user_pid) == col(Submission.student_pid))
+                & (col(Membership.course_id) == col(Activity.course_id)),
+            )
+            .where(
+                col(Submission.activity_id) == activity_id,
+                col(Submission.is_active),
+                col(Membership.type) == MembershipType.STUDENT,
+                col(Membership.state) == MembershipState.ENROLLED,
+            )
         )
         result = self._session.exec(stmt).one()
         return int(result)

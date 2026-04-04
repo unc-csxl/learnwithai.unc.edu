@@ -95,6 +95,7 @@ def _make_iyow_submission(submission_id: int = 100) -> MagicMock:
     m.submission_id = submission_id
     m.response_text = "My response"
     m.feedback = None
+    m.submission = None
     return m
 
 
@@ -381,33 +382,30 @@ def test_get_student_submissions_raises_for_non_member() -> None:
 def test_list_submissions_for_activity_succeeds_for_staff() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.INSTRUCTOR)
-    submission_repo = MagicMock(spec=SubmissionRepository)
     sub = _make_submission()
-    submission_repo.list_by_activity.return_value = [sub]
     iyow_sub_repo = MagicMock(spec=IyowSubmissionRepository)
     detail = _make_iyow_submission()
-    iyow_sub_repo.get_by_submission_id.return_value = detail
+    detail.submission = sub
+    iyow_sub_repo.list_active_for_activity.return_value = [detail]
 
     svc = _make_service(
-        submission_repo=submission_repo,
         iyow_submission_repo=iyow_sub_repo,
         membership_repo=membership_repo,
     )
     result = svc.list_submissions_for_activity(_make_user(), _make_course(), _make_activity())
 
     assert len(result) == 1
+    assert result[0] == (sub, detail)
+    iyow_sub_repo.list_active_for_activity.assert_called_once_with(10)
 
 
 def test_list_submissions_for_activity_skips_missing_iyow() -> None:
     membership_repo = MagicMock(spec=MembershipRepository)
     membership_repo.get_by_user_and_course.return_value = _make_membership(MembershipType.TA)
-    submission_repo = MagicMock(spec=SubmissionRepository)
-    submission_repo.list_by_activity.return_value = [_make_submission()]
     iyow_sub_repo = MagicMock(spec=IyowSubmissionRepository)
-    iyow_sub_repo.get_by_submission_id.return_value = None
+    iyow_sub_repo.list_active_for_activity.return_value = []
 
     svc = _make_service(
-        submission_repo=submission_repo,
         iyow_submission_repo=iyow_sub_repo,
         membership_repo=membership_repo,
     )
@@ -504,16 +502,13 @@ def test_list_submissions_with_roster_includes_non_submitters() -> None:
 
     # Only student_a submitted
     sub = Submission(id=10, activity_id=1, student_pid=111, is_active=True, submitted_at=NOW)
-    submission_repo = MagicMock(spec=SubmissionRepository)
-    submission_repo.list_by_activity.return_value = [sub]
-
     iyow_sub = IyowSubmission(id=10, submission_id=10, response_text="answer")
+    iyow_sub.submission = sub
     iyow_submission_repo = MagicMock(spec=IyowSubmissionRepository)
-    iyow_submission_repo.get_by_submission_id.return_value = iyow_sub
+    iyow_submission_repo.list_active_for_activity.return_value = [iyow_sub]
 
     svc = _make_service(
         membership_repo=membership_repo,
-        submission_repo=submission_repo,
         iyow_submission_repo=iyow_submission_repo,
     )
 
@@ -527,6 +522,8 @@ def test_list_submissions_with_roster_includes_non_submitters() -> None:
     assert result[1][0].pid == 222
     assert result[1][1] is None
     assert result[1][2] is None
+    iyow_submission_repo.list_active_for_activity.assert_called_once_with(10)
+    iyow_submission_repo.get_by_submission_id.assert_not_called()
 
 
 def test_list_submissions_with_roster_raises_for_student() -> None:

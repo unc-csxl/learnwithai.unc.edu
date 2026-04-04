@@ -8,6 +8,7 @@ import pytest
 from learnwithai.repositories.submission_repository import SubmissionRepository
 from learnwithai.tables.activity import Activity, ActivityType
 from learnwithai.tables.course import Course, Term
+from learnwithai.tables.membership import Membership, MembershipState, MembershipType
 from learnwithai.tables.submission import Submission
 from learnwithai.tables.user import User
 from sqlmodel import Session
@@ -26,6 +27,22 @@ def _seed_prereqs(session: Session) -> tuple[User, Course, Activity]:
     session.add(course)
     session.flush()
     assert course.id is not None
+    session.add(
+        Membership(
+            user_pid=user.pid,
+            course_id=course.id,
+            type=MembershipType.INSTRUCTOR,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    session.add(
+        Membership(
+            user_pid=student.pid,
+            course_id=course.id,
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
     activity = Activity(
         course_id=course.id,
         created_by_pid=user.pid,
@@ -146,11 +163,25 @@ def test_list_by_student_and_activity_returns_all(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_count_active_returns_count(session: Session) -> None:
+def test_count_active_returns_count_for_enrolled_students(session: Session) -> None:
     student, course, activity = _seed_prereqs(session)
     repo = SubmissionRepository(session)
     repo.create(_make_submission(activity))
-    repo.create(_make_submission(activity, student_pid=INSTRUCTOR_PID))
+
+    second_student_pid = 555555555
+    session.add(User(pid=second_student_pid, name="Student Two", onyen="student2"))
+    session.flush()
+    assert course.id is not None
+    session.add(
+        Membership(
+            user_pid=second_student_pid,
+            course_id=course.id,
+            type=MembershipType.STUDENT,
+            state=MembershipState.ENROLLED,
+        )
+    )
+    session.flush()
+    repo.create(_make_submission(activity, student_pid=second_student_pid))
 
     result = repo.count_active_by_activity(activity.id)  # type: ignore[arg-type]
 
@@ -158,11 +189,23 @@ def test_count_active_returns_count(session: Session) -> None:
 
 
 @pytest.mark.integration
-def test_count_active_excludes_inactive(session: Session) -> None:
+def test_count_active_excludes_inactive_versions_for_same_student(session: Session) -> None:
+    student, course, activity = _seed_prereqs(session)
+    repo = SubmissionRepository(session)
+    repo.create(_make_submission(activity, is_active=False, submitted_at=datetime(2025, 1, 14, tzinfo=timezone.utc)))
+    repo.create(_make_submission(activity, submitted_at=datetime(2025, 1, 15, tzinfo=timezone.utc)))
+
+    result = repo.count_active_by_activity(activity.id)  # type: ignore[arg-type]
+
+    assert result == 1
+
+
+@pytest.mark.integration
+def test_count_active_excludes_staff_preview_submissions(session: Session) -> None:
     student, course, activity = _seed_prereqs(session)
     repo = SubmissionRepository(session)
     repo.create(_make_submission(activity))
-    repo.create(_make_submission(activity, student_pid=INSTRUCTOR_PID, is_active=False))
+    repo.create(_make_submission(activity, student_pid=INSTRUCTOR_PID))
 
     result = repo.count_active_by_activity(activity.id)  # type: ignore[arg-type]
 

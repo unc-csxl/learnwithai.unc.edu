@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any, cast
 
 import pytest
 from learnwithai.activities.iyow.repository import (
@@ -15,6 +16,8 @@ from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.course import Course, Term
 from learnwithai.tables.submission import Submission
 from learnwithai.tables.user import User
+from sqlalchemy import inspect
+from sqlalchemy.orm.state import InstanceState
 from sqlmodel import Session
 
 STUDENT_PID = 888888888
@@ -132,12 +135,14 @@ def _seed_submission(session: Session) -> tuple[Activity, Submission, AsyncJob]:
 def test_iyow_submission_create_and_get(session: Session) -> None:
     _activity, base_sub, async_job = _seed_submission(session)
     repo = IyowSubmissionRepository(session)
+    assert base_sub.id is not None
+    assert async_job.id is not None
 
     detail = repo.create(
         IyowSubmission(
-            submission_id=base_sub.id,  # type: ignore[arg-type]
+            submission_id=base_sub.id,
             response_text="My explanation",
-            async_job_id=async_job.id,  # type: ignore[arg-type]
+            async_job_id=async_job.id,
         )
     )
 
@@ -170,6 +175,86 @@ def test_iyow_submission_get_by_id_returns_detail(session: Session) -> None:
 def test_iyow_submission_get_by_submission_id_returns_none(session: Session) -> None:
     repo = IyowSubmissionRepository(session)
     assert repo.get_by_submission_id(999999) is None
+
+
+@pytest.mark.integration
+def test_iyow_submission_list_active_for_activity(session: Session) -> None:
+    activity, base_sub, async_job = _seed_submission(session)
+    repo = IyowSubmissionRepository(session)
+    assert base_sub.id is not None
+    assert async_job.id is not None
+
+    second_student = User(pid=STUDENT_PID + 1, name="Student Two", onyen="student2")
+    session.add(second_student)
+    session.flush()
+
+    first_detail = repo.create(
+        IyowSubmission(
+            submission_id=base_sub.id,
+            response_text="First answer",
+            async_job_id=async_job.id,
+        )
+    )
+
+    second_submission = Submission(
+        activity_id=activity.id,  # type: ignore[arg-type]
+        student_pid=second_student.pid,
+        is_active=True,
+        submitted_at=datetime(2025, 1, 16, tzinfo=timezone.utc),
+    )
+    session.add(second_submission)
+    session.flush()
+    assert second_submission.id is not None
+
+    second_detail = repo.create(
+        IyowSubmission(
+            submission_id=second_submission.id,
+            response_text="Second answer",
+        )
+    )
+
+    inactive_submission = Submission(
+        activity_id=activity.id,  # type: ignore[arg-type]
+        student_pid=second_student.pid,
+        is_active=False,
+        submitted_at=datetime(2025, 1, 14, tzinfo=timezone.utc),
+    )
+    session.add(inactive_submission)
+    session.flush()
+    assert inactive_submission.id is not None
+
+    repo.create(
+        IyowSubmission(
+            submission_id=inactive_submission.id,
+            response_text="Inactive answer",
+        )
+    )
+
+    fetched = repo.list_active_for_activity(activity.id)  # type: ignore[arg-type]
+
+    assert {detail.id for detail in fetched} == {first_detail.id, second_detail.id}
+    assert [detail.response_text for detail in fetched] == ["Second answer", "First answer"]
+
+    first_state = cast(InstanceState[Any], inspect(fetched[0]))
+    assert "submission" not in first_state.unloaded
+    assert "async_job" not in first_state.unloaded
+    assert fetched[0].submission is not None
+    assert fetched[0].submission.id == second_submission.id
+
+    second_state = cast(InstanceState[Any], inspect(fetched[1]))
+    assert "submission" not in second_state.unloaded
+    assert "async_job" not in second_state.unloaded
+    assert fetched[1].submission is not None
+    assert fetched[1].submission.id == base_sub.id
+    assert fetched[1].async_job is not None
+    assert fetched[1].async_job.id == async_job.id
+
+
+@pytest.mark.integration
+def test_iyow_submission_list_active_for_activity_returns_empty_for_no_matches(session: Session) -> None:
+    repo = IyowSubmissionRepository(session)
+
+    assert repo.list_active_for_activity(999999) == []
 
 
 @pytest.mark.integration

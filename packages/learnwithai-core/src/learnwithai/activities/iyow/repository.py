@@ -1,8 +1,10 @@
 """Persistence helpers for IYOW activity and submission records."""
 
-from sqlmodel import select
+from sqlalchemy.orm import contains_eager, joinedload
+from sqlmodel import col, select
 
 from ...repositories.base_repository import BaseRepository
+from ...tables.submission import Submission
 from .tables import IyowActivity, IyowSubmission
 
 
@@ -46,6 +48,30 @@ class IyowSubmissionRepository(BaseRepository[IyowSubmission, int]):
         """
         stmt = select(IyowSubmission).where(IyowSubmission.submission_id == submission_id)
         return self._session.exec(stmt).first()
+
+    def list_active_for_activity(self, activity_id: int) -> list[IyowSubmission]:
+        """Returns active IYOW submissions for an activity.
+
+        Args:
+            activity_id: Primary key of the activity whose active submissions
+                should be loaded.
+
+        Returns:
+            Matching IYOW submission details ordered by submission time
+            descending. Each detail includes its base submission and linked
+            async job loaded eagerly.
+        """
+        stmt = (
+            select(IyowSubmission)
+            .join(Submission, col(IyowSubmission.submission_id) == col(Submission.id))
+            .options(
+                contains_eager(IyowSubmission.submission),  # type: ignore[arg-type]
+                joinedload(IyowSubmission.async_job),  # type: ignore[arg-type]
+            )
+            .where(col(Submission.activity_id) == activity_id, col(Submission.is_active))
+            .order_by(col(Submission.submitted_at).desc())
+        )
+        return list(self._session.exec(stmt).all())
 
     def get_by_async_job_id(self, async_job_id: int) -> IyowSubmission | None:
         """Looks up an IYOW submission by its linked async job ID.
