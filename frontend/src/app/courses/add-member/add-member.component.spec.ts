@@ -3,6 +3,7 @@ import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AddMember } from './add-member.component';
 import { CourseService } from '../course.service';
+import { LayoutNavigationService } from '../../layout/layout-navigation.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -22,6 +23,7 @@ describe('AddMember', () => {
     const mockRoute = {
       parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
     };
+    const mockLayoutNavigation = { clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [AddMember, NoopAnimationsModule],
@@ -29,6 +31,7 @@ describe('AddMember', () => {
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
         { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
       ],
     });
 
@@ -36,12 +39,13 @@ describe('AddMember', () => {
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    return { fixture, mockService, router };
+    return { fixture, mockService, router, mockLayoutNavigation };
   }
 
   it('should render the form', () => {
-    const { fixture } = setup();
+    const { fixture, mockLayoutNavigation } = setup();
     const el: HTMLElement = fixture.nativeElement;
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(el.querySelector('input[formControlName="pid"]')).toBeTruthy();
     expect(el.querySelector('mat-select')).toBeTruthy();
   });

@@ -8,6 +8,7 @@ import { CourseService } from '../../course.service';
 import { PaginatedRoster, RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
 import { JobUpdateService, JobUpdate } from '../../../job-update.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const fakeMembers: RosterMember[] = [
@@ -63,6 +64,7 @@ describe('Roster', () => {
       unsubscribe: vi.fn(),
       updateForJob: vi.fn(() => jobUpdateSignal.asReadonly()),
     };
+    const mockLayoutNavigation = { clearContext: vi.fn() };
 
     const mockRoute = {
       parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
@@ -74,6 +76,7 @@ describe('Roster', () => {
         provideRouter([]),
         { provide: CourseService, useValue: mockService },
         { provide: JobUpdateService, useValue: mockJobUpdateService },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
         {
           provide: PageTitleService,
           useValue: {
@@ -100,6 +103,7 @@ describe('Roster', () => {
       fixture,
       mockService,
       mockJobUpdateService,
+      mockLayoutNavigation,
       snackBarOpen,
       snackBarDismiss,
       dialogOpen,
@@ -107,9 +111,10 @@ describe('Roster', () => {
   }
 
   it('should display roster members with name columns', async () => {
-    const { fixture } = await setup();
+    const { fixture, mockLayoutNavigation } = await setup();
     const el: HTMLElement = fixture.nativeElement;
     const rows = el.querySelectorAll('tr[mat-row]');
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('Alice');
     expect(rows[0].textContent).toContain('Alpha');

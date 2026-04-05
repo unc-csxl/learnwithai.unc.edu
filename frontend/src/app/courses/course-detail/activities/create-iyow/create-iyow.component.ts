@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,7 +23,7 @@ import { ActivityService } from '../activity.service';
   ],
   templateUrl: './create-iyow.component.html',
 })
-export class CreateIyow implements OnDestroy {
+export class CreateIyow {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -67,10 +67,6 @@ export class CreateIyow implements OnDestroy {
         },
       ],
     });
-  }
-
-  ngOnDestroy(): void {
-    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {

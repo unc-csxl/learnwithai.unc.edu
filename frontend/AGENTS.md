@@ -50,3 +50,30 @@ After a successful save:
 2. Navigate the user to the next useful page.
 
 Do not leave users on the same page with an inline "saved" message.
+
+## Sidenav Sibling Axiom
+
+When the user is at a leaf page in the navigation tree, the sidebar must show **all sibling links** at that level plus the ancestral parents leading back to the root. No sibling may be accidentally omitted.
+
+### How it works
+
+- `LayoutNavigationService` manages two layers: a base section (set by course-detail) and a context section (set by nested pages).
+- Top-level course views call `clearContext()` to show only the base course nav.
+- Nested activity sub-pages call `setContextSection()` with the result of `buildActivityContextNav()` from `activities/activity-nav.ts`.
+
+### Adding a new activity sub-page
+
+1. Import `buildActivityContextNav` from `../activity-nav`.
+2. After loading the activity, call:
+   ```ts
+   this.layoutNavigation.setContextSection(
+     buildActivityContextNav({
+       courseId: this.courseId,
+       activityId: this.activityId,
+       activityTitle: activity.title,
+       role: isStaff ? 'staff' : 'student',
+       extraGroups: [], // optional additional groups
+     }),
+   );
+   ```
+3. Do **not** hand-write the sibling list. The builder guarantees all siblings are present.

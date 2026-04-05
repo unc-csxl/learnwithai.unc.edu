@@ -18,6 +18,7 @@ import { PageTitleService } from '../../../../page-title.service';
 import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
+import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity, IyowSubmission } from '../../../../api/models';
 
 /** Instructor view showing a single student's submission detail. */
@@ -61,7 +62,6 @@ export class SubmissionDetail implements OnDestroy {
 
   ngOnDestroy(): void {
     this.jobUpdateService.unsubscribe(this.courseId);
-    this.layoutNavigation.clearContext();
   }
 
   protected statusIcon(status: string | undefined): string {
@@ -92,42 +92,27 @@ export class SubmissionDetail implements OnDestroy {
       this.titleService.setTitle(`${activity.title} — Student ${this.studentPid}`);
       this.submissions.set(history);
       this.watchPendingJobs(history);
-      this.layoutNavigation.setContextSection({
-        visibleBaseRoutes: [
-          `/courses/${this.courseId}/dashboard`,
-          `/courses/${this.courseId}/activities`,
-        ],
-        groups: [
-          {
-            label: 'Current activity',
-            items: [
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}`,
-                label: activity.title,
-                description: 'Return to the submissions table',
-                icon: 'assignment',
-              },
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
-                label: 'Activity Editor',
-                description: 'Edit this activity',
-                icon: 'edit',
-              },
-            ],
-          },
-          {
-            label: 'Submission',
-            items: [
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}/submissions/${this.studentPid}`,
-                label: `Student ${this.studentPid}`,
-                description: 'Review this student submission history',
-                icon: 'person',
-              },
-            ],
-          },
-        ],
-      });
+      this.layoutNavigation.setContextSection(
+        buildActivityContextNav({
+          courseId: this.courseId,
+          activityId: this.activityId,
+          activityTitle: activity.title,
+          role: 'staff',
+          extraGroups: [
+            {
+              label: 'Submission',
+              items: [
+                {
+                  route: `/courses/${this.courseId}/activities/${this.activityId}/submissions/${this.studentPid}`,
+                  label: `Student ${this.studentPid}`,
+                  description: 'Review this student submission history',
+                  icon: 'person',
+                },
+              ],
+            },
+          ],
+        }),
+      );
     } catch {
       this.errorMessage.set('Failed to load submission details.');
       this.layoutNavigation.clearContext();

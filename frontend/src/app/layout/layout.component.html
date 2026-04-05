@@ -33,8 +33,10 @@
       <mat-nav-list>
         <a
           mat-list-item
+          class="sidenav-nav-link"
           routerLink="/courses"
           routerLinkActive="active-link"
+          [routerLinkActiveOptions]="exactLinkActiveOptions"
           (click)="closeMobileSidenav()"
         >
           <mat-icon matListItemIcon>school</mat-icon>
@@ -54,6 +56,8 @@
                 @for (item of group.items; track item.route) {
                   <a
                     mat-list-item
+                    class="sidenav-nav-link"
+                    [class.context-nav-item-with-subtitle]="!!item.subtitle"
                     [routerLink]="item.route"
                     routerLinkActive="active-link"
                     [routerLinkActiveOptions]="
@@ -62,7 +66,11 @@
                     (click)="closeMobileSidenav()"
                     [attr.title]="item.description || ''"
                   >
-                    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+                    <mat-icon
+                      matListItemIcon
+                      [class.context-nav-item-icon-with-subtitle]="!!item.subtitle"
+                      >{{ item.icon }}</mat-icon
+                    >
                     <span matListItemTitle>{{ item.label }}</span>
                     @if (item.subtitle) {
                       <span matListItemLine class="context-nav-item-subtitle">{{

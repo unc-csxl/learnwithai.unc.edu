@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { PageTitleService } from '../../../page-title.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 
 /** Landing view for instructor course navigation. */
 @Component({
@@ -11,8 +12,10 @@ import { PageTitleService } from '../../../page-title.service';
 })
 export class Dashboard {
   private titleService = inject(PageTitleService);
+  private layoutNavigation = inject(LayoutNavigationService);
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Dashboard');
   }
 }

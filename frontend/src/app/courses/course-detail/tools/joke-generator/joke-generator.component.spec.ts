@@ -8,6 +8,7 @@ import { JokeGeneratorService } from '../joke-generator.service';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService, JobUpdate } from '../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { AsyncJobInfo, JokeRequest } from '../../../../api/models';
 
 const fakeRequest: JokeRequest = {
@@ -86,6 +87,7 @@ describe('JokeGenerator', () => {
       unsubscribe: vi.fn(),
       updateForJob: vi.fn(() => jobUpdateSignal.asReadonly()),
     };
+    const mockLayoutNavigation = { clearContext: vi.fn() };
 
     const mockSnackbar = { open: vi.fn() };
 
@@ -101,6 +103,7 @@ describe('JokeGenerator', () => {
         provideRouter([]),
         { provide: JokeGeneratorService, useValue: mockService },
         { provide: JobUpdateService, useValue: mockJobUpdate },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
         { provide: SuccessSnackbarService, useValue: mockSnackbar },
         {
           provide: PageTitleService,
@@ -115,12 +118,13 @@ describe('JokeGenerator', () => {
     await flush();
     fixture.detectChanges();
 
-    return { fixture, mockService, mockJobUpdate, mockSnackbar };
+    return { fixture, mockService, mockJobUpdate, mockSnackbar, mockLayoutNavigation };
   }
 
   it('should set the page title', async () => {
-    await setup();
+    const { mockLayoutNavigation } = await setup();
     const titleService = TestBed.inject(PageTitleService);
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(titleService.setTitle).toHaveBeenCalledWith('Joke Generator');
   });
 

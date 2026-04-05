@@ -23,6 +23,7 @@ import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { CourseService } from '../../../course.service';
 import { ActivityService } from '../activity.service';
+import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity, IyowSubmission } from '../../../../api/models';
 
 /** Student view for submitting an IYOW response and viewing feedback. */
@@ -74,7 +75,6 @@ export class IyowSubmit implements OnDestroy {
 
   ngOnDestroy(): void {
     this.jobUpdateService.unsubscribe(this.courseId);
-    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {
@@ -114,37 +114,14 @@ export class IyowSubmit implements OnDestroy {
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
       this.activeSubmission.set(active);
-      this.layoutNavigation.setContextSection({
-        visibleBaseRoutes: [
-          isStaff ? `/courses/${this.courseId}/dashboard` : `/courses/${this.courseId}/student`,
-          `/courses/${this.courseId}/activities`,
-        ],
-        groups: [
-          {
-            label: 'Current activity',
-            items: [
-              {
-                route: isStaff
-                  ? `/courses/${this.courseId}/activities/${this.activityId}`
-                  : `/courses/${this.courseId}/activities/${this.activityId}/submit`,
-                label: activity.title,
-                description: isStaff ? 'Open this activity overview' : 'Open this student activity',
-                icon: 'assignment',
-              },
-              ...(isStaff
-                ? [
-                    {
-                      route: `/courses/${this.courseId}/activities/${this.activityId}/submit`,
-                      label: 'Preview & Test',
-                      description: 'Preview and test this activity',
-                      icon: 'preview',
-                    },
-                  ]
-                : []),
-            ],
-          },
-        ],
-      });
+      this.layoutNavigation.setContextSection(
+        buildActivityContextNav({
+          courseId: this.courseId,
+          activityId: this.activityId,
+          activityTitle: activity.title,
+          role: isStaff ? 'staff' : 'student',
+        }),
+      );
       if (active?.job && (active.job.status === 'pending' || active.job.status === 'processing')) {
         this.watchJob(active.job.id);
       }

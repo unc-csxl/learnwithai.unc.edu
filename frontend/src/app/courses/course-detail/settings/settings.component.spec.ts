@@ -64,6 +64,7 @@ describe('Settings', () => {
     const sectionSignal = signal<typeof fakeSection | null>(initialSection);
     const mockLayoutNavigation = {
       section: sectionSignal.asReadonly(),
+      clearContext: vi.fn(),
       updateSection: vi.fn((update: (section: typeof fakeSection) => typeof fakeSection) => {
         const current = sectionSignal();
         if (current !== null) {
@@ -97,7 +98,8 @@ describe('Settings', () => {
   }
 
   it('should set the page title', () => {
-    const { mockPageTitle } = setup();
+    const { mockPageTitle, mockLayoutNavigation } = setup();
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Course Settings');
   });
 

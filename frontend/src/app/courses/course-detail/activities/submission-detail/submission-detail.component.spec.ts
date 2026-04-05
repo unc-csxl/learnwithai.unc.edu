@@ -113,7 +113,7 @@ describe('SubmissionDetail', () => {
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
-    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
+    expect(mockLayoutNavigation.clearContext).not.toHaveBeenCalled();
   });
 
   it('should show error on load failure', async () => {
@@ -238,6 +238,7 @@ describe('SubmissionDetail', () => {
             items: expect.arrayContaining([
               expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
               expect.objectContaining({ label: 'Activity Editor' }),
+              expect.objectContaining({ label: 'Preview & Test' }),
             ]),
           }),
           expect.objectContaining({

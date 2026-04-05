@@ -4,12 +4,14 @@ import { Activities } from './activities.component';
 import { PageTitleService } from '../../../page-title.service';
 import { CourseService } from '../../course.service';
 import { ActivityService } from './activity.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('Activities', () => {
   function setup(overrides: { courseService?: object; activityService?: object } = {}) {
     const mockPageTitle = { title: vi.fn(), setTitle: vi.fn() };
+    const mockLayoutNavigation = { clearContext: vi.fn() };
     const mockCourseService = overrides.courseService ?? {
       getMyCourses: vi.fn(() => Promise.resolve([{ id: 1, membership: { type: 'instructor' } }])),
     };
@@ -38,6 +40,7 @@ describe('Activities', () => {
       providers: [
         provideRouter([]),
         { provide: PageTitleService, useValue: mockPageTitle },
+        { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
         { provide: CourseService, useValue: mockCourseService },
         { provide: ActivityService, useValue: mockActivityService },
         { provide: ActivatedRoute, useValue: mockRoute },
@@ -47,14 +50,15 @@ describe('Activities', () => {
     const fixture = TestBed.createComponent(Activities);
     fixture.detectChanges();
 
-    return { fixture, mockPageTitle };
+    return { fixture, mockPageTitle, mockLayoutNavigation };
   }
 
   it('should set the page title and list activities for instructor', async () => {
-    const { fixture, mockPageTitle } = setup();
+    const { fixture, mockPageTitle, mockLayoutNavigation } = setup();
     await flush();
     fixture.detectChanges();
 
+    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Student Activities');
     expect(fixture.nativeElement.textContent).toContain('Test Activity');
     expect(fixture.nativeElement.textContent).toContain('Create IYOW Activity');

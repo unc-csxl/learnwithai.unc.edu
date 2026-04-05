@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { PageTitleService } from '../../../page-title.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 
 /** Placeholder for student-facing course tools. */
 @Component({
@@ -17,8 +18,10 @@ import { PageTitleService } from '../../../page-title.service';
 })
 export class StudentView {
   private titleService = inject(PageTitleService);
+  private layoutNavigation = inject(LayoutNavigationService);
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Student Dashboard');
   }
 }

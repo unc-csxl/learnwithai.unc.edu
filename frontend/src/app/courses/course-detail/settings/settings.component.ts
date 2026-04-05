@@ -41,6 +41,7 @@ export class Settings {
   private courseId = 0;
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Course Settings');
     this.courseId = Number(this.route.parent!.snapshot.paramMap.get('id'));
     this.loadCourse();

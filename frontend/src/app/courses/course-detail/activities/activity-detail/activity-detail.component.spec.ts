@@ -110,7 +110,7 @@ describe('ActivityDetail', () => {
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
-    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
+    expect(mockLayoutNavigation.clearContext).not.toHaveBeenCalled();
   });
 
   it('should show error on load failure', async () => {

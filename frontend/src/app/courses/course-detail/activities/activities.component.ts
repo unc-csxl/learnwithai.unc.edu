@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { PageTitleService } from '../../../page-title.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { CourseService } from '../../course.service';
 import { ActivityService } from './activity.service';
 import { Activity } from '../../../api/models';
@@ -18,6 +19,7 @@ import { Activity } from '../../../api/models';
 })
 export class Activities {
   private titleService = inject(PageTitleService);
+  private layoutNavigation = inject(LayoutNavigationService);
   private courseService = inject(CourseService);
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
@@ -38,6 +40,7 @@ export class Activities {
   ];
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Student Activities');
     this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
     this.loadData();

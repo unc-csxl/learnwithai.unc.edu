@@ -1,6 +1,7 @@
 :host {
   display: block;
   height: 100vh;
+  --sidenav-nav-item-radius: 12px;
 }
 
 .sidenav-container {
@@ -138,6 +139,27 @@
   padding-inline: 8px;
 }
 
+.sidenav-nav-link {
+  --mdc-list-list-item-container-shape: var(--sidenav-nav-item-radius);
+  border-radius: var(--sidenav-nav-item-radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.sidenav-nav-link:hover:not(.active-link) {
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.sidenav-nav-link:hover.mat-mdc-list-item-interactive::before,
+.sidenav-nav-link .mat-mdc-list-item-ripple,
+.sidenav-nav-link .mat-ripple-element {
+  border-radius: var(--sidenav-nav-item-radius);
+}
+
+.sidenav-nav-link:hover.mat-mdc-list-item-interactive::before {
+  opacity: 0;
+}
+
 .context-nav-label,
 .context-nav-item-subtitle {
   color: var(--mat-sys-on-surface-variant);
@@ -153,13 +175,20 @@
 }
 
 .context-nav-item-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .sidenav-content-wrap mat-nav-list a.active-link {
   background-color: var(--mat-sys-secondary-container);
-  border-radius: 12px;
+  border-radius: var(--sidenav-nav-item-radius);
   color: var(--mat-sys-on-secondary-container);
+}
+
+.context-nav-item-icon-with-subtitle {
+  align-self: center;
+  margin-top: 0;
 }
 
 .spacer {

@@ -149,6 +149,7 @@ describe('IyowSubmit', () => {
           expect.objectContaining({
             items: expect.arrayContaining([
               expect.objectContaining({ route: '/courses/1/activities/10' }),
+              expect.objectContaining({ label: 'Activity Editor' }),
               expect.objectContaining({ label: 'Preview & Test' }),
             ]),
           }),
@@ -166,7 +167,7 @@ describe('IyowSubmit', () => {
 
     fixture.destroy();
     expect(mockJobUpdate.unsubscribe).toHaveBeenCalledWith(1);
-    expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
+    expect(mockLayoutNavigation.clearContext).not.toHaveBeenCalled();
   });
 
   it('should submit response via template and show snackbar', async () => {

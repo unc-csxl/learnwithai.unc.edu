@@ -19,6 +19,7 @@ import { PageTitleService } from '../../../../page-title.service';
 import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
+import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity, StudentSubmissionRow } from '../../../../api/models';
 
 const DEBOUNCE_MS = 300;
@@ -91,7 +92,6 @@ export class ActivityDetail implements OnDestroy {
       clearTimeout(this.debounceTimer);
     }
     this.jobUpdateService.unsubscribe(this.courseId);
-    this.layoutNavigation.clearContext();
   }
 
   protected onSearchInput(value: string): void {
@@ -128,37 +128,14 @@ export class ActivityDetail implements OnDestroy {
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
       this.allRows.set(roster);
-      this.layoutNavigation.setContextSection({
-        visibleBaseRoutes: [
-          `/courses/${this.courseId}/dashboard`,
-          `/courses/${this.courseId}/activities`,
-        ],
-        groups: [
-          {
-            label: 'Current activity',
-            items: [
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}`,
-                label: activity.title,
-                description: 'Open this activity overview',
-                icon: 'assignment',
-              },
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
-                label: 'Activity Editor',
-                description: 'Edit this activity',
-                icon: 'edit',
-              },
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}/submit`,
-                label: 'Preview & Test',
-                description: 'Preview and test this activity',
-                icon: 'preview',
-              },
-            ],
-          },
-        ],
-      });
+      this.layoutNavigation.setContextSection(
+        buildActivityContextNav({
+          courseId: this.courseId,
+          activityId: this.activityId,
+          activityTitle: activity.title,
+          role: 'staff',
+        }),
+      );
     } catch {
       this.errorMessage.set('Failed to load activity details.');
       this.layoutNavigation.clearContext();

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
+import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity } from '../../../../api/models';
 
 /** Form for instructors to edit an existing In Your Own Words activity. */
@@ -24,7 +25,7 @@ import { IyowActivity } from '../../../../api/models';
   ],
   templateUrl: './edit-iyow.component.html',
 })
-export class EditIyow implements OnDestroy {
+export class EditIyow {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -53,10 +54,6 @@ export class EditIyow implements OnDestroy {
     this.activityId = Number(this.route.snapshot.paramMap.get('activityId'));
     this.titleService.setTitle('Edit Activity');
     this.loadActivity();
-  }
-
-  ngOnDestroy(): void {
-    this.layoutNavigation.clearContext();
   }
 
   protected async onSubmit(): Promise<void> {
@@ -88,31 +85,14 @@ export class EditIyow implements OnDestroy {
       const activity = await this.activityService.get(this.courseId, this.activityId);
       this.populateForm(activity);
       this.titleService.setTitle(`Edit: ${activity.title}`);
-      this.layoutNavigation.setContextSection({
-        visibleBaseRoutes: [
-          `/courses/${this.courseId}/dashboard`,
-          `/courses/${this.courseId}/activities`,
-        ],
-        groups: [
-          {
-            label: 'Current activity',
-            items: [
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}`,
-                label: activity.title,
-                description: 'Open this activity overview',
-                icon: 'assignment',
-              },
-              {
-                route: `/courses/${this.courseId}/activities/${this.activityId}/edit`,
-                label: 'Activity Editor',
-                description: 'Edit this activity',
-                icon: 'edit',
-              },
-            ],
-          },
-        ],
-      });
+      this.layoutNavigation.setContextSection(
+        buildActivityContextNav({
+          courseId: this.courseId,
+          activityId: this.activityId,
+          activityTitle: activity.title,
+          role: 'staff',
+        }),
+      );
     } catch {
       this.errorMessage.set('Failed to load activity.');
       this.layoutNavigation.clearContext();
