@@ -208,6 +208,19 @@ describe('EditIyow', () => {
     );
   });
 
+  it('should add spacing between controls and larger helper text', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const form = fixture.nativeElement.querySelector('form');
+    const hints = fixture.nativeElement.querySelectorAll('mat-hint');
+
+    expect(form.className).toContain('space-y-5');
+    expect(hints[0]?.className).toContain('text-sm');
+    expect(hints[1]?.className).toContain('text-sm');
+  });
+
   it('should handle late_date in form population', async () => {
     const mockActivityService = {
       get: vi.fn(() => Promise.resolve({ ...baseActivity, late_date: '2025-07-01T12:30:00Z' })),

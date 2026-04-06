@@ -101,7 +101,9 @@ describe('ActivityDetail', () => {
     fixture.detectChanges();
 
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Test IYOW');
-    expect(fixture.nativeElement.textContent).toContain('Explain X');
+    expect(fixture.nativeElement.textContent).toContain('Release date');
+    expect(fixture.nativeElement.textContent).toContain('Due date');
+    expect(fixture.nativeElement.textContent).not.toContain('Explain X');
   });
 
   it('should subscribe to job updates on create and unsubscribe on destroy', () => {
@@ -143,7 +145,7 @@ describe('ActivityDetail', () => {
     expect(fixture.nativeElement.textContent).toContain('1 of 3 students have submitted');
   });
 
-  it('should show late_date and rubric when present', async () => {
+  it('should keep the activity information card limited to release and due dates', async () => {
     const mockActivityService = {
       get: vi.fn(() =>
         Promise.resolve({
@@ -158,8 +160,10 @@ describe('ActivityDetail', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Late date');
-    expect(fixture.nativeElement.textContent).toContain('Must explain clearly');
+    expect(fixture.nativeElement.textContent).toContain('Release date');
+    expect(fixture.nativeElement.textContent).toContain('Due date');
+    expect(fixture.nativeElement.textContent).not.toContain('Late date');
+    expect(fixture.nativeElement.textContent).not.toContain('Must explain clearly');
   });
 
   it('should show status labels for submitted and not-submitted rows', async () => {

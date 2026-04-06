@@ -52,6 +52,7 @@ export class ActivityDetail implements OnDestroy {
 
   protected readonly courseId: number;
   protected readonly activityId: number;
+  protected readonly dateTimeFormat = 'MMM d, y, h:mm a';
   protected readonly activity = signal<IyowActivity | null>(null);
   protected readonly allRows = signal<StudentSubmissionRow[]>([]);
   protected readonly loaded = signal(false);

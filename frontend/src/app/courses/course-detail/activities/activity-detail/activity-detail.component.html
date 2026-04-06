@@ -6,27 +6,16 @@
   @if (activity(); as a) {
     <section class="mb-6" aria-label="Activity information">
       <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>assignment</mat-icon>
-          <mat-card-title>{{ a.title }}</mat-card-title>
-          <mat-card-subtitle>IYOW Activity</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <dt class="opacity-75">Release date</dt>
-            <dd>{{ a.release_date | date: 'medium' }}</dd>
-            <dt class="opacity-75">Due date</dt>
-            <dd>{{ a.due_date | date: 'medium' }}</dd>
-            @if (a.late_date) {
-              <dt class="opacity-75">Late date</dt>
-              <dd>{{ a.late_date | date: 'medium' }}</dd>
-            }
-            <dt class="opacity-75">Prompt</dt>
-            <dd>{{ a.prompt }}</dd>
-            @if (a.rubric) {
-              <dt class="opacity-75">Rubric</dt>
-              <dd>{{ a.rubric }}</dd>
-            }
+        <mat-card-content class="pt-6">
+          <dl class="grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt class="opacity-75">Release date</dt>
+              <dd class="mt-1 font-medium">{{ a.release_date | date: dateTimeFormat }}</dd>
+            </div>
+            <div>
+              <dt class="opacity-75">Due date</dt>
+              <dd class="mt-1 font-medium">{{ a.due_date | date: dateTimeFormat }}</dd>
+            </div>
           </dl>
         </mat-card-content>
       </mat-card>
