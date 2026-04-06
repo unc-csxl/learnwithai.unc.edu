@@ -89,6 +89,7 @@ test.describe('activities — student submits to an activity', () => {
 
     // The seeded submission should be visible with its feedback
     await expect(page.getByText('Your Submission')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try Again' })).toBeVisible();
     await expect(
       page.getByText('Dependency injection is when you pass the things', { exact: false }),
     ).toBeVisible();
@@ -105,23 +106,26 @@ test.describe('activities — student submits to an activity', () => {
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
 
-    // The "Submit Again" heading should be present since there's already a submission
-    await expect(page.getByText('Submit Again')).toBeVisible();
+    await page.getByRole('button', { name: 'Try Again' }).click();
+
+    const responseField = page.getByLabel('Your response');
+    await expect(responseField).toHaveValue(/Dependency injection is when you pass/i);
 
     // Fill in a new response
     const responseText =
       'Dependency injection means that instead of a class creating its own dependencies, ' +
       'they are provided from the outside. This makes code more testable and flexible.';
-    await page.getByLabel('Your response').fill(responseText);
+    await responseField.fill(responseText);
 
     // Submit the form
-    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
 
     // Should show success snackbar
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
     // The new submission should appear
     await expect(page.getByText(responseText)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try Again' })).toBeVisible();
   });
 });
 
@@ -238,9 +242,9 @@ test.describe('activities — full instructor-to-student flow', () => {
     await page.getByText('Explain Testing').click();
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
 
-    // Should show prompt, no existing submission
+    // Should show prompt and an empty submission card.
     await expect(page.getByText('Explain why automated testing is important.')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Your Response' })).toBeVisible();
+    await expect(page.getByText('Your Submission')).toBeVisible();
 
     await page
       .getByLabel('Your response')
@@ -279,6 +283,8 @@ test.describe('activities — real-time feedback processing', () => {
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
 
+    await page.getByRole('button', { name: 'Try Again' }).click();
+
     // Submit a new response
     await page
       .getByLabel('Your response')
@@ -286,24 +292,20 @@ test.describe('activities — real-time feedback processing', () => {
         'Dependency injection is a design pattern where objects receive their dependencies ' +
           'from external sources rather than creating them internally.',
       );
-    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
     // After submitting, a processing spinner should appear while the LLM job runs
-    // The spinner may be very brief if the worker processes quickly, so we look for
-    // either the spinner OR the feedback appearing (both indicate the flow works).
-    const feedbackSection = page.getByText('AI Feedback');
     const spinner = page.getByText('Generating feedback');
 
-    // Wait for either the spinner to show up or the feedback to arrive
-    await expect(spinner.or(feedbackSection)).toBeVisible({ timeout: 5000 });
+    await expect(spinner).toBeVisible({ timeout: 5000 });
 
     // Ultimately, AI Feedback should appear when the job completes via WebSocket
-    await expect(feedbackSection).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText('AI Feedback')).toBeVisible({ timeout: 30000 });
 
-    // Some feedback text should be present below the AI Feedback heading
-    const submissionSection = page.getByLabel('Your submission');
-    await expect(submissionSection.getByText('AI Feedback')).toBeVisible();
+    const feedbackSection = page.getByLabel('AI feedback');
+    await expect(feedbackSection.getByText('AI Feedback')).toBeVisible();
+    await expect(spinner).not.toBeVisible({ timeout: 30000 });
   });
 });
 
@@ -364,10 +366,11 @@ test.describe('activities — submission detail with history', () => {
     const courseId = await goToActivities(page, STUDENT_PID);
     await page.getByText(SEEDED_ACTIVITY_TITLE).click();
     await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
+    await page.getByRole('button', { name: 'Try Again' }).click();
     await page
       .getByLabel('Your response')
       .fill('Second attempt: DI means providing dependencies externally.');
-    await page.getByRole('button', { name: 'Submit' }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
     // Now login as instructor and view the activity detail

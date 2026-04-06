@@ -4,60 +4,98 @@
 
 @if (loaded()) {
   @if (activity(); as a) {
-    <mat-card appearance="outlined" class="mb-4">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>assignment</mat-icon>
-        <mat-card-title>{{ a.title }}</mat-card-title>
-        <mat-card-subtitle>Due {{ a.due_date | date: 'medium' }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p class="mt-2">{{ a.prompt }}</p>
-      </mat-card-content>
-    </mat-card>
+    <section class="mb-6 max-w-4xl space-y-3" aria-label="Activity prompt">
+      <p class="text-sm font-medium opacity-70">Due {{ a.due_date | date: dateTimeFormat }}</p>
+      <p class="text-base leading-7 whitespace-pre-wrap">{{ a.prompt }}</p>
+    </section>
+
+    <section class="mb-4" aria-label="Your submission">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>description</mat-icon>
+          <mat-card-title>Your Submission</mat-card-title>
+          @if (activeSubmission(); as sub) {
+            <mat-card-subtitle>
+              Submitted {{ sub.submitted_at | date: dateTimeFormat }}
+            </mat-card-subtitle>
+          }
+        </mat-card-header>
+        <mat-card-content class="mt-2">
+          @if (showSubmissionEditor()) {
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Your response</mat-label>
+                <textarea matInput formControlName="response_text" rows="8"></textarea>
+                <mat-hint>Explain the concept in your own words (minimum 10 characters)</mat-hint>
+              </mat-form-field>
+
+              <div class="flex justify-end">
+                <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
+                  @if (submitting()) {
+                    <span class="inline-flex items-center gap-2">
+                      <mat-spinner diameter="18" />
+                      <span>{{ activeSubmission() ? 'Saving' : 'Submitting' }}</span>
+                    </span>
+                  } @else {
+                    {{ activeSubmission() ? 'Save' : 'Submit' }}
+                  }
+                </button>
+              </div>
+            </form>
+          } @else if (activeSubmission(); as sub) {
+            <div class="space-y-4">
+              <button
+                type="button"
+                class="submission-display-button"
+                (click)="startEditingSubmission()"
+                [disabled]="submitting()"
+                aria-label="Edit your submission"
+              >
+                <span class="block whitespace-pre-wrap">{{ sub.response_text }}</span>
+              </button>
+
+              <p class="text-sm opacity-70">Click your saved response to edit and resubmit.</p>
+
+              <div class="flex justify-end">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="startEditingSubmission()"
+                  [disabled]="submitting()"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </section>
 
     @if (activeSubmission(); as sub) {
-      <section class="mb-4" aria-label="Your submission">
+      <section aria-label="AI feedback">
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-icon mat-card-avatar>description</mat-icon>
-            <mat-card-title>Your Submission</mat-card-title>
-            <mat-card-subtitle>Submitted {{ sub.submitted_at | date: 'medium' }}</mat-card-subtitle>
+            <mat-icon mat-card-avatar>smart_toy</mat-icon>
+            <mat-card-title>AI Feedback</mat-card-title>
           </mat-card-header>
           <mat-card-content class="mt-2">
-            <p class="whitespace-pre-wrap">{{ sub.response_text }}</p>
-
             @if (sub.feedback) {
-              <h3 class="mt-4 text-sm font-medium opacity-75">AI Feedback</h3>
-              <p class="mt-1 whitespace-pre-wrap">{{ sub.feedback }}</p>
-            } @else if (sub.job?.status === 'pending' || sub.job?.status === 'processing') {
-              <div class="mt-4 flex items-center gap-2">
-                <mat-spinner diameter="20" />
-                <span class="text-sm opacity-75">Generating feedback&hellip;</span>
+              <p class="whitespace-pre-wrap">{{ sub.feedback }}</p>
+            } @else if (feedbackPending()) {
+              <div class="feedback-loading" role="status" aria-live="polite">
+                <div class="feedback-loading__spinner" aria-hidden="true">
+                  <mat-spinner diameter="88" />
+                  <span class="feedback-loading__label">Generating feedback</span>
+                </div>
+                <p class="feedback-loading__message">The AI is reviewing your latest submission.</p>
               </div>
+            } @else {
+              <p class="text-sm opacity-75">Feedback is not available yet.</p>
             }
           </mat-card-content>
         </mat-card>
       </section>
     }
-
-    <section aria-label="Submit response">
-      <h2 class="mb-2 text-lg font-medium">
-        {{ activeSubmission() ? 'Submit Again' : 'Your Response' }}
-      </h2>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Your response</mat-label>
-          <textarea matInput formControlName="response_text" rows="6"></textarea>
-          <mat-hint>Explain the concept in your own words (minimum 10 characters)</mat-hint>
-        </mat-form-field>
-        <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
-          @if (submitting()) {
-            <mat-spinner diameter="20" />
-          } @else {
-            Submit
-          }
-        </button>
-      </form>
-    </section>
   }
 }

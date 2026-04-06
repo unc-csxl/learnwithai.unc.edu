@@ -65,9 +65,13 @@ test.describe('course settings', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     await page.waitForURL('**/courses/*/dashboard');
 
-    // Sidebar should immediately reflect the updated course number and name
+    // Sidebar should immediately reflect the updated course number.
     await expect(sidenav).toContainText('COMP524');
-    await expect(sidenav).toContainText('Advanced Software Engineering');
+
+    // The course list should reflect the updated name after returning to courses.
+    await page.getByRole('link', { name: 'Courses' }).click();
+    await page.waitForURL('**/courses');
+    await expect(page.getByText('Advanced Software Engineering')).toBeVisible();
   });
 
   test('student cannot see course settings link', async ({ page }) => {
@@ -77,7 +81,7 @@ test.describe('course settings', () => {
 
     // Navigate to the course
     await page.getByText('COMP423').click();
-    await page.waitForURL('**/courses/*/activities');
+    await page.waitForURL('**/courses/*/student');
 
     // Student view should not show Course Settings
     const sidenav = page.locator('mat-sidenav');

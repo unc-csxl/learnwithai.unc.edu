@@ -1,11 +1,12 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  computed,
+  EffectRef,
   inject,
   signal,
   OnDestroy,
   effect,
-  DestroyRef,
   Injector,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -41,6 +42,7 @@ import { IyowActivity, IyowSubmission } from '../../../../api/models';
     MatProgressSpinnerModule,
   ],
   templateUrl: './iyow-submit.component.html',
+  styleUrl: './iyow-submit.component.scss',
 })
 export class IyowSubmit implements OnDestroy {
   private activityService = inject(ActivityService);
@@ -52,15 +54,27 @@ export class IyowSubmit implements OnDestroy {
   private jobUpdateService = inject(JobUpdateService);
   private layoutNavigation = inject(LayoutNavigationService);
   private injector = inject(Injector);
-  private destroyRef = inject(DestroyRef);
+  private jobWatcher: EffectRef | null = null;
 
   protected readonly courseId: number;
   protected readonly activityId: number;
+  protected readonly dateTimeFormat = 'MMM d, y, h:mm a';
   protected readonly activity = signal<IyowActivity | null>(null);
   protected readonly activeSubmission = signal<IyowSubmission | null>(null);
+  protected readonly editingSubmission = signal(false);
   protected readonly loaded = signal(false);
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal('');
+  protected readonly showSubmissionEditor = computed(
+    () => this.editingSubmission() || this.activeSubmission() === null,
+  );
+  protected readonly feedbackPending = computed(() => {
+    const submission = this.activeSubmission();
+    const status = submission?.job?.status;
+    return Boolean(
+      submission && !submission.feedback && (status === 'pending' || status === 'processing'),
+    );
+  });
 
   protected readonly form = this.fb.nonNullable.group({
     response_text: ['', [Validators.required, Validators.minLength(10)]],
@@ -74,7 +88,21 @@ export class IyowSubmit implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopWatchingJob();
     this.jobUpdateService.unsubscribe(this.courseId);
+  }
+
+  protected startEditingSubmission(): void {
+    const submission = this.activeSubmission();
+    if (!submission) {
+      return;
+    }
+
+    this.form.controls.response_text.setValue(submission.response_text);
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+    this.errorMessage.set('');
+    this.editingSubmission.set(true);
   }
 
   protected async onSubmit(): Promise<void> {
@@ -89,12 +117,10 @@ export class IyowSubmit implements OnDestroy {
         this.activityId,
         response_text,
       );
-      this.activeSubmission.set(submission);
-      this.form.reset();
+      this.setActiveSubmission(submission);
+      this.editingSubmission.set(false);
+      this.form.reset({ response_text: '' });
       this.successSnackbar.open('Response submitted!');
-      if (submission.job && submission.job.status !== 'completed') {
-        this.watchJob(submission.job.id);
-      }
     } catch {
       this.errorMessage.set('Failed to submit response.');
     } finally {
@@ -113,7 +139,7 @@ export class IyowSubmit implements OnDestroy {
       const isStaff = course?.membership.type !== 'student';
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
-      this.activeSubmission.set(active);
+      this.setActiveSubmission(active);
       this.layoutNavigation.setContextSection(
         buildActivityContextNav({
           courseId: this.courseId,
@@ -122,9 +148,6 @@ export class IyowSubmit implements OnDestroy {
           role: isStaff ? 'staff' : 'student',
         }),
       );
-      if (active?.job && (active.job.status === 'pending' || active.job.status === 'processing')) {
-        this.watchJob(active.job.id);
-      }
     } catch {
       this.errorMessage.set('Failed to load activity.');
       this.layoutNavigation.clearContext();
@@ -134,24 +157,42 @@ export class IyowSubmit implements OnDestroy {
   }
 
   private watchJob(jobId: number): void {
+    this.stopWatchingJob();
     const jobSignal = this.jobUpdateService.updateForJob(jobId);
-    effect(
+    this.jobWatcher = effect(
       () => {
         const update = jobSignal();
         if (update?.status === 'completed' || update?.status === 'failed') {
-          this.refreshActiveSubmission();
+          this.stopWatchingJob();
+          void this.refreshActiveSubmission();
         }
       },
-      { injector: this.injector, manualCleanup: true },
+      { injector: this.injector },
     );
   }
 
   private async refreshActiveSubmission(): Promise<void> {
     try {
       const active = await this.activityService.getActiveSubmission(this.courseId, this.activityId);
-      this.activeSubmission.set(active);
+      this.setActiveSubmission(active);
     } catch {
       /* swallow */
     }
+  }
+
+  private setActiveSubmission(submission: IyowSubmission | null): void {
+    this.activeSubmission.set(submission);
+    const status = submission?.job?.status;
+    if (submission?.job && (status === 'pending' || status === 'processing')) {
+      this.watchJob(submission.job.id);
+      return;
+    }
+
+    this.stopWatchingJob();
+  }
+
+  private stopWatchingJob(): void {
+    this.jobWatcher?.destroy();
+    this.jobWatcher = null;
   }
 }

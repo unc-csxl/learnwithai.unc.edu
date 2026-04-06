@@ -1,0 +1,55 @@
+.submission-display-button {
+  display: block;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  background: none;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.submission-display-button:hover {
+  border-color: var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.submission-display-button:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-color: var(--mat-sys-primary);
+}
+
+.feedback-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 1rem;
+  text-align: center;
+}
+
+.feedback-loading__spinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5.5rem;
+  min-width: 5.5rem;
+}
+
+.feedback-loading__label {
+  position: absolute;
+  max-width: 3.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.feedback-loading__message {
+  max-width: 24rem;
+  opacity: 0.75;
+}

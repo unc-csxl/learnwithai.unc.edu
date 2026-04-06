@@ -123,6 +123,19 @@ describe('IyowSubmit', () => {
     expect(fixture.nativeElement.textContent).toContain('Explain X');
   });
 
+  it('should render the initial submission editor inside the submission card', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const content = fixture.nativeElement.textContent;
+
+    expect(content).toContain('Your Submission');
+    expect(content).not.toContain('Submitted');
+    expect(content).not.toContain('AI Feedback');
+    expect(fixture.nativeElement.querySelector('textarea')).not.toBeNull();
+  });
+
   it('should show preview and test context for staff users', async () => {
     const { fixture, mockCourseService, mockLayoutNavigation } = setup();
     mockCourseService.getMyCourses.mockResolvedValueOnce([
@@ -190,6 +203,9 @@ describe('IyowSubmit', () => {
       (mockActivityService as { submitIyow: ReturnType<typeof vi.fn> }).submitIyow,
     ).toHaveBeenCalledOnce();
     expect(mockSnackbar.open).toHaveBeenCalledWith('Response submitted!');
+    expect(fixture.nativeElement.textContent).toContain('My answer');
+    expect(fixture.nativeElement.textContent).toContain('Try Again');
+    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
   });
 
   it('should show error on submission failure', async () => {
@@ -256,7 +272,88 @@ describe('IyowSubmit', () => {
     await flush();
     fixture.detectChanges();
 
+    expect(fixture.nativeElement.textContent).toContain('Your Submission');
+    expect(fixture.nativeElement.textContent).toContain('Submitted');
+    expect(fixture.nativeElement.textContent).toContain('Try Again');
+    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('AI Feedback');
     expect(fixture.nativeElement.textContent).toContain('Good work!');
+  });
+
+  it('should let the student edit a saved submission from the response text', async () => {
+    const existingResponse = 'Dependency injection is useful because dependencies are provided.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 100,
+          response_text: existingResponse,
+          feedback: 'Good work!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 42, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const editButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Edit your submission"]',
+    ) as HTMLButtonElement;
+    editButton.click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    expect(textarea).not.toBeNull();
+    expect(textarea.value).toContain(existingResponse);
+    expect(fixture.nativeElement.textContent).toContain('Save');
+  });
+
+  it('should let the student edit a saved submission from the try again button', async () => {
+    const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 101,
+          response_text: existingResponse,
+          feedback: 'Keep going!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 43, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const tryAgainButton = fixture.nativeElement.querySelector(
+      'button[mat-stroked-button]',
+    ) as HTMLButtonElement;
+    tryAgainButton.click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    expect(textarea.value).toContain(existingResponse);
+    expect(fixture.nativeElement.textContent).toContain('Save');
+  });
+
+  it('should ignore edit requests when there is no active submission', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      startEditingSubmission: () => void;
+      editingSubmission: () => boolean;
+    };
+
+    component.startEditingSubmission();
+
+    expect(component.editingSubmission()).toBe(false);
   });
 
   it('should watch pending active submission job and refresh on complete', async () => {
@@ -378,6 +475,49 @@ describe('IyowSubmit', () => {
     expect(button.disabled).toBe(true);
 
     resolveSubmit({ id: 100, response_text: 'x', feedback: null, job: null });
+    await flush();
+    fixture.detectChanges();
+  });
+
+  it('should show saving state while resubmitting an existing response', async () => {
+    let resolveSubmit!: (v: unknown) => void;
+    const existingResponse = 'Dependency injection allows dependencies to be provided.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 100,
+          response_text: existingResponse,
+          feedback: 'Prior feedback',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 42, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+      submitIyow: vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveSubmit = resolve;
+          }),
+      ),
+    };
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const tryAgainButton = fixture.nativeElement.querySelector(
+      'button[mat-stroked-button]',
+    ) as HTMLButtonElement;
+    tryAgainButton.click();
+    fixture.detectChanges();
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Saving');
+
+    resolveSubmit({ id: 101, response_text: existingResponse, feedback: null, job: null });
     await flush();
     fixture.detectChanges();
   });
