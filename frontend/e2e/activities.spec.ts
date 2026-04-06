@@ -63,7 +63,7 @@ test.describe('activities — instructor creates an IYOW activity', () => {
 });
 
 test.describe('activities — student submits to an activity', () => {
-  test.beforeAll(async ({ request }) => {
+  test.beforeEach(async ({ request }) => {
     await request.post('/api/dev/reset-db');
   });
 
@@ -113,7 +113,7 @@ test.describe('activities — student submits to an activity', () => {
 
     // Fill in a new response
     const responseText =
-      'Dependency injection means that instead of a class creating its own dependencies, ' +
+      '**Dependency injection** means that instead of a class creating its own dependencies, ' +
       'they are provided from the outside. This makes code more testable and flexible.';
     await responseField.fill(responseText);
 
@@ -124,7 +124,33 @@ test.describe('activities — student submits to an activity', () => {
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
     // The new submission should appear
-    await expect(page.getByText(responseText)).toBeVisible();
+    const submissionSection = page.getByLabel('Your submission');
+    await expect(submissionSection.locator('strong')).toContainText('Dependency injection');
+    await expect(page.getByRole('button', { name: 'Try Again' })).toBeVisible();
+  });
+
+  test('student can cancel a dirty edit and return to the saved submission view', async ({
+    page,
+  }) => {
+    const courseId = await goToActivities(page, STUDENT_PID);
+
+    await page.getByText(SEEDED_ACTIVITY_TITLE).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/*/submit`);
+
+    await page.getByRole('button', { name: 'Try Again' }).click();
+    await page.getByLabel('Your response').fill('Edited response that should be discarded.');
+
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('Discard your unsaved changes?');
+      await dialog.accept();
+    });
+
+    await page.getByRole('button', { name: 'Cancel' }).click();
+
+    await expect(page.getByLabel('Your response')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Your submission' })).toContainText(
+      'Dependency injection is when you pass the things',
+    );
     await expect(page.getByRole('button', { name: 'Try Again' })).toBeVisible();
   });
 });
@@ -296,16 +322,18 @@ test.describe('activities — real-time feedback processing', () => {
     await expect(page.getByText('Response submitted!')).toBeVisible();
 
     // After submitting, a processing spinner should appear while the LLM job runs
-    const spinner = page.getByText('Generating feedback');
+    const status = page.getByRole('status');
 
-    await expect(spinner).toBeVisible({ timeout: 5000 });
+    await expect(status).toContainText('The AI is reviewing your latest submission.', {
+      timeout: 5000,
+    });
 
     // Ultimately, AI Feedback should appear when the job completes via WebSocket
     await expect(page.getByText('AI Feedback')).toBeVisible({ timeout: 30000 });
 
     const feedbackSection = page.getByLabel('AI feedback');
     await expect(feedbackSection.getByText('AI Feedback')).toBeVisible();
-    await expect(spinner).not.toBeVisible({ timeout: 30000 });
+    await expect(status).not.toBeVisible({ timeout: 30000 });
   });
 });
 

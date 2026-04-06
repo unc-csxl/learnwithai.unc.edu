@@ -13,11 +13,10 @@ import {
 export function buildActivityContextNav(options: {
   courseId: number;
   activityId: number;
-  activityTitle: string;
   role: 'staff' | 'student';
   extraGroups?: LayoutNavigationGroup[];
 }): LayoutNavigationSection {
-  const { courseId, activityId, activityTitle, role, extraGroups } = options;
+  const { courseId, activityId, role, extraGroups } = options;
   const base = `/courses/${courseId}/activities/${activityId}`;
   const isStaff = role === 'staff';
 
@@ -27,8 +26,8 @@ export function buildActivityContextNav(options: {
       ? [
           {
             route: base,
-            label: activityTitle,
-            description: 'Open this activity overview',
+            label: 'Submissions',
+            description: 'Open this activity submissions view',
             icon: 'assignment',
           },
           {
@@ -47,8 +46,8 @@ export function buildActivityContextNav(options: {
       : [
           {
             route: `${base}/submit`,
-            label: activityTitle,
-            description: 'Open this student activity',
+            label: 'Submissions',
+            description: 'Open your submission view',
             icon: 'assignment',
           },
         ],

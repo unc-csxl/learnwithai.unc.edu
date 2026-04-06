@@ -26,6 +26,7 @@ import { CourseService } from '../../../course.service';
 import { ActivityService } from '../activity.service';
 import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity, IyowSubmission } from '../../../../api/models';
+import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
 
 /** Student view for submitting an IYOW response and viewing feedback. */
 @Component({
@@ -40,6 +41,7 @@ import { IyowActivity, IyowSubmission } from '../../../../api/models';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MarkdownToHtmlPipe,
   ],
   templateUrl: './iyow-submit.component.html',
   styleUrl: './iyow-submit.component.scss',
@@ -105,6 +107,23 @@ export class IyowSubmit implements OnDestroy {
     this.editingSubmission.set(true);
   }
 
+  protected cancelEditingSubmission(): void {
+    const submission = this.activeSubmission();
+    if (!submission || !this.editingSubmission()) {
+      return;
+    }
+
+    if (this.form.dirty && !globalThis.confirm('Discard your unsaved changes?')) {
+      return;
+    }
+
+    this.form.reset({ response_text: submission.response_text });
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+    this.errorMessage.set('');
+    this.editingSubmission.set(false);
+  }
+
   protected async onSubmit(): Promise<void> {
     if (this.form.invalid) return;
 
@@ -144,7 +163,6 @@ export class IyowSubmit implements OnDestroy {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
-          activityTitle: activity.title,
           role: isStaff ? 'staff' : 'student',
         }),
       );

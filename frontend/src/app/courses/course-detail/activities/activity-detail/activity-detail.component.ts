@@ -132,7 +132,6 @@ export class ActivityDetail implements OnDestroy {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
-          activityTitle: activity.title,
           role: 'staff',
         }),
       );

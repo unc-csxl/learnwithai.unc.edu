@@ -1,7 +1,7 @@
 import { buildActivityContextNav } from './activity-nav';
 
 describe('buildActivityContextNav', () => {
-  const baseOptions = { courseId: 1, activityId: 10, activityTitle: 'Test IYOW' };
+  const baseOptions = { courseId: 1, activityId: 10 };
 
   it('should produce 3 sibling items for staff', () => {
     const result = buildActivityContextNav({ ...baseOptions, role: 'staff' });
@@ -12,7 +12,7 @@ describe('buildActivityContextNav', () => {
     const items = result.groups[0].items;
     expect(items).toHaveLength(3);
     expect(items[0]).toEqual(
-      expect.objectContaining({ route: '/courses/1/activities/10', label: 'Test IYOW' }),
+      expect.objectContaining({ route: '/courses/1/activities/10', label: 'Submissions' }),
     );
     expect(items[1]).toEqual(
       expect.objectContaining({ route: '/courses/1/activities/10/edit', label: 'Activity Editor' }),
@@ -34,7 +34,7 @@ describe('buildActivityContextNav', () => {
     const items = result.groups[0].items;
     expect(items).toHaveLength(1);
     expect(items[0]).toEqual(
-      expect.objectContaining({ route: '/courses/1/activities/10/submit', label: 'Test IYOW' }),
+      expect.objectContaining({ route: '/courses/1/activities/10/submit', label: 'Submissions' }),
     );
   });
 

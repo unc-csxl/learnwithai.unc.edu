@@ -29,7 +29,17 @@
                 <mat-hint>Explain the concept in your own words (minimum 10 characters)</mat-hint>
               </mat-form-field>
 
-              <div class="flex justify-end">
+              <div class="flex flex-wrap justify-end gap-3">
+                @if (activeSubmission()) {
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="cancelEditingSubmission()"
+                    [disabled]="submitting()"
+                  >
+                    Cancel
+                  </button>
+                }
                 <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
                   @if (submitting()) {
                     <span class="inline-flex items-center gap-2">
@@ -51,10 +61,11 @@
                 [disabled]="submitting()"
                 aria-label="Edit your submission"
               >
-                <span class="block whitespace-pre-wrap">{{ sub.response_text }}</span>
+                <span
+                  class="markdown-content markdown-content--interactive block"
+                  [innerHTML]="sub.response_text | markdownToHtml"
+                ></span>
               </button>
-
-              <p class="text-sm opacity-70">Click your saved response to edit and resubmit.</p>
 
               <div class="flex justify-end">
                 <button
@@ -79,14 +90,13 @@
             <mat-icon mat-card-avatar>smart_toy</mat-icon>
             <mat-card-title>AI Feedback</mat-card-title>
           </mat-card-header>
-          <mat-card-content class="mt-2">
+          <mat-card-content class="feedback-card__content">
             @if (sub.feedback) {
-              <p class="whitespace-pre-wrap">{{ sub.feedback }}</p>
+              <div class="markdown-content" [innerHTML]="sub.feedback | markdownToHtml"></div>
             } @else if (feedbackPending()) {
               <div class="feedback-loading" role="status" aria-live="polite">
                 <div class="feedback-loading__spinner" aria-hidden="true">
                   <mat-spinner diameter="88" />
-                  <span class="feedback-loading__label">Generating feedback</span>
                 </div>
                 <p class="feedback-loading__message">The AI is reviewing your latest submission.</p>
               </div>

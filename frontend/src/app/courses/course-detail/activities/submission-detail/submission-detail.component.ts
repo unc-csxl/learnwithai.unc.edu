@@ -20,6 +20,7 @@ import { LayoutNavigationService } from '../../../../layout/layout-navigation.se
 import { ActivityService } from '../activity.service';
 import { buildActivityContextNav } from '../activity-nav';
 import { IyowActivity, IyowSubmission } from '../../../../api/models';
+import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
 
 /** Instructor view showing a single student's submission detail. */
 @Component({
@@ -32,6 +33,7 @@ import { IyowActivity, IyowSubmission } from '../../../../api/models';
     MatProgressSpinnerModule,
     MatMenuModule,
     MatButtonModule,
+    MarkdownToHtmlPipe,
   ],
   templateUrl: './submission-detail.component.html',
 })
@@ -46,6 +48,7 @@ export class SubmissionDetail implements OnDestroy {
   protected readonly courseId: number;
   protected readonly activityId: number;
   protected readonly studentPid: number;
+  protected readonly dateTimeFormat = 'MMM d, y, h:mm a';
   protected readonly activity = signal<IyowActivity | null>(null);
   protected readonly submissions = signal<IyowSubmission[]>([]);
   protected readonly loaded = signal(false);
@@ -96,7 +99,6 @@ export class SubmissionDetail implements OnDestroy {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
-          activityTitle: activity.title,
           role: 'staff',
           extraGroups: [
             {

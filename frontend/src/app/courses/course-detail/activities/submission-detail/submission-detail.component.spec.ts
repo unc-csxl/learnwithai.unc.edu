@@ -104,7 +104,8 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Test IYOW — Student 111');
-    expect(fixture.nativeElement.textContent).toContain('Explain X');
+    expect(fixture.nativeElement.textContent).toContain('Release date');
+    expect(fixture.nativeElement.textContent).toContain('Due date');
   });
 
   it('should subscribe to job updates on create and unsubscribe on destroy', () => {
@@ -165,7 +166,10 @@ describe('SubmissionDetail', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Must be clear');
+    expect(fixture.nativeElement.textContent).not.toContain('Prompt');
+    expect(fixture.nativeElement.textContent).not.toContain('Explain X');
+    expect(fixture.nativeElement.textContent).not.toContain('Rubric');
+    expect(fixture.nativeElement.textContent).not.toContain('Must be clear');
   });
 
   it('should show spinner for pending submission and refresh on job complete', async () => {
@@ -236,7 +240,7 @@ describe('SubmissionDetail', () => {
           expect.objectContaining({
             label: 'Current activity',
             items: expect.arrayContaining([
-              expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
+              expect.objectContaining({ label: 'Submissions', icon: 'assignment' }),
               expect.objectContaining({ label: 'Activity Editor' }),
               expect.objectContaining({ label: 'Preview & Test' }),
             ]),
@@ -270,7 +274,7 @@ describe('SubmissionDetail', () => {
     expect(comp.selectedPriorSub()).toBeNull();
   });
 
-  it('should hide rubric row when rubric is null', async () => {
+  it('should keep the activity information card limited to release and due dates', async () => {
     const noRubricActivity = { ...baseActivity, rubric: null };
     const mockActivityService = {
       get: vi.fn(() => Promise.resolve(noRubricActivity)),
@@ -280,6 +284,9 @@ describe('SubmissionDetail', () => {
     await flush();
     fixture.detectChanges();
 
+    expect(fixture.nativeElement.textContent).toContain('Release date');
+    expect(fixture.nativeElement.textContent).toContain('Due date');
+    expect(fixture.nativeElement.textContent).not.toContain('Prompt');
     expect(fixture.nativeElement.textContent).not.toContain('Rubric');
   });
 });

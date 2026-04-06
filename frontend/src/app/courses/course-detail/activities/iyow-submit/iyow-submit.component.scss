@@ -22,6 +22,54 @@
   border-color: var(--mat-sys-primary);
 }
 
+.markdown-content {
+  overflow-wrap: anywhere;
+}
+
+:host ::ng-deep .markdown-content > :first-child {
+  margin-top: 0;
+}
+
+:host ::ng-deep .markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .markdown-content p,
+:host ::ng-deep .markdown-content ul,
+:host ::ng-deep .markdown-content ol,
+:host ::ng-deep .markdown-content pre,
+:host ::ng-deep .markdown-content blockquote {
+  margin-block: 0.5rem;
+}
+
+:host ::ng-deep .markdown-content ul,
+:host ::ng-deep .markdown-content ol {
+  padding-left: 1.5rem;
+}
+
+:host ::ng-deep .markdown-content pre,
+:host ::ng-deep .markdown-content code {
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+:host ::ng-deep .markdown-content pre {
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+}
+
+:host ::ng-deep .markdown-content code {
+  padding-inline: 0.25rem;
+}
+
+.markdown-content--interactive {
+  pointer-events: none;
+}
+
+.feedback-card__content {
+  margin-top: 0.25rem;
+}
+
 .feedback-loading {
   display: flex;
   flex-direction: column;
@@ -38,15 +86,6 @@
   justify-content: center;
   min-height: 5.5rem;
   min-width: 5.5rem;
-}
-
-.feedback-loading__label {
-  position: absolute;
-  max-width: 3.5rem;
-  font-size: 0.625rem;
-  font-weight: 600;
-  line-height: 1.2;
-  text-align: center;
 }
 
 .feedback-loading__message {

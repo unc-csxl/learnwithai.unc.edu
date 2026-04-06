@@ -114,7 +114,10 @@ describe('IyowSubmit', () => {
         groups: expect.arrayContaining([
           expect.objectContaining({
             items: expect.arrayContaining([
-              expect.objectContaining({ route: '/courses/1/activities/10/submit' }),
+              expect.objectContaining({
+                route: '/courses/1/activities/10/submit',
+                label: 'Submissions',
+              }),
             ]),
           }),
         ]),
@@ -161,7 +164,7 @@ describe('IyowSubmit', () => {
         groups: expect.arrayContaining([
           expect.objectContaining({
             items: expect.arrayContaining([
-              expect.objectContaining({ route: '/courses/1/activities/10' }),
+              expect.objectContaining({ route: '/courses/1/activities/10', label: 'Submissions' }),
               expect.objectContaining({ label: 'Activity Editor' }),
               expect.objectContaining({ label: 'Preview & Test' }),
             ]),
@@ -260,8 +263,8 @@ describe('IyowSubmit', () => {
       getActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 100,
-          response_text: 'My answer',
-          feedback: 'Good work!',
+          response_text: '**My answer**',
+          feedback: '- Good work!',
           is_active: true,
           submitted_at: '2025-03-01T00:00:00Z',
           job: { id: 42, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
@@ -277,7 +280,8 @@ describe('IyowSubmit', () => {
     expect(fixture.nativeElement.textContent).toContain('Try Again');
     expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('AI Feedback');
-    expect(fixture.nativeElement.textContent).toContain('Good work!');
+    expect(fixture.nativeElement.querySelector('strong')?.textContent).toContain('My answer');
+    expect(fixture.nativeElement.querySelector('li')?.textContent).toContain('Good work!');
   });
 
   it('should let the student edit a saved submission from the response text', async () => {
@@ -339,6 +343,144 @@ describe('IyowSubmit', () => {
     const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
     expect(textarea.value).toContain(existingResponse);
     expect(fixture.nativeElement.textContent).toContain('Save');
+    expect(fixture.nativeElement.textContent).toContain('Cancel');
+  });
+
+  it('should cancel editing without a confirmation when there are no changes', async () => {
+    const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 101,
+          response_text: existingResponse,
+          feedback: 'Keep going!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 43, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const confirmSpy = vi.spyOn(globalThis, 'confirm');
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const tryAgainButton = fixture.nativeElement.querySelector(
+      'button[mat-stroked-button]',
+    ) as HTMLButtonElement;
+    tryAgainButton.click();
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    );
+    const cancelButton = buttons.find((button) =>
+      button.textContent?.includes('Cancel'),
+    ) as HTMLButtonElement;
+    cancelButton.click();
+    fixture.detectChanges();
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('should confirm before discarding dirty edits', async () => {
+    const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 101,
+          response_text: existingResponse,
+          feedback: 'Keep going!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 43, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const confirmSpy = vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const tryAgainButton = fixture.nativeElement.querySelector(
+      'button[mat-stroked-button]',
+    ) as HTMLButtonElement;
+    tryAgainButton.click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    textarea.value = 'Changed answer';
+    textarea.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    );
+    const cancelButton = buttons.find((button) =>
+      button.textContent?.includes('Cancel'),
+    ) as HTMLButtonElement;
+    cancelButton.click();
+    fixture.detectChanges();
+
+    expect(confirmSpy).toHaveBeenCalledWith('Discard your unsaved changes?');
+    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain(existingResponse);
+
+    confirmSpy.mockRestore();
+  });
+
+  it('should keep editing when discard confirmation is rejected', async () => {
+    const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 101,
+          response_text: existingResponse,
+          feedback: 'Keep going!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 43, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const confirmSpy = vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const tryAgainButton = fixture.nativeElement.querySelector(
+      'button[mat-stroked-button]',
+    ) as HTMLButtonElement;
+    tryAgainButton.click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    textarea.value = 'Changed answer';
+    textarea.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    );
+    const cancelButton = buttons.find((button) =>
+      button.textContent?.includes('Cancel'),
+    ) as HTMLButtonElement;
+    cancelButton.click();
+    fixture.detectChanges();
+
+    expect(confirmSpy).toHaveBeenCalledWith('Discard your unsaved changes?');
+    expect(fixture.nativeElement.querySelector('textarea')).not.toBeNull();
+    expect((fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement).value).toBe(
+      'Changed answer',
+    );
+
+    confirmSpy.mockRestore();
   });
 
   it('should ignore edit requests when there is no active submission', async () => {
@@ -354,6 +496,39 @@ describe('IyowSubmit', () => {
     component.startEditingSubmission();
 
     expect(component.editingSubmission()).toBe(false);
+  });
+
+  it('should ignore cancel requests when edit mode is not active', async () => {
+    const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
+    const mockActivityService = {
+      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getActiveSubmission: vi.fn(() =>
+        Promise.resolve({
+          id: 101,
+          response_text: existingResponse,
+          feedback: 'Keep going!',
+          is_active: true,
+          submitted_at: '2025-03-01T00:00:00Z',
+          job: { id: 43, status: 'completed', completed_at: '2025-03-01T01:00:00Z' },
+        }),
+      ),
+    };
+    const confirmSpy = vi.spyOn(globalThis, 'confirm');
+    const { fixture } = setup({ activityService: mockActivityService });
+    await flush();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      cancelEditingSubmission: () => void;
+      editingSubmission: () => boolean;
+    };
+
+    component.cancelEditingSubmission();
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(component.editingSubmission()).toBe(false);
+
+    confirmSpy.mockRestore();
   });
 
   it('should watch pending active submission job and refresh on complete', async () => {
@@ -381,8 +556,10 @@ describe('IyowSubmit', () => {
     await flush();
     fixture.detectChanges();
 
-    // Should show spinner for pending
-    expect(fixture.nativeElement.textContent).toContain('Generating feedback');
+    expect(fixture.nativeElement.textContent).toContain(
+      'The AI is reviewing your latest submission.',
+    );
+    expect(fixture.nativeElement.textContent).not.toContain('Generating feedback');
 
     // Simulate job completing
     jobSignals.get(77)!.set({ status: 'completed' });

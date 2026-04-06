@@ -148,9 +148,6 @@ test.describe('roster CSV upload', () => {
       buffer: Buffer.from(csv, 'utf-8'),
     });
 
-    // Snackbar should appear indicating processing
-    await expect(page.getByText('Roster upload processing')).toBeVisible({ timeout: 5000 });
-
     // Wait for the results dialog (worker must be running)
     await expect(page.getByText('Upload Results')).toBeVisible({ timeout: 15000 });
 

@@ -198,7 +198,7 @@ describe('EditIyow', () => {
           expect.objectContaining({
             label: 'Current activity',
             items: expect.arrayContaining([
-              expect.objectContaining({ label: 'Test IYOW', icon: 'assignment' }),
+              expect.objectContaining({ label: 'Submissions', icon: 'assignment' }),
               expect.objectContaining({ label: 'Activity Editor' }),
               expect.objectContaining({ label: 'Preview & Test' }),
             ]),

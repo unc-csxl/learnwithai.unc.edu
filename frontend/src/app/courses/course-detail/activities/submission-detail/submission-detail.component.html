@@ -6,19 +6,16 @@
   @if (activity(); as a) {
     <section class="mb-6" aria-label="Activity information">
       <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>assignment</mat-icon>
-          <mat-card-title>{{ a.title }}</mat-card-title>
-          <mat-card-subtitle>IYOW Activity</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <dt class="opacity-75">Prompt</dt>
-            <dd>{{ a.prompt }}</dd>
-            @if (a.rubric) {
-              <dt class="opacity-75">Rubric</dt>
-              <dd>{{ a.rubric }}</dd>
-            }
+        <mat-card-content class="pt-6">
+          <dl class="grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt class="opacity-75">Release date</dt>
+              <dd class="mt-1 font-medium">{{ a.release_date | date: dateTimeFormat }}</dd>
+            </div>
+            <div>
+              <dt class="opacity-75">Due date</dt>
+              <dd class="mt-1 font-medium">{{ a.due_date | date: dateTimeFormat }}</dd>
+            </div>
           </dl>
         </mat-card-content>
       </mat-card>
@@ -42,10 +39,10 @@
           </mat-card-header>
           <mat-card-content class="mt-2">
             <p class="text-sm opacity-75">Response:</p>
-            <p class="whitespace-pre-wrap">{{ sub.response_text }}</p>
+            <div class="break-words" [innerHTML]="sub.response_text | markdownToHtml"></div>
             @if (sub.feedback) {
               <p class="mt-3 text-sm opacity-75">Feedback:</p>
-              <p class="whitespace-pre-wrap">{{ sub.feedback }}</p>
+              <div class="break-words" [innerHTML]="sub.feedback | markdownToHtml"></div>
             } @else if (sub.job?.status === 'pending' || sub.job?.status === 'processing') {
               <div class="mt-3 flex items-center gap-2">
                 <mat-spinner diameter="20" />
