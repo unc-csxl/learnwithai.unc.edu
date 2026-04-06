@@ -177,44 +177,73 @@ describe('Layout', () => {
     const { fixture } = setup({
       authenticated: true,
       section: {
-        label: 'Instructor view',
-        title: 'COMP423',
-        subtitle: 'Spring 2026 - Section 001',
-        items: [
+        groups: [
           {
-            route: '/courses/1/dashboard',
-            label: 'Dashboard',
-            description: 'Course overview and quick links',
-            icon: 'dashboard',
+            label: 'Course',
+            items: [
+              {
+                route: '/courses/1/dashboard',
+                label: 'COMP423',
+                subtitle: 'Spring 2026 - Section 001',
+                description: 'Course overview and quick links',
+                icon: 'dashboard',
+              },
+            ],
           },
         ],
       },
     });
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Instructor view');
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Course');
     expect(el.querySelector('mat-sidenav')?.textContent).toContain('COMP423');
-    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Dashboard');
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Spring 2026 - Section 001');
   });
 
   it('should render contextual navigation items without optional metadata', () => {
     const { fixture } = setup({
       authenticated: true,
       section: {
-        label: 'Instructor view',
-        items: [
+        groups: [
           {
-            route: '/courses/1/settings',
-            label: 'Course Settings',
-            icon: 'settings',
+            items: [
+              {
+                route: '/courses/1/settings',
+                label: 'Course Settings',
+                icon: 'settings',
+              },
+            ],
           },
         ],
       },
     });
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('.context-nav-title')).toBeFalsy();
-    expect(el.querySelector('.context-nav-subtitle')).toBeFalsy();
-    expect(el.querySelector('[matlistitemline]')).toBeFalsy();
+    expect(el.querySelector('.context-nav-label')).toBeFalsy();
+    expect(el.querySelector('.context-nav-item-subtitle')).toBeFalsy();
     expect(el.querySelector('mat-sidenav')?.textContent).toContain('Course Settings');
+  });
+
+  it('should render subtree course links for nested routes', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      section: {
+        groups: [
+          {
+            label: 'Course',
+            items: [
+              {
+                route: '/courses/1/activities',
+                label: 'Student Activities',
+                description: 'Review student-facing work and participation',
+                icon: 'assignment',
+                exact: false,
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('mat-sidenav')?.textContent).toContain('Student Activities');
   });
 
   it('should show hamburger menu on handset', () => {
@@ -257,13 +286,17 @@ describe('Layout', () => {
       authenticated: true,
       handset: true,
       section: {
-        label: 'Instructor view',
-        items: [
+        groups: [
           {
-            route: '/courses/1/roster',
-            label: 'Roster',
-            description: 'See current course membership',
-            icon: 'groups',
+            label: 'Course',
+            items: [
+              {
+                route: '/courses/1/roster',
+                label: 'Roster',
+                description: 'See current course membership',
+                icon: 'groups',
+              },
+            ],
           },
         ],
       },

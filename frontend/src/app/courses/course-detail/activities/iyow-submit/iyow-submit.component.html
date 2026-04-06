@@ -1,0 +1,111 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (activity(); as a) {
+    <section class="mb-6 max-w-4xl space-y-3" aria-label="Activity prompt">
+      <p class="text-sm font-medium opacity-70">Due {{ a.due_date | date: dateTimeFormat }}</p>
+      <p class="text-base leading-7 whitespace-pre-wrap">{{ a.prompt }}</p>
+    </section>
+
+    <section class="mb-4" aria-label="Your submission">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>description</mat-icon>
+          <mat-card-title>Your Submission</mat-card-title>
+          @if (activeSubmission(); as sub) {
+            <mat-card-subtitle>
+              Submitted {{ sub.submitted_at | date: dateTimeFormat }}
+            </mat-card-subtitle>
+          }
+        </mat-card-header>
+        <mat-card-content class="mt-2">
+          @if (showSubmissionEditor()) {
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Your response</mat-label>
+                <textarea matInput formControlName="response_text" rows="8"></textarea>
+                <mat-hint>Explain the concept in your own words (minimum 10 characters)</mat-hint>
+              </mat-form-field>
+
+              <div class="flex flex-wrap justify-end gap-3">
+                @if (activeSubmission()) {
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="cancelEditingSubmission()"
+                    [disabled]="submitting()"
+                  >
+                    Cancel
+                  </button>
+                }
+                <button mat-flat-button type="submit" [disabled]="form.invalid || submitting()">
+                  @if (submitting()) {
+                    <span class="inline-flex items-center gap-2">
+                      <mat-spinner diameter="18" />
+                      <span>{{ activeSubmission() ? 'Saving' : 'Submitting' }}</span>
+                    </span>
+                  } @else {
+                    {{ activeSubmission() ? 'Save' : 'Submit' }}
+                  }
+                </button>
+              </div>
+            </form>
+          } @else if (activeSubmission(); as sub) {
+            <div class="space-y-4">
+              <button
+                type="button"
+                class="submission-display-button"
+                (click)="startEditingSubmission()"
+                [disabled]="submitting()"
+                aria-label="Edit your submission"
+              >
+                <span
+                  class="markdown-content markdown-content--interactive block"
+                  [innerHTML]="sub.response_text | markdownToHtml"
+                ></span>
+              </button>
+
+              <div class="flex justify-end">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="startEditingSubmission()"
+                  [disabled]="submitting()"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    @if (activeSubmission(); as sub) {
+      <section aria-label="AI feedback">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>smart_toy</mat-icon>
+            <mat-card-title>AI Feedback</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="feedback-card__content">
+            @if (sub.feedback) {
+              <div class="markdown-content" [innerHTML]="sub.feedback | markdownToHtml"></div>
+            } @else if (feedbackPending()) {
+              <div class="feedback-loading" role="status" aria-live="polite">
+                <div class="feedback-loading__spinner" aria-hidden="true">
+                  <mat-spinner diameter="88" />
+                </div>
+                <p class="feedback-loading__message">The AI is reviewing your latest submission.</p>
+              </div>
+            } @else {
+              <p class="text-sm opacity-75">Feedback is not available yet.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </section>
+    }
+  }
+}

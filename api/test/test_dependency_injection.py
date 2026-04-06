@@ -6,13 +6,21 @@ import pytest
 from fastapi import HTTPException
 
 from api.di import (
+    activity_repository_factory,
+    activity_service_factory,
     async_job_repository_factory,
     course_repository_factory,
+    get_activity_by_path_id,
     get_course_by_path_id,
     get_user_by_pid,
+    iyow_activity_repository_factory,
+    iyow_activity_service_factory,
+    iyow_submission_repository_factory,
+    iyow_submission_service_factory,
     joke_generation_service_factory,
     joke_repository_factory,
     roster_upload_service_factory,
+    submission_repository_factory,
 )
 
 
@@ -123,3 +131,98 @@ def test_joke_repository_factory_returns_repository() -> None:
     result = joke_repository_factory(session)
 
     assert isinstance(result, JokeRepository)
+
+
+def test_activity_repository_factory_returns_repository() -> None:
+    from learnwithai.repositories.activity_repository import ActivityRepository
+
+    session = MagicMock()
+
+    result = activity_repository_factory(session)
+
+    assert isinstance(result, ActivityRepository)
+
+
+def test_submission_repository_factory_returns_repository() -> None:
+    from learnwithai.repositories.submission_repository import SubmissionRepository
+
+    session = MagicMock()
+
+    result = submission_repository_factory(session)
+
+    assert isinstance(result, SubmissionRepository)
+
+
+def test_iyow_activity_repository_factory_returns_repository() -> None:
+    from learnwithai.activities.iyow.repository import IyowActivityRepository
+
+    session = MagicMock()
+
+    result = iyow_activity_repository_factory(session)
+
+    assert isinstance(result, IyowActivityRepository)
+
+
+def test_iyow_submission_repository_factory_returns_repository() -> None:
+    from learnwithai.activities.iyow.repository import IyowSubmissionRepository
+
+    session = MagicMock()
+
+    result = iyow_submission_repository_factory(session)
+
+    assert isinstance(result, IyowSubmissionRepository)
+
+
+def test_activity_service_factory_returns_service() -> None:
+    from learnwithai.services.activity_service import ActivityService
+
+    activity_repo = MagicMock()
+    membership_repo = MagicMock()
+
+    result = activity_service_factory(activity_repo, membership_repo)
+
+    assert isinstance(result, ActivityService)
+
+
+def test_iyow_activity_service_factory_returns_service() -> None:
+    from learnwithai.activities.iyow.service import IyowActivityService
+
+    activity_repo = MagicMock()
+    iyow_activity_repo = MagicMock()
+    membership_repo = MagicMock()
+
+    result = iyow_activity_service_factory(activity_repo, iyow_activity_repo, membership_repo)
+
+    assert isinstance(result, IyowActivityService)
+
+
+def test_iyow_submission_service_factory_returns_service() -> None:
+    from learnwithai.activities.iyow.submission_service import IyowSubmissionService
+
+    result = iyow_submission_service_factory(
+        MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock()
+    )
+
+    assert isinstance(result, IyowSubmissionService)
+
+
+def test_get_activity_by_path_id_returns_activity() -> None:
+    activity = MagicMock()
+    activity_repo = MagicMock()
+    activity_repo.get_by_id.return_value = activity
+
+    result = get_activity_by_path_id(10, activity_repo)
+
+    assert result is activity
+    activity_repo.get_by_id.assert_called_once_with(10)
+
+
+def test_get_activity_by_path_id_raises_for_missing_activity() -> None:
+    activity_repo = MagicMock()
+    activity_repo.get_by_id.return_value = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        get_activity_by_path_id(10, activity_repo)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Activity not found."

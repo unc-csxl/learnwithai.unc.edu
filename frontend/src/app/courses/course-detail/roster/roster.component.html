@@ -1,8 +1,8 @@
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
 } @else if (loaded()) {
-  <div class="mb-4 flex items-center justify-between gap-4">
-    <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+  <div class="roster-toolbar">
+    <mat-form-field class="roster-toolbar-search" appearance="outline" subscriptSizing="dynamic">
       <mat-label>Search roster</mat-label>
       <input
         matInput
@@ -13,14 +13,16 @@
       />
       <mat-icon matPrefix>search</mat-icon>
     </mat-form-field>
-    <a mat-flat-button routerLink="../add-member">
-      <mat-icon>person_add</mat-icon>
-      Add Member
-    </a>
-    <button mat-flat-button (click)="fileInput.click()" [disabled]="uploading()">
-      <mat-icon>upload_file</mat-icon>
-      Upload CSV
-    </button>
+    <div class="roster-toolbar-actions">
+      <a mat-flat-button routerLink="../add-member">
+        <mat-icon>person_add</mat-icon>
+        Add Member
+      </a>
+      <button mat-flat-button (click)="fileInput.click()" [disabled]="uploading()">
+        <mat-icon>upload_file</mat-icon>
+        Upload CSV
+      </button>
+    </div>
     <input #fileInput type="file" accept=".csv" hidden (change)="onFileSelected($event)" />
   </div>
   @if (roster().length > 0) {

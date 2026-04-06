@@ -1,0 +1,97 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (activity(); as a) {
+    <section class="mb-6" aria-label="Activity information">
+      <mat-card appearance="outlined">
+        <mat-card-content class="pt-6">
+          <dl class="grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt class="opacity-75">Release date</dt>
+              <dd class="mt-1 font-medium">{{ a.release_date | date: dateTimeFormat }}</dd>
+            </div>
+            <div>
+              <dt class="opacity-75">Due date</dt>
+              <dd class="mt-1 font-medium">{{ a.due_date | date: dateTimeFormat }}</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section aria-label="Student submissions">
+      <div class="mb-4 flex items-center gap-4">
+        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Search students</mat-label>
+          <input
+            matInput
+            type="text"
+            placeholder="Student name (min 3 characters)"
+            aria-label="Search students by name"
+            (input)="onSearchInput($any($event.target).value)"
+          />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      @if (filteredRows().length > 0) {
+        <table
+          mat-table
+          [dataSource]="filteredRows()"
+          matSort
+          [matSortActive]="sortActive()"
+          [matSortDirection]="sortDirection()"
+          (matSortChange)="onSortChange($event)"
+          aria-label="Student submissions"
+        >
+          <ng-container matColumnDef="student_name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="family_name">Student</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.submission) {
+                <a
+                  [routerLink]="[
+                    '/courses',
+                    courseId,
+                    'activities',
+                    activityId,
+                    'submissions',
+                    row.student_pid,
+                  ]"
+                  >{{ row.family_name }}, {{ row.given_name }}</a
+                >
+              } @else {
+                {{ row.family_name }}, {{ row.given_name }}
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="submitted_at">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Submitted</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.submission) {
+                {{ row.submission.submitted_at | date: 'medium' }}
+              } @else {
+                &mdash;
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let row">
+              {{ statusLabel(row) }}
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      } @else {
+        <p>No students found.</p>
+      }
+
+      <p class="mt-4 text-sm opacity-75" aria-label="Submission summary">
+        {{ submittedCount() }} of {{ totalCount() }} students have submitted.
+      </p>
+    </section>
+  }
+}

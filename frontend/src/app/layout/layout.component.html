@@ -33,8 +33,10 @@
       <mat-nav-list>
         <a
           mat-list-item
+          class="sidenav-nav-link"
           routerLink="/courses"
           routerLinkActive="active-link"
+          [routerLinkActiveOptions]="exactLinkActiveOptions"
           (click)="closeMobileSidenav()"
         >
           <mat-icon matListItemIcon>school</mat-icon>
@@ -44,31 +46,42 @@
 
       @if (layoutNavigation.section(); as section) {
         <section class="context-nav" aria-label="Course navigation">
-          <div class="context-nav-header">
-            <p class="context-nav-label">{{ section.label }}</p>
-            @if (section.title) {
-              <p class="context-nav-title">{{ section.title }}</p>
-            }
-            @if (section.subtitle) {
-              <p class="context-nav-subtitle">{{ section.subtitle }}</p>
-            }
-          </div>
+          @for (group of section.groups; track $index) {
+            <div class="context-nav-group">
+              @if (group.label) {
+                <p class="context-nav-label">{{ group.label }}</p>
+              }
 
-          <mat-nav-list>
-            @for (item of section.items; track item.route) {
-              <a
-                mat-list-item
-                [routerLink]="item.route"
-                routerLinkActive="active-link"
-                [routerLinkActiveOptions]="{ exact: true }"
-                (click)="closeMobileSidenav()"
-                [attr.title]="item.description"
-              >
-                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-                <span matListItemTitle>{{ item.label }}</span>
-              </a>
-            }
-          </mat-nav-list>
+              <mat-nav-list>
+                @for (item of group.items; track item.route) {
+                  <a
+                    mat-list-item
+                    class="sidenav-nav-link"
+                    [class.context-nav-item-with-subtitle]="!!item.subtitle"
+                    [routerLink]="item.route"
+                    routerLinkActive="active-link"
+                    [routerLinkActiveOptions]="
+                      item.exact === false ? subtreeLinkActiveOptions : exactLinkActiveOptions
+                    "
+                    (click)="closeMobileSidenav()"
+                    [attr.title]="item.description || ''"
+                  >
+                    <mat-icon
+                      matListItemIcon
+                      [class.context-nav-item-icon-with-subtitle]="!!item.subtitle"
+                      >{{ item.icon }}</mat-icon
+                    >
+                    <span matListItemTitle>{{ item.label }}</span>
+                    @if (item.subtitle) {
+                      <span matListItemLine class="context-nav-item-subtitle">{{
+                        item.subtitle
+                      }}</span>
+                    }
+                  </a>
+                }
+              </mat-nav-list>
+            </div>
+          }
         </section>
       }
 

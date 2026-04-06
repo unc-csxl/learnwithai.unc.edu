@@ -1,0 +1,128 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loaded()) {
+  @if (activity(); as a) {
+    <section class="mb-6" aria-label="Activity information">
+      <mat-card appearance="outlined">
+        <mat-card-content class="pt-6">
+          <dl class="grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt class="opacity-75">Release date</dt>
+              <dd class="mt-1 font-medium">{{ a.release_date | date: dateTimeFormat }}</dd>
+            </div>
+            <div>
+              <dt class="opacity-75">Due date</dt>
+              <dd class="mt-1 font-medium">{{ a.due_date | date: dateTimeFormat }}</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="mb-6" aria-label="Submission navigation">
+      <mat-card appearance="outlined">
+        <mat-card-content
+          class="flex flex-col gap-4 pt-6 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <div class="space-y-1">
+            <p class="text-sm font-medium">Submission navigator</p>
+            <p class="text-sm opacity-75">{{ currentStudentDescription() }}</p>
+            @if (currentSubmittedPosition()) {
+              <p class="text-sm opacity-75">{{ currentSubmittedPosition() }}</p>
+            }
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="min-w-72 flex-1">
+              <mat-label>Jump to submission</mat-label>
+              <input
+                matInput
+                type="text"
+                [formControl]="jumpControl"
+                [matAutocomplete]="submissionJump"
+                aria-label="Jump to a submitted student"
+                placeholder="Type a student name or submission ID"
+              />
+              <mat-hint>Search by student name, PID, email, or submission ID.</mat-hint>
+              <mat-autocomplete
+                #submissionJump="matAutocomplete"
+                autoActiveFirstOption
+                [displayWith]="jumpDisplay.bind(this)"
+                (optionSelected)="onJumpSelection($event)"
+              >
+                @for (row of jumpOptions(); track row.student_pid) {
+                  <mat-option [value]="row">{{ jumpOptionLabel(row) }}</mat-option>
+                } @empty {
+                  <mat-option disabled>No other submitted students yet</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <div class="flex gap-2">
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="goToPreviousSubmission()"
+                [disabled]="previousSubmissionRow() === null"
+              >
+                Previous
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="goToNextSubmission()"
+                [disabled]="nextSubmissionRow() === null"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section aria-label="Student submission">
+      <h2
+        class="mb-1 text-lg font-medium"
+        [attr.aria-label]="currentSubmissionLabel() + '. ' + currentStudentDescription()"
+        [attr.title]="currentStudentDescription()"
+      >
+        {{ currentSubmissionLabel() }}
+      </h2>
+      <p class="mb-3 text-sm opacity-75">{{ currentStudentDescription() }}</p>
+      @for (sub of submissions(); track sub.id; let idx = $index; let count = $count) {
+        <mat-card appearance="outlined" class="mb-3">
+          <mat-card-header>
+            <mat-icon mat-card-avatar [class]="'status-' + (sub.job?.status ?? 'unknown')">
+              {{ statusIcon(sub.job?.status) }}
+            </mat-icon>
+            <mat-card-title>Submission {{ count - idx }}</mat-card-title>
+            <mat-card-subtitle
+              >Submitted {{ sub.submitted_at | date: 'medium' }}
+              @if (sub.is_active) {
+                (Active)
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content class="mt-2">
+            <p class="text-sm opacity-75">Response:</p>
+            <div class="break-words" [innerHTML]="sub.response_text | markdownToHtml"></div>
+            @if (sub.feedback) {
+              <p class="mt-3 text-sm opacity-75">Feedback:</p>
+              <div class="break-words" [innerHTML]="sub.feedback | markdownToHtml"></div>
+            } @else if (sub.job?.status === 'pending' || sub.job?.status === 'processing') {
+              <div class="mt-3 flex items-center gap-2">
+                <mat-spinner diameter="20" />
+                <span class="text-sm opacity-75">Generating feedback&hellip;</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <p>No submissions yet from this student.</p>
+      }
+    </section>
+  }
+}

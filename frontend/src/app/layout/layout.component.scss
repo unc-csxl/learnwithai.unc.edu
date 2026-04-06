@@ -1,6 +1,7 @@
 :host {
   display: block;
   height: 100vh;
+  --sidenav-nav-item-radius: 12px;
 }
 
 .sidenav-container {
@@ -12,14 +13,14 @@
   color: var(--mat-sys-on-surface);
   gap: 12px;
   min-height: 56px;
-  padding-inline: 16px;
+  padding-inline: 24px;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
 .toolbar-title {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -50,7 +51,7 @@
   align-items: center;
   justify-content: center;
   min-height: 56px;
-  padding: 20px 16px 12px;
+  padding: 12px 16px 12px;
   position: relative;
 }
 
@@ -127,17 +128,40 @@
   padding-top: 0.75rem;
 }
 
+.context-nav-group + .context-nav-group {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
 .sidenav-content-wrap mat-nav-list {
   box-sizing: border-box;
   padding-inline: 8px;
 }
 
-.context-nav-header {
-  padding: 0 1rem 0.5rem;
+.sidenav-nav-link {
+  --mdc-list-list-item-container-shape: var(--sidenav-nav-item-radius);
+  border-radius: var(--sidenav-nav-item-radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.sidenav-nav-link:hover:not(.active-link) {
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.sidenav-nav-link:hover.mat-mdc-list-item-interactive::before,
+.sidenav-nav-link .mat-mdc-list-item-ripple,
+.sidenav-nav-link .mat-ripple-element {
+  border-radius: var(--sidenav-nav-item-radius);
+}
+
+.sidenav-nav-link:hover.mat-mdc-list-item-interactive::before {
+  opacity: 0;
 }
 
 .context-nav-label,
-.context-nav-subtitle {
+.context-nav-item-subtitle {
   color: var(--mat-sys-on-surface-variant);
   margin: 0;
 }
@@ -146,18 +170,25 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
+  padding: 0 1rem 0.35rem;
   text-transform: uppercase;
 }
 
-.context-nav-title {
-  margin: 0.35rem 0 0;
-  font-size: 1rem;
-  font-weight: 700;
+.context-nav-item-subtitle {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
-.context-nav-subtitle {
-  margin-top: 0.2rem;
-  font-size: 0.875rem;
+.sidenav-content-wrap mat-nav-list a.active-link {
+  background-color: var(--mat-sys-secondary-container);
+  border-radius: var(--sidenav-nav-item-radius);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.context-nav-item-icon-with-subtitle {
+  align-self: center;
+  margin-top: 0;
 }
 
 .spacer {

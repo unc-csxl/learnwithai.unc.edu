@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { CourseService } from '../course.service';
 import { MembershipType } from '../../api/models';
 import { PageTitleService } from '../../page-title.service';
+import { LayoutNavigationService } from '../../layout/layout-navigation.service';
 
 /** Form for adding a member to a course by PID and role. */
 @Component({
@@ -28,10 +29,12 @@ export class AddMember {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private titleService = inject(PageTitleService);
+  private layoutNavigation = inject(LayoutNavigationService);
 
   private readonly courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Add Member');
   }
 

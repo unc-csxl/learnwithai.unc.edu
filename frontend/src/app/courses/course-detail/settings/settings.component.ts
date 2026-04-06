@@ -41,6 +41,7 @@ export class Settings {
   private courseId = 0;
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Course Settings');
     this.courseId = Number(this.route.parent!.snapshot.paramMap.get('id'));
     this.loadCourse();
@@ -81,15 +82,36 @@ export class Settings {
         term: raw.term as 'fall' | 'winter' | 'spring' | 'summer',
         year: raw.year,
       });
-      const currentSection = this.layoutNavigation.section();
-      if (currentSection) {
-        const term = updated.term.charAt(0).toUpperCase() + updated.term.slice(1);
-        this.layoutNavigation.setSection({
+      const term = updated.term.charAt(0).toUpperCase() + updated.term.slice(1);
+      this.layoutNavigation.updateSection((currentSection) => {
+        if (currentSection.groups.length === 0 || currentSection.groups[0].items.length === 0) {
+          return currentSection;
+        }
+
+        const [firstGroup, ...remainingGroups] = currentSection.groups;
+        const [courseHomeItem, ...remainingItems] = firstGroup.items;
+
+        return {
           ...currentSection,
-          title: `${updated.course_number}: ${updated.name}`,
-          subtitle: `${term} ${updated.year}`,
-        });
-      }
+          groups: [
+            {
+              ...firstGroup,
+              items: [
+                {
+                  ...courseHomeItem,
+                  label: updated.course_number,
+                  subtitle: `${term} ${updated.year}`,
+                  description: courseHomeItem.route.endsWith('/student')
+                    ? `${updated.name} student dashboard`
+                    : `${updated.name} dashboard`,
+                },
+                ...remainingItems,
+              ],
+            },
+            ...remainingGroups,
+          ],
+        };
+      });
       this.successSnackbar.open('Course settings updated.');
       await this.router.navigate(['/courses', this.courseId, 'dashboard']);
     } catch {

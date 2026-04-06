@@ -21,6 +21,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { PageTitleService } from '../../../../page-title.service';
 import { SuccessSnackbarService } from '../../../../success-snackbar.service';
 import { JobUpdateService } from '../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { JokeGeneratorService } from '../joke-generator.service';
 import { AsyncJobInfo, JokeRequest } from '../../../../api/models';
 
@@ -48,6 +49,7 @@ export class JokeGenerator implements OnDestroy {
   private titleService = inject(PageTitleService);
   private successSnackbar = inject(SuccessSnackbarService);
   private jobUpdateService = inject(JobUpdateService);
+  private layoutNavigation = inject(LayoutNavigationService);
   private injector = inject(Injector);
   private destroyRef = inject(DestroyRef);
 
@@ -64,6 +66,7 @@ export class JokeGenerator implements OnDestroy {
   protected readonly hasRequests = computed(() => this.requests().length > 0);
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Joke Generator');
     this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
     this.jobUpdateService.subscribe(this.courseId);

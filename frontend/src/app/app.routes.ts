@@ -47,10 +47,50 @@ export const routes: Routes = [
           },
           {
             path: 'activities',
-            loadComponent: () =>
-              import('./courses/course-detail/activities/activities.component').then(
-                (m) => m.Activities,
-              ),
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/activities.component').then(
+                    (m) => m.Activities,
+                  ),
+              },
+              {
+                path: 'create-iyow',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/create-iyow/create-iyow.component').then(
+                    (m) => m.CreateIyow,
+                  ),
+              },
+              {
+                path: ':activityId',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/activity-detail/activity-detail.component').then(
+                    (m) => m.ActivityDetail,
+                  ),
+              },
+              {
+                path: ':activityId/edit',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/edit-iyow/edit-iyow.component').then(
+                    (m) => m.EditIyow,
+                  ),
+              },
+              {
+                path: ':activityId/submit',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/iyow-submit/iyow-submit.component').then(
+                    (m) => m.IyowSubmit,
+                  ),
+              },
+              {
+                path: ':activityId/submissions/:studentPid',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/submission-detail/submission-detail.component').then(
+                    (m) => m.SubmissionDetail,
+                  ),
+              },
+            ],
           },
           {
             path: 'tools',

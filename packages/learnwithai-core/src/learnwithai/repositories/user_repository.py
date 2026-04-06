@@ -2,20 +2,17 @@
 
 from sqlmodel import select
 
-from ..db import Session
 from ..tables.user import User
+from .base_repository import BaseRepository
 
 
-class UserRepository:
+class UserRepository(BaseRepository[User, int]):
     """Provides user lookup and persistence operations."""
 
-    def __init__(self, session: Session):
-        """Initializes the repository with a database session.
-
-        Args:
-            session: Session used to read and write user records.
-        """
-        self._session = session
+    @property
+    def model_type(self) -> type[User]:
+        """Returns the SQLModel class managed by this repository."""
+        return User
 
     def get_by_pid(self, pid: int) -> User | None:
         """Looks up a user by PID (primary key).
@@ -26,7 +23,7 @@ class UserRepository:
         Returns:
             The matching user when found; otherwise, ``None``.
         """
-        return self._session.get(User, pid)
+        return self.get_by_id(pid)
 
     def list_all(self) -> list[User]:
         """Returns all registered users.
@@ -45,13 +42,10 @@ class UserRepository:
         Returns:
             The persisted user with refreshed database state.
         """
-        self._session.add(new_user)
-        self._session.flush()
-        self._session.refresh(new_user)
-        return new_user
+        return self.create(new_user)
 
     def update_user(self, user: User) -> User:
-        """Merges changes to an existing user and refreshes state.
+        """Persists changes to an existing user and refreshes state.
 
         Args:
             user: User instance with updated fields.
@@ -59,7 +53,4 @@ class UserRepository:
         Returns:
             The updated user with refreshed database state.
         """
-        merged = self._session.merge(user)
-        self._session.flush()
-        self._session.refresh(merged)
-        return merged
+        return self.update(user)

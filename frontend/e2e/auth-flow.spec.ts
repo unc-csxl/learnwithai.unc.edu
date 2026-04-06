@@ -17,13 +17,10 @@ test.describe('authenticated course and roster flow', () => {
     await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
 
     await page.getByText('COMP423').click();
-    await page.waitForURL('**/courses/*/activities');
+    await page.waitForURL('**/courses/*/student');
 
     const sidenav = page.locator('mat-sidenav');
-    await expect(sidenav).toContainText('Student view');
     await expect(sidenav.getByRole('link', { name: 'Student Activities' })).toBeVisible();
-    await expect(sidenav.getByRole('link', { name: 'Student Tools' })).toBeVisible();
-    await expect(sidenav.getByRole('link', { name: 'Dashboard' })).toHaveCount(0);
     await expect(sidenav.getByRole('link', { name: 'Instructor Tools' })).toHaveCount(0);
     await expect(sidenav.getByRole('link', { name: 'Roster' })).toHaveCount(0);
     await expect(sidenav.getByRole('link', { name: 'Course Settings' })).toHaveCount(0);
@@ -59,11 +56,11 @@ test.describe('authenticated course and roster flow', () => {
     await page.getByText('COMP423').click();
     await page.waitForURL('**/courses/*/dashboard');
 
-    await expect(page.getByRole('link', { name: /Dashboard/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Student Activities/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Instructor Tools/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Roster/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Course Settings/i })).toBeVisible();
+    const sidenav = page.locator('mat-sidenav');
+    await expect(sidenav.getByRole('link', { name: /Student Activities/i })).toBeVisible();
+    await expect(sidenav.getByRole('link', { name: /Instructor Tools/i })).toBeVisible();
+    await expect(sidenav.getByRole('link', { name: /Roster/i })).toBeVisible();
+    await expect(sidenav.getByRole('link', { name: /Course Settings/i })).toBeVisible();
 
     await page.getByRole('link', { name: /Roster/i }).click();
     await page.waitForURL('**/courses/*/roster');

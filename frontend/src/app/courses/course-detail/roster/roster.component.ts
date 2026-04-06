@@ -22,6 +22,7 @@ import { CourseService } from '../../course.service';
 import { RosterMember, RosterUploadStatus } from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
 import { JobUpdateService } from '../../../job-update.service';
+import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
 
 const DEBOUNCE_MS = 300;
@@ -52,6 +53,7 @@ export class Roster implements OnDestroy {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private jobUpdateService = inject(JobUpdateService);
+  private layoutNavigation = inject(LayoutNavigationService);
   private injector = inject(Injector);
   private destroyRef = inject(DestroyRef);
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -69,6 +71,7 @@ export class Roster implements OnDestroy {
   protected readonly dataSource = computed(() => this.roster());
 
   constructor() {
+    this.layoutNavigation.clearContext();
     this.titleService.setTitle('Roster');
     this.courseId = Number(this.route.parent?.snapshot.paramMap.get('id'));
     this.jobUpdateService.subscribe(this.courseId);
