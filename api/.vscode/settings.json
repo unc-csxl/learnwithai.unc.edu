@@ -1,12 +1,9 @@
 {
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [],
-    "python-envs.pythonProjects": [
-        {
-            "path": ".",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
-        }
-    ]
+    "python.testing.pytestArgs": [
+        "api/test"
+    ],
+    "python.testing.cwd": "/workspaces/learnwithai",
+    "python.defaultInterpreterPath": "/workspaces/learnwithai/.venv/bin/python"
 }

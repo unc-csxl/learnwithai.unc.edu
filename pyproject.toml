@@ -16,11 +16,6 @@ members = [
 [tool.pytest.ini_options]
 addopts = [
   "--strict-markers",
-  "--cov=api",
-  "--cov=learnwithai",
-  "--cov=learnwithai_jobqueue",
-  "--cov-report=term-missing",
-  "--cov-config=.coveragerc",
 ]
 markers = [
   "integration: marks tests that exercise cross-module or framework integration",
