@@ -19,11 +19,15 @@ The repository is designed to work especially well in VS Code with the multi-roo
 1. Open `learnwithai.code-workspace` in VS Code.
 2. Reopen the repository in the dev container when VS Code prompts you.
 3. Wait for the post-create setup to finish. It installs Python dependencies with `uv`, frontend dependencies with `pnpm`, and Chromium support for Playwright UI testing.
-4. Start the app stack:
+4. Create your local environment file:
+   - Run `cp .env.example .env`
+   - Set `OPENAI_API_KEY` to a real Azure OpenAI-compatible subscription key
+   - Leave the database and RabbitMQ defaults as-is when using the dev container unless you have a specific override
+5. Start the app stack:
    - Frontend: run the `start` task from the `frontend` workspace, or run `cd frontend && pnpm start`
    - API: run the `api: run` task from the repository workspace
    - Worker: run the `job queue: run` task from the repository workspace
-5. Open the running services:
+6. Open the running services:
    - Frontend: `http://localhost:4200`
    - API health check: `http://localhost:8000/api/health`
    - RabbitMQ management UI: `http://localhost:15672`
@@ -48,7 +52,7 @@ What it runs:
 
 The AI-backed features in `learnwithai-core` now call Azure OpenAI through the OpenAI Python SDK.
 
-For this repository, the app reads these settings from `.env` in development and from OKD secrets in deployment:
+For this repository, the API and worker search upward from their current working directory for the nearest `.env` file in development and read OKD secrets in deployment:
 
 - `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY`: the Azure subscription key for the Azure OpenAI-compatible endpoint
 - `OPENAI_MODEL` or `AZURE_OPENAI_DEPLOYMENT`: the Azure deployment name, defaulting to `gpt-5-mini`
@@ -65,10 +69,12 @@ Example local `.env` entries:
 
 ```bash
 OPENAI_API_KEY=<azure-subscription-key>
-OPENAI_MODEL=<azure-deployment-name>
+OPENAI_MODEL=gpt-5-mini
 OPENAI_ENDPOINT=https://azureaiapi.cloud.unc.edu
 OPENAI_API_VERSION=2025-04-01-preview
 ```
+
+The committed sample lives at `.env.example`. Copy it to `.env` at the repository root. That root file is the canonical development config.
 
 Before `pytest`, the QA script resets the PostgreSQL test database so local runs start clean like GitHub Actions.
 

@@ -37,6 +37,16 @@ You usually only need to edit this package when queue delivery, worker startup, 
 
 ## Running The Worker
 
+The worker reads configuration through `learnwithai-core` settings, which search upward from the current working directory for the nearest `.env` file. The canonical development setup is still the repo-root `.env`, so the worker does not need a package-local `.env` file.
+
+Set up local config from the repository root:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and provide a real `OPENAI_API_KEY`.
+
 From the repository root:
 
 ```bash
