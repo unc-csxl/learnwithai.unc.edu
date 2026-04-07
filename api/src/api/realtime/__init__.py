@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Real-time job update delivery pipeline.
 
 Bridges background job status changes from RabbitMQ to connected

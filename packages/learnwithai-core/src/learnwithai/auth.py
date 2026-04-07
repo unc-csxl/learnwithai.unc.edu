@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Lightweight JWT verification for use across HTTP and WebSocket layers."""
 
 import jwt

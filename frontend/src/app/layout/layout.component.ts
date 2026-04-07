@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component, ChangeDetectionStrategy, inject, computed, viewChild } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatToolbarModule } from '@angular/material/toolbar';

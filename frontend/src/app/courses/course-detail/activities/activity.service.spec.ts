@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TestBed } from '@angular/core/testing';
 import { Api } from '../../../api/generated/api';
 import { ActivityService } from './activity.service';

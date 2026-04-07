@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pydantic models for the IYOW feedback job payload."""
 
 from typing import Literal

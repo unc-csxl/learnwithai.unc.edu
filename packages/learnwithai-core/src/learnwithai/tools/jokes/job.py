@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Background job handler for joke generation."""
 
 from datetime import datetime, timezone

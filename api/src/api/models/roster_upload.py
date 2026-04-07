@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pydantic models for roster CSV upload API requests and responses."""
 
 from datetime import datetime

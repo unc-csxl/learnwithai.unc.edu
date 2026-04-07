@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';

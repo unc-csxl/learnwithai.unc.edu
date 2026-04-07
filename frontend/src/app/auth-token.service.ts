@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable } from '@angular/core';
 
 export const AUTH_TOKEN_KEY = 'auth_token';

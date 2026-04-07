@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Persistence helpers for IYOW activity and submission records."""
 
 from sqlalchemy.orm import contains_eager, joinedload

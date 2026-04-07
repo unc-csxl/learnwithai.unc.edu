@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Drop and recreate the development database, then rebuild all tables.
 
 After recreating tables the script inserts a small set of seed data so the

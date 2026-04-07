@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Repository-level pytest bootstrap for database-backed tests."""
 
 from __future__ import annotations

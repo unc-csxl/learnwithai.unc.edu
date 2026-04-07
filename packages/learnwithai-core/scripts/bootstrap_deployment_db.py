@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Bootstrap a deployed LearnWithAI database for developer resets.
 
 This script is intended to run inside the deployed app image after the target

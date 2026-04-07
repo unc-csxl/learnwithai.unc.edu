@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';

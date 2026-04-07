@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """WebSocket endpoint for real-time job update delivery.
 
 Clients connect with a JWT in the query string and subscribe to updates

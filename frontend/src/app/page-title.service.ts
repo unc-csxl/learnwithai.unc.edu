@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable, signal } from '@angular/core';
 
 /** Reactive page title shared between the layout shell and child components. */

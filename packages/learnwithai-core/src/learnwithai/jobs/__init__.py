@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Job payload adapters and handler registration."""
 
 from typing import Annotated, Any, TypeAlias, Union

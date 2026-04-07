@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Dramatiq-backed implementation of the shared job queue interface."""
 
 from typing import Any

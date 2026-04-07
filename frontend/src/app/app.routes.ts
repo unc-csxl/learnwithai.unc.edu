@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Routes } from '@angular/router';
 import { authGuard, landingGuard } from './auth.guard';
 

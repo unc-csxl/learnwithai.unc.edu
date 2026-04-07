@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Route exports for the FastAPI application."""
 
 from api.routes.activities import router as activities_router

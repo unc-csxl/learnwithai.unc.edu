@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Imports all SQLModel table modules so metadata registration is explicit."""
 
 from .activity import Activity, ActivityType

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { expect, test, devices } from '@playwright/test';
 import path from 'node:path';
 

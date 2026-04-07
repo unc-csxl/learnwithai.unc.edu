@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Joke generation tool — models, tables, and service.
 
 ``JokeGenerationService`` and ``JokeGenerationJobHandler`` are

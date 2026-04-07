@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Seed data for local development and end-to-end tests.
 
 This module exposes a single :func:`seed` function that inserts a fixed set of

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { defineConfig } from 'vitest/config';
 
 import { angularComponentResourcesPlugin } from './vitest.angular-component-resources';

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TestBed } from '@angular/core/testing';
 import { StudentView } from './student-view.component';
 import { PageTitleService } from '../../../page-title.service';

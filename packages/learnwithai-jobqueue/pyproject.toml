@@ -3,6 +3,7 @@ name = "learnwithai-jobqueue"
 version = "0.1.0"
 description = "Shared Dramatiq queue integration for LearnWithAI"
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.12"
 dependencies = [
   "dramatiq[rabbitmq]>=2.1,<3",

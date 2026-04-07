@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Reusable base class for background job handlers.
 
 Owns session lifecycle (open, commit/rollback, close), PROCESSING

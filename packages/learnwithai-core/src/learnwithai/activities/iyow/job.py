@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Background job handler for IYOW feedback generation."""
 
 from datetime import datetime, timezone

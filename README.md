@@ -95,6 +95,10 @@ On the first run, the deploy script now generates an SSH deploy key for OKD, pri
 
 **CI/CD:** Pushing to `main` and passing QA triggers a GitHub Actions workflow that calls an OKD webhook. GitHub no longer needs direct `oc login` access to the cluster. See `infra/README.md` for the required webhook secret setup.
 
+## License
+
+This repository is released under the MIT License. See `LICENSE` for the full text.
+
 ## How The Repository Is Organized
 
 ```text

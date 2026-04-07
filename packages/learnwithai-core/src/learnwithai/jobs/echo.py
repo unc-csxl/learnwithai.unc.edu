@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Sample echo job used to validate queue integration."""
 
 from typing import Literal

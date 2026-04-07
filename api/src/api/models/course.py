@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pydantic models for course-related API requests and responses."""
 
 from learnwithai.tables.course import Term

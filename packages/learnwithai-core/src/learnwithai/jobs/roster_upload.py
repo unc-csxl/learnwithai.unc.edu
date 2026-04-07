@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Background job for processing roster CSV uploads."""
 
 from typing import Literal, TypedDict

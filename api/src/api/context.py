@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Request context containers used by the API layer."""
 
 from typing import Annotated, TypeAlias

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Tests for the JokeGenerationJobHandler."""
 
 from __future__ import annotations

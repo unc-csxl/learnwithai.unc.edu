@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { expect, test } from '@playwright/test';
 
 const SEEDED_PROMPT = 'Tell me 3 jokes about software engineering';

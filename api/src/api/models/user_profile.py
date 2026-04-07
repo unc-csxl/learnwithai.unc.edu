@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Public API models for authenticated user profile responses."""
 
 from pydantic import BaseModel, ConfigDict

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Integration logic for UNC CSXL authentication and local JWT issuance."""
 
 from datetime import datetime, timedelta, timezone

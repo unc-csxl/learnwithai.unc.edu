@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Service layer for joke generation CRUD operations."""
 
 from ...interfaces import JobQueue

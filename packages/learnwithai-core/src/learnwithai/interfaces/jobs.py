@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Contracts for serializable background jobs and their handlers."""
 
 from abc import ABC

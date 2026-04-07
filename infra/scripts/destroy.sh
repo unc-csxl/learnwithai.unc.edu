@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 # =============================================================================
 # destroy.sh — Tear down a LearnWithAI deployment from an OKD cluster
 # =============================================================================

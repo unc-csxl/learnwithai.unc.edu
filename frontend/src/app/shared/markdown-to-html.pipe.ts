@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Pipe, PipeTransform } from '@angular/core';
 import { marked } from 'marked';
 

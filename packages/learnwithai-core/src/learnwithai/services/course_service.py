@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Business logic for course and membership management."""
 
 from ..errors import AuthorizationError

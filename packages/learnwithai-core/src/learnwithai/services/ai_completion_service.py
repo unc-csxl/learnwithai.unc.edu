@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Shared AI chat-completion service wrapping the OpenAI client.
 
 Provides a single abstraction that feature-specific services (joke

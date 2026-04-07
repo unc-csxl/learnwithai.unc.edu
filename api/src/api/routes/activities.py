@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Activity routes for the public API."""
 
 from datetime import datetime, timezone

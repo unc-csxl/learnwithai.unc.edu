@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """OpenAPI metadata and customization for the LearnWithAI API."""
 
 from fastapi.routing import APIRoute

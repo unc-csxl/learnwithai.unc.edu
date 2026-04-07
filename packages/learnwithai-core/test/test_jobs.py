@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch

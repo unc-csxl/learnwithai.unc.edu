@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Database-backed tables for the In Your Own Words activity type."""
 
 from datetime import datetime

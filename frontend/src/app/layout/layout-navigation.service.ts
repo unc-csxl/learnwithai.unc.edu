@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable, computed, signal } from '@angular/core';
 
 export type LayoutNavigationItem = {

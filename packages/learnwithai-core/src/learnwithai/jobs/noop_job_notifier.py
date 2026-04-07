@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """No-op job notifier for use in tests and contexts without RabbitMQ."""
 
 from ..interfaces.jobs import JobNotifier, JobUpdate

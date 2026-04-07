@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 set -euo pipefail
 
 sudo mkdir -p /home/vscode/.cache/uv /home/vscode/.cache/ms-playwright /home/vscode/.npm /home/vscode/.local/share/pnpm

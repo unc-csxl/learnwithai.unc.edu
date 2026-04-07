@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pydantic models for joke generation job input, output, and payload."""
 
 from typing import Literal

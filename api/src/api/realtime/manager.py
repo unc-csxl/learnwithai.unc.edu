@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """In-memory WebSocket subscription manager for real-time job updates.
 
 Tracks which WebSocket connections are interested in updates for a given

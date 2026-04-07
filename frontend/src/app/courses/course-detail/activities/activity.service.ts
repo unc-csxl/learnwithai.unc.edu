@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable, inject } from '@angular/core';
 import { Api } from '../../../api/generated/api';
 import { listActivities } from '../../../api/generated/fn/activities/list-activities';

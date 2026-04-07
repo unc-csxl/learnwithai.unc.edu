@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pagination primitives shared across services and repositories."""
 
 from dataclasses import dataclass

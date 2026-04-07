@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Database-backed joke table for the joke generation tool."""
 
 from datetime import datetime

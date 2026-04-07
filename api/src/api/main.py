@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Application entrypoint for the FastAPI adapter.
 
 Creates and configures the FastAPI application by composing routes,

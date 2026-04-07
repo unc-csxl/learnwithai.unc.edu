@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MatPane } from './mat-pane';

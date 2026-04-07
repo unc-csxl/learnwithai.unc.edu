@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """RabbitMQ-backed job notifier that publishes updates to a fanout exchange."""
 
 import json

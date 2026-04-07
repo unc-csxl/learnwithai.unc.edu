@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable, inject } from '@angular/core';
 import { Api } from '../../../api/generated/api';
 import { createJokeRequest } from '../../../api/generated/fn/instructor-tools/create-joke-request';

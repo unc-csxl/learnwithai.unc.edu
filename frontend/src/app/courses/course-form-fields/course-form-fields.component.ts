@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';

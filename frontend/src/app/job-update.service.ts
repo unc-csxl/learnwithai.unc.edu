@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Injectable, inject, signal, computed, OnDestroy, NgZone } from '@angular/core';
 import { AuthTokenService } from './auth-token.service';
 

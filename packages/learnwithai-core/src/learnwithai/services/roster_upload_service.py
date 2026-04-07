@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Service for parsing Canvas gradebook CSVs and importing roster members."""
 
 import csv

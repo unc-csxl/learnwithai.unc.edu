@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Pydantic models for UNC directory responses."""
 
 from pydantic import BaseModel

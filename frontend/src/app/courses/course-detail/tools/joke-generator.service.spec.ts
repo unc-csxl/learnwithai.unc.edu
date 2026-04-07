@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TestBed } from '@angular/core/testing';
 import { JokeGeneratorService } from './joke-generator.service';
 import { Api } from '../../../api/generated/api';

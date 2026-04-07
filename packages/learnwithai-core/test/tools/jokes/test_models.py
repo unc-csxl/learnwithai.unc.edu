@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Tests for joke generation entities."""
 
 from learnwithai.tools.jokes.models import (

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Development-only routes for local testing and database management.
 
 These routes are only registered when the application is running in the

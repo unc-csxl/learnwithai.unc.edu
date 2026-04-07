@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 # =============================================================================
 # update_secrets.sh — Apply updated runtime secrets to an existing deployment
 # =============================================================================

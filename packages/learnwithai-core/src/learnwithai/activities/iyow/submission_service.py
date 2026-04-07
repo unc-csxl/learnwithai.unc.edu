@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Business logic for IYOW student submissions and feedback."""
 
 from datetime import datetime

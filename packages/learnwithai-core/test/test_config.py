@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -150,6 +153,7 @@ def test_settings_load_from_nearest_parent_env_file(tmp_path: Path, monkeypatch:
     nested_dir.mkdir(parents=True)
     env_file = repo_dir / ENV_FILE_NAME
     env_file.write_text("LOG_LEVEL=DEBUG\n", encoding="utf-8")
+    monkeypatch.delenv("LOG_LEVEL", raising=False)
     monkeypatch.chdir(nested_dir)
 
     # Act

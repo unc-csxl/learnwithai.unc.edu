@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Dependency factories shared across FastAPI route handlers."""
 
 from __future__ import annotations

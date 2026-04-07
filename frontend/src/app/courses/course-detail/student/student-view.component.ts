@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { PageTitleService } from '../../../page-title.service';
 import { LayoutNavigationService } from '../../../layout/layout-navigation.service';

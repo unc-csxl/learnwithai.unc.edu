@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Database engine and session helpers."""
 
 from collections.abc import Callable, Generator

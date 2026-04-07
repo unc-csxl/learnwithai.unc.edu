@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Shared Pydantic models for async job API responses."""
 
 from datetime import datetime

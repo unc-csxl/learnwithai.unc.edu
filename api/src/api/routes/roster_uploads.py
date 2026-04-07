@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Roster CSV upload routes for the public API."""
 
 from fastapi import APIRouter, HTTPException, UploadFile

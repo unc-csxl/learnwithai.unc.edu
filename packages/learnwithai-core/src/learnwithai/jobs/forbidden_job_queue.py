@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Forbidden job queue that raises on use, to expose misconfigured contexts."""
 
 from ..interfaces import Job, JobQueue

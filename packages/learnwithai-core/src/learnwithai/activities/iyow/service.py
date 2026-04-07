@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Business logic for creating and retrieving IYOW activities."""
 
 from datetime import datetime

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """RabbitMQ consumer that bridges job update messages to WebSocket clients.
 
 Connects to the ``job_updates`` fanout exchange via ``aio-pika`` and

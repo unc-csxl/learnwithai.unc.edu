@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Tests for handle_job_update_message in the job update consumer."""
 
 from __future__ import annotations

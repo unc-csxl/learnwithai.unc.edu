@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component } from '@angular/core';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';

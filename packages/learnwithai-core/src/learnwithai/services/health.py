@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Kris Jordan
+# SPDX-License-Identifier: MIT
+
 """Health helpers shared across services."""
 
 from learnwithai.config import Settings

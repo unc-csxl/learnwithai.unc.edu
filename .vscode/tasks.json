@@ -2,6 +2,24 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "frontend: run",
+            "type": "shell",
+            "command": "pnpm start",
+            "options": {
+                "cwd": "${workspaceFolder:frontend}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "typescript",
+                "pattern": "$tsc",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*",
+                    "endsPattern": "Application bundle generation (complete|failed)"
+                }
+            }
+        },
+        {
             "label": "repo: uv sync",
             "type": "shell",
             "command": "uv sync --all-packages --all-groups",
@@ -34,7 +52,7 @@
                     "endsPattern": "Uvicorn running on"
                 }
             },
-            "dependsOn": "uv sync"
+            "dependsOn": "repo: uv sync"
         },
         {
             "label": "job queue: run",
@@ -60,7 +78,7 @@
                     "endsPattern": "Worker Ready|Workers ready"
                 }
             },
-            "dependsOn": "uv sync"
+            "dependsOn": "repo: uv sync"
         },
         {
             "label": "dev: run frontend + api + job queue",

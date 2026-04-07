@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, extname, join, relative, resolve } from 'node:path';
