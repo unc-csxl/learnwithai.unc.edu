@@ -13,6 +13,13 @@ spec:
   runPolicy: SerialLatestOnly
   successfulBuildsHistoryLimit: 3
   failedBuildsHistoryLimit: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
   source:
     type: Git
     git:
