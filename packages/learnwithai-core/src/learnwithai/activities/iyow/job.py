@@ -46,7 +46,7 @@ class IyowFeedbackJobHandler(BaseJobHandler[IyowFeedbackJob]):
         """
         settings = get_settings()
         if not settings.openai_api_key:
-            raise RuntimeError("openai_api_key is not configured. Set the OPENAI_API_KEY environment variable.")
+            raise RuntimeError("openai_api_key is not configured. Set OPENAI_API_KEY or AZURE_OPENAI_API_KEY.")
 
         async_job_repo = AsyncJobRepository(session)
         async_job = async_job_repo.get_by_id(job.job_id)
@@ -72,7 +72,12 @@ class IyowFeedbackJobHandler(BaseJobHandler[IyowFeedbackJob]):
             raise ValueError(f"IyowActivity for activity {base_submission.activity_id} not found")
 
         system_prompt = IYOW_SYSTEM_PROMPT.format(rubric=iyow_activity.rubric)
-        ai_svc = AiCompletionService(api_key=settings.openai_api_key, model=settings.openai_model)
+        ai_svc = AiCompletionService(
+            api_key=settings.openai_api_key,
+            model=settings.openai_model,
+            endpoint=settings.openai_endpoint,
+            api_version=settings.openai_api_version,
+        )
         feedback = ai_svc.complete(
             system_prompt=system_prompt,
             user_prompt=iyow_submission.response_text,

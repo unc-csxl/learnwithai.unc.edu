@@ -16,18 +16,23 @@ def _mock_completion(content: str) -> MagicMock:
     return response
 
 
-@patch("learnwithai.services.ai_completion_service.openai.OpenAI")
+@patch("learnwithai.services.ai_completion_service.openai.AzureOpenAI")
 def test_complete_returns_assistant_content(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
     mock_client.chat.completions.create.return_value = _mock_completion("Hello, world!")
-    svc = AiCompletionService(api_key="sk-test", model="gpt-4o-mini")
+    svc = AiCompletionService(api_key="sk-test", model="gpt-5-mini")
 
     result = svc.complete(system_prompt="Be helpful.", user_prompt="Say hello.")
 
     assert result == "Hello, world!"
+    mock_openai_cls.assert_called_once_with(
+        api_key="sk-test",
+        azure_endpoint="https://azureaiapi.cloud.unc.edu",
+        api_version="2025-04-01-preview",
+    )
     mock_client.chat.completions.create.assert_called_once_with(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=[
             {"role": "system", "content": "Be helpful."},
             {"role": "user", "content": "Say hello."},
@@ -35,12 +40,12 @@ def test_complete_returns_assistant_content(mock_openai_cls: MagicMock) -> None:
     )
 
 
-@patch("learnwithai.services.ai_completion_service.openai.OpenAI")
+@patch("learnwithai.services.ai_completion_service.openai.AzureOpenAI")
 def test_complete_uses_model_override(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
     mock_client.chat.completions.create.return_value = _mock_completion("response")
-    svc = AiCompletionService(api_key="sk-test", model="gpt-4o-mini")
+    svc = AiCompletionService(api_key="sk-test", model="gpt-5-mini")
 
     svc.complete(system_prompt="sys", user_prompt="usr", model="gpt-4o")
 
@@ -48,7 +53,7 @@ def test_complete_uses_model_override(mock_openai_cls: MagicMock) -> None:
     assert call_kwargs.kwargs["model"] == "gpt-4o"
 
 
-@patch("learnwithai.services.ai_completion_service.openai.OpenAI")
+@patch("learnwithai.services.ai_completion_service.openai.AzureOpenAI")
 def test_complete_returns_empty_string_for_none_content(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
@@ -64,7 +69,7 @@ def test_complete_returns_empty_string_for_none_content(mock_openai_cls: MagicMo
     assert result == ""
 
 
-@patch("learnwithai.services.ai_completion_service.openai.OpenAI")
+@patch("learnwithai.services.ai_completion_service.openai.AzureOpenAI")
 def test_complete_uses_default_model_when_no_override(mock_openai_cls: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_cls.return_value = mock_client
@@ -75,3 +80,23 @@ def test_complete_uses_default_model_when_no_override(mock_openai_cls: MagicMock
 
     call_kwargs = mock_client.chat.completions.create.call_args
     assert call_kwargs.kwargs["model"] == "custom-model"
+
+
+@patch("learnwithai.services.ai_completion_service.openai.AzureOpenAI")
+def test_complete_uses_custom_endpoint_and_api_version(mock_openai_cls: MagicMock) -> None:
+    mock_client = MagicMock()
+    mock_openai_cls.return_value = mock_client
+    mock_client.chat.completions.create.return_value = _mock_completion("ok")
+
+    AiCompletionService(
+        api_key="sk-test",
+        model="custom-model",
+        endpoint="https://example.azure.com",
+        api_version="2024-10-21",
+    )
+
+    mock_openai_cls.assert_called_once_with(
+        api_key="sk-test",
+        azure_endpoint="https://example.azure.com",
+        api_version="2024-10-21",
+    )

@@ -45,7 +45,7 @@ class JokeGenerationJobHandler(BaseJobHandler[JokeGenerationJob]):
         """
         settings = get_settings()
         if not settings.openai_api_key:
-            raise RuntimeError("openai_api_key is not configured. Set the OPENAI_API_KEY environment variable.")
+            raise RuntimeError("openai_api_key is not configured. Set OPENAI_API_KEY or AZURE_OPENAI_API_KEY.")
 
         async_job_repo = AsyncJobRepository(session)
         async_job = async_job_repo.get_by_id(job.job_id)
@@ -58,7 +58,12 @@ class JokeGenerationJobHandler(BaseJobHandler[JokeGenerationJob]):
             raise ValueError(f"Joke for AsyncJob {job.job_id} not found")
 
         system_prompt = JOKE_SYSTEM_PROMPT.format(count=DEFAULT_JOKE_COUNT)
-        ai_svc = AiCompletionService(api_key=settings.openai_api_key, model=settings.openai_model)
+        ai_svc = AiCompletionService(
+            api_key=settings.openai_api_key,
+            model=settings.openai_model,
+            endpoint=settings.openai_endpoint,
+            api_version=settings.openai_api_version,
+        )
         raw_response = ai_svc.complete(system_prompt=system_prompt, user_prompt=joke.prompt)
 
         jokes = _parse_jokes(raw_response, DEFAULT_JOKE_COUNT)

@@ -50,6 +50,21 @@ What `deploy.sh` does for you:
 - starts the first build
 - prints the webhook URL used by GitHub Actions
 
+## Azure OpenAI Secrets
+
+The deployed app and worker both read AI configuration from the `learnwithai-secrets` secret.
+
+Provide these values in `infra/manifests/secrets.local.yaml` before running `deploy.sh`:
+
+- `OPENAI_API_KEY`: Azure subscription key for the configured endpoint
+- `OPENAI_MODEL`: Azure deployment name used by AI-backed jobs
+- `OPENAI_ENDPOINT`: Azure endpoint host, for example `https://azureaiapi.cloud.unc.edu`
+- `OPENAI_API_VERSION`: Azure API version, for example `2025-04-01-preview`
+
+The backend also accepts `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_API_VERSION`, but the checked-in manifest templates use the `OPENAI_*` names for consistency with the rest of the repository.
+
+If the worker logs `401 Access denied due to invalid subscription key`, the app is reaching Azure correctly and the secret value itself is wrong for that endpoint or subscription.
+
 ## Common Operations
 
 ### Roll out a new version

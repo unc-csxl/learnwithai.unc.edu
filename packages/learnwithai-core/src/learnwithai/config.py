@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import computed_field
+from pydantic import AliasChoices, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["development", "test", "production"]
@@ -39,8 +39,22 @@ class Settings(BaseSettings):
     static_dir: str = ""
 
     # OpenAI
-    openai_api_key: str | None = None
-    openai_model: str = "gpt-4o-mini"
+    openai_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("AZURE_OPENAI_API_KEY", "OPENAI_API_KEY"),
+    )
+    openai_model: str = Field(
+        default="gpt-5-mini",
+        validation_alias=AliasChoices("AZURE_OPENAI_DEPLOYMENT", "OPENAI_MODEL"),
+    )
+    openai_endpoint: str = Field(
+        default="https://azureaiapi.cloud.unc.edu",
+        validation_alias=AliasChoices("AZURE_OPENAI_ENDPOINT", "OPENAI_ENDPOINT"),
+    )
+    openai_api_version: str = Field(
+        default="2025-04-01-preview",
+        validation_alias=AliasChoices("AZURE_OPENAI_API_VERSION", "OPENAI_API_VERSION"),
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

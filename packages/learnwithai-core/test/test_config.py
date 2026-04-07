@@ -124,3 +124,32 @@ def test_get_settings_returns_cached_settings_instance() -> None:
 
     # Assert
     assert first_settings is second_settings
+
+
+def test_settings_accepts_azure_openai_env_var_aliases(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Arrange
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "azure-key")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "teaching-assistant")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_OPENAI_API_VERSION", "2024-10-21")
+
+    # Act
+    settings = Settings()
+
+    # Assert
+    assert settings.openai_api_key == "azure-key"
+    assert settings.openai_model == "teaching-assistant"
+    assert settings.openai_endpoint == "https://example.azure.com"
+    assert settings.openai_api_version == "2024-10-21"
+
+
+def test_azure_openai_env_vars_take_precedence_over_legacy_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Arrange
+    monkeypatch.setenv("OPENAI_API_KEY", "repo-key")
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "azure-key")
+
+    # Act
+    settings = Settings()
+
+    # Assert
+    assert settings.openai_api_key == "azure-key"

@@ -44,6 +44,32 @@ What it runs:
 - Pytest with coverage across the Python workspaces, forced onto the dedicated PostgreSQL test database
 - Prettier, ESLint, and Angular tests in the frontend workspace
 
+## Azure OpenAI Configuration
+
+The AI-backed features in `learnwithai-core` now call Azure OpenAI through the OpenAI Python SDK.
+
+For this repository, the app reads these settings from `.env` in development and from OKD secrets in deployment:
+
+- `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY`: the Azure subscription key for the Azure OpenAI-compatible endpoint
+- `OPENAI_MODEL` or `AZURE_OPENAI_DEPLOYMENT`: the Azure deployment name, defaulting to `gpt-5-mini`
+- `OPENAI_ENDPOINT` or `AZURE_OPENAI_ENDPOINT`: the Azure endpoint host, defaulting to `https://azureaiapi.cloud.unc.edu`
+- `OPENAI_API_VERSION` or `AZURE_OPENAI_API_VERSION`: the Azure API version, defaulting to `2025-04-01-preview`
+
+Important details:
+
+- A `401 Access denied due to invalid subscription key` error means the request reached Azure successfully, but the key is not valid for that endpoint.
+- You do not need to rename your variable if you already use `OPENAI_API_KEY`; the app accepts both the repository's legacy `OPENAI_*` names and Azure-style `AZURE_OPENAI_*` names.
+- The deployment value must be the Azure deployment name configured on the endpoint. `gpt-5-mini` only works if that exact deployment exists in the target Azure environment.
+
+Example local `.env` entries:
+
+```bash
+OPENAI_API_KEY=<azure-subscription-key>
+OPENAI_MODEL=<azure-deployment-name>
+OPENAI_ENDPOINT=https://azureaiapi.cloud.unc.edu
+OPENAI_API_VERSION=2025-04-01-preview
+```
+
 Before `pytest`, the QA script resets the PostgreSQL test database so local runs start clean like GitHub Actions.
 
 If you are not sure whether your work is ready, run `./scripts/qa.sh --check`. That is the closest local match to the GitHub Actions workflow.

@@ -129,6 +129,23 @@ The OKD cluster handles the build by cloning the repository with the deploy key 
 - TLS terminates at the OKD Route.
 - The production image runs as a non-root user.
 
+## Azure OpenAI In Deployment
+
+AI-backed jobs run in the worker and use the same secret-backed configuration as the API process.
+
+Set these keys in `learnwithai-secrets`:
+
+- `OPENAI_API_KEY`: Azure subscription key for the endpoint
+- `OPENAI_MODEL`: Azure deployment name
+- `OPENAI_ENDPOINT`: Azure endpoint host
+- `OPENAI_API_VERSION`: Azure API version
+
+Operational guidance:
+
+- A `404 Resource not found` error usually means the endpoint or deployment path is wrong.
+- A `401 invalid subscription key` error means the endpoint was reached but the credential was rejected.
+- The deployment name must match the Azure deployment configured on the target service. A model family name is not enough unless the deployment was created with the same name.
+
 ## Useful OKD Commands
 
 ```bash

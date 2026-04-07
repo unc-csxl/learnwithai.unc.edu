@@ -48,7 +48,7 @@ def test_handler_calls_ai_service_and_stores_output() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -158,7 +158,7 @@ def test_handler_rolls_back_on_ai_error() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -217,7 +217,7 @@ def test_handler_raises_when_async_job_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -266,7 +266,7 @@ def test_handler_raises_when_joke_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),

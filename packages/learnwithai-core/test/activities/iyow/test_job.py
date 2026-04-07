@@ -71,7 +71,7 @@ def test_handler_generates_feedback_and_stores_result() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -170,7 +170,7 @@ def test_handler_raises_when_async_job_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -216,7 +216,7 @@ def test_handler_raises_when_iyow_submission_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -274,7 +274,7 @@ def test_handler_raises_when_base_submission_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),
@@ -345,7 +345,7 @@ def test_handler_raises_when_iyow_activity_not_found() -> None:
 
     mock_settings = MagicMock()
     mock_settings.openai_api_key = "sk-test"
-    mock_settings.openai_model = "gpt-4o-mini"
+    mock_settings.openai_model = "gpt-5-mini"
 
     with (
         patch.object(handler, "_build_notifier", return_value=mock_notifier),

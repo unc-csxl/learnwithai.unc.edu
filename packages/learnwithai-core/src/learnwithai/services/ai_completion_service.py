@@ -2,7 +2,7 @@
 
 Provides a single abstraction that feature-specific services (joke
 generation, quiz generation, tutoring, etc.) call instead of importing
-the ``openai`` package directly.  Each call site can pass its own model
+the ``openai`` package directly. Each call site can pass its own model
 preference.
 """
 
@@ -17,14 +17,27 @@ class AiCompletionService:
         _model: Default model identifier used for completions.
     """
 
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gpt-5-mini",
+        *,
+        endpoint: str = "https://azureaiapi.cloud.unc.edu",
+        api_version: str = "2025-04-01-preview",
+    ):
         """Initializes the service with an API key and default model.
 
         Args:
             api_key: OpenAI API key.
-            model: Default model to use when callers do not override.
+            model: Default Azure deployment name to use when callers do not override.
+            endpoint: Azure OpenAI endpoint host.
+            api_version: Azure OpenAI API version.
         """
-        self._client = openai.OpenAI(api_key=api_key)
+        self._client = openai.AzureOpenAI(
+            api_key=api_key,
+            azure_endpoint=endpoint,
+            api_version=api_version,
+        )
         self._model = model
 
     def complete(
