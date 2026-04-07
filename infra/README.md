@@ -14,8 +14,8 @@ infra/
 |- Dockerfile                 Production image build
 |- manifests/
 |  |- namespace.yaml          Namespace template
-|  |- secrets.yaml            Checked-in secrets template
-|  |- secrets.local.yaml      Local-only secrets file for real values
+|  |- secrets.example.yaml    Checked-in secrets template
+|  `- secrets.yaml            Local-only secrets file with real values
 |  |- postgres.yaml           PostgreSQL resources
 |  |- rabbitmq.yaml           RabbitMQ resources
 |  |- app.yaml                App build and deployment resources
@@ -24,6 +24,7 @@ infra/
 |  `- route.yaml              Public route
 `- scripts/
    |- deploy.sh               First-time deploy helper
+   |- update_secrets.sh       Apply updated runtime secrets and restart workloads
    |- rollout.sh              Rebuild and roll forward
    |- reset_db.sh             Reset deployed database and seed demo data
    `- destroy.sh              Tear down deployment resources
@@ -35,8 +36,8 @@ Replace `<your-namespace>` with your team's OKD namespace.
 
 ```bash
 oc login https://your-cluster-api:6443
-cp infra/manifests/secrets.yaml infra/manifests/secrets.local.yaml
-# edit infra/manifests/secrets.local.yaml with real values
+cp infra/manifests/secrets.example.yaml infra/manifests/secrets.yaml
+# edit infra/manifests/secrets.yaml with real values
 ./infra/scripts/deploy.sh <your-namespace>
 ```
 
@@ -54,7 +55,7 @@ What `deploy.sh` does for you:
 
 The deployed app and worker both read AI configuration from the `learnwithai-secrets` secret.
 
-Provide these values in `infra/manifests/secrets.local.yaml` before running `deploy.sh`:
+Provide these values in `infra/manifests/secrets.yaml` before running `deploy.sh`:
 
 - `OPENAI_API_KEY`: Azure subscription key for the configured endpoint
 - `OPENAI_MODEL`: Azure deployment name used by AI-backed jobs
@@ -72,6 +73,16 @@ If the worker logs `401 Access denied due to invalid subscription key`, the app 
 ```bash
 ./infra/scripts/rollout.sh <your-namespace>
 ```
+
+### Update deployed secrets
+
+```bash
+./infra/scripts/update_secrets.sh <your-namespace>
+```
+
+This reapplies `infra/manifests/secrets.yaml` and restarts PostgreSQL, RabbitMQ, the app, and the worker so the new values take effect.
+
+Use `--dry-run` to validate the manifest against the cluster without changing anything.
 
 ### Reset deployed data
 

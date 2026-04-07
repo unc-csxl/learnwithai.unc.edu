@@ -38,11 +38,12 @@ infra/
 |  |- postgres.yaml           PostgreSQL resources
 |  |- rabbitmq.yaml           RabbitMQ resources
 |  |- route.yaml              Public route
-|  |- secrets.yaml            Template secrets file
-|  |- secrets.local.yaml      Local-only secrets file with real values
+|  |- secrets.example.yaml    Template secrets file
+|  `- secrets.yaml            Local-only secrets file with real values
 |  `- webhook-rbac.yaml       Webhook access binding
 `- scripts/
     |- deploy.sh               First-time deployment
+    |- update_secrets.sh       Apply updated runtime secrets
     |- rollout.sh              Rebuild and roll forward
     |- reset_db.sh             Reset deployed data
     `- destroy.sh              Tear down deployment resources
@@ -68,6 +69,12 @@ Use this when the namespace is not set up yet:
 - starts the first build
 - prints the OKD webhook URL used by GitHub Actions
 
+Before the first deploy, create the local runtime secret manifest:
+
+```bash
+cp infra/manifests/secrets.example.yaml infra/manifests/secrets.yaml
+```
+
 ### Deploy a new revision
 
 Use this after the initial deployment exists:
@@ -77,6 +84,16 @@ Use this after the initial deployment exists:
 ```
 
 This streams the current repository checkout to the existing OKD BuildConfig, waits for the build, and then waits for the app and worker rollouts.
+
+### Update deployed secrets
+
+Use this after editing `infra/manifests/secrets.yaml`:
+
+```bash
+./infra/scripts/update_secrets.sh <your-namespace>
+```
+
+This reapplies the three OKD Secret objects defined in the manifest and restarts the dependent deployments so the new environment values are loaded.
 
 ### Reset deployed data
 

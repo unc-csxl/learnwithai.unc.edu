@@ -62,6 +62,10 @@ delete_manifest() {
     envsubst '${NAMESPACE}' < "$1" | oc delete --ignore-not-found=true -f -
 }
 
+delete_secret() {
+    oc delete secret "$@" -n "$NAMESPACE" --ignore-not-found=true >/dev/null
+}
+
 confirm() {
     local prompt="$1"
     local response
@@ -111,13 +115,8 @@ delete_manifest "$MANIFESTS_DIR/rabbitmq.yaml"
 info "Deleting PostgreSQL..."
 delete_manifest "$MANIFESTS_DIR/postgres.yaml"
 
-if [ -f "$MANIFESTS_DIR/secrets.local.yaml" ]; then
-    info "Deleting secrets from secrets.local.yaml..."
-    delete_manifest "$MANIFESTS_DIR/secrets.local.yaml"
-else
-    info "Deleting secrets from secrets.yaml..."
-    delete_manifest "$MANIFESTS_DIR/secrets.yaml"
-fi
+info "Deleting runtime secrets..."
+delete_secret learnwithai-secrets learnwithai-postgres-credentials learnwithai-rabbitmq-credentials
 
 if [ "$DELETE_NAMESPACE" = true ]; then
     info "Deleting namespace $NAMESPACE..."

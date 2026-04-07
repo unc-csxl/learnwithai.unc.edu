@@ -87,7 +87,7 @@ The application deploys to an OKD cluster. See `infra/DEPLOYMENT.md` for the ful
 **First-time setup:**
 
 ```bash
-# Edit secrets, then run:
+# Create infra/manifests/secrets.yaml from infra/manifests/secrets.example.yaml, edit it, then run:
 ./infra/scripts/deploy.sh <your-namespace>
 ```
 

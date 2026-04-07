@@ -102,6 +102,20 @@ apply_manifest() {
     envsubst '${NAMESPACE} ${GIT_REPO_URL} ${GIT_REF}' < "$1" | oc apply -f -
 }
 
+resolve_runtime_secrets_file() {
+    if [ -f "$MANIFESTS_DIR/secrets.yaml" ]; then
+        echo "$MANIFESTS_DIR/secrets.yaml"
+        return
+    fi
+
+    if [ -f "$MANIFESTS_DIR/secrets.local.yaml" ]; then
+        echo "$MANIFESTS_DIR/secrets.local.yaml"
+        return
+    fi
+
+    fail "Expected $MANIFESTS_DIR/secrets.yaml. Copy infra/manifests/secrets.example.yaml to secrets.yaml and fill in real values first."
+}
+
 ensure_namespace() {
     if oc get namespace "$NAMESPACE" >/dev/null 2>&1; then
         warn "Namespace $NAMESPACE already exists. Reusing it without modifying cluster-scoped metadata."
@@ -200,6 +214,7 @@ GENERIC_WEBHOOK_SECRET="${GENERIC_WEBHOOK_SECRET:-}"
 ROTATE_DEPLOY_KEY=0
 NON_INTERACTIVE=0
 SOURCE_HOST=""
+SECRETS_FILE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -287,12 +302,10 @@ info "Logged in as: $(oc whoami)"
 info "Cluster: $(oc whoami --show-server)"
 echo
 
-if [ ! -f "$MANIFESTS_DIR/secrets.local.yaml" ]; then
-    fail "Expected $MANIFESTS_DIR/secrets.local.yaml. Copy infra/manifests/secrets.yaml to secrets.local.yaml and fill in real values first."
-fi
+SECRETS_FILE="$(resolve_runtime_secrets_file)"
 
-if grep -q '<PLACEHOLDER>\|<DB_PASSWORD>\|<RABBITMQ_PASSWORD>\|<GENERATE_A_STRONG_SECRET>\|<PUBLIC_HOSTNAME>' "$MANIFESTS_DIR/secrets.local.yaml"; then
-    fail "secrets.local.yaml still contains placeholder values. Edit it before deploying."
+if grep -q '<PLACEHOLDER>\|<DB_PASSWORD>\|<RABBITMQ_PASSWORD>\|<GENERATE_A_STRONG_SECRET>\|<PUBLIC_HOSTNAME>' "$SECRETS_FILE"; then
+    fail "$(basename "$SECRETS_FILE") still contains placeholder values. Edit it before deploying."
 fi
 
 ensure_deploy_key
@@ -302,8 +315,8 @@ info "Step 1/7: Creating namespace..."
 ensure_namespace
 echo
 
-info "Step 2/7: Applying runtime secrets..."
-envsubst '${NAMESPACE}' < "$MANIFESTS_DIR/secrets.local.yaml" | oc apply -f -
+info "Step 2/7: Applying runtime secrets from $(basename "$SECRETS_FILE")..."
+envsubst '${NAMESPACE}' < "$SECRETS_FILE" | oc apply -f -
 echo
 
 info "Step 3/7: Creating build + webhook secrets..."
