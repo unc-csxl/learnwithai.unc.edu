@@ -23,11 +23,14 @@ The repository is designed to work especially well in VS Code with the multi-roo
    - Run `cp .env.example .env`
    - Set `OPENAI_API_KEY` to a real Azure OpenAI-compatible subscription key
    - Leave the database and RabbitMQ defaults as-is when using the dev container unless you have a specific override
-5. Start the app stack:
+5. Create the development database:
+   - Run `uv run python3 packages/learnwithai-core/scripts/create_database.py`
+   - If you need to wipe and reseed development data later, run `uv run python3 packages/learnwithai-core/scripts/reset_database.py`
+6. Start the app stack:
    - Frontend: run the `start` task from the `frontend` workspace, or run `cd frontend && pnpm start`
    - API: run the `api: run` task from the repository workspace
    - Worker: run the `job queue: run` task from the repository workspace
-6. Open the running services:
+7. Open the running services:
    - Frontend: `http://localhost:4200`
    - API health check: `http://localhost:8000/api/health`
    - RabbitMQ management UI: `http://localhost:15672`
