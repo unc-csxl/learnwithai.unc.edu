@@ -25,6 +25,8 @@ export type { AddMember$Params as AddMember$Params } from './fn/courses/add-memb
 export { addMember as addMember } from './fn/courses/add-member';
 export type { DropMember$Params as DropMember$Params } from './fn/courses/drop-member';
 export { dropMember as dropMember } from './fn/courses/drop-member';
+export type { UpdateMemberRole$Params as UpdateMemberRole$Params } from './fn/courses/update-member-role';
+export { updateMemberRole as updateMemberRole } from './fn/courses/update-member-role';
 export type { ListActivities$Params as ListActivities$Params } from './fn/activities/list-activities';
 export { listActivities as listActivities } from './fn/activities/list-activities';
 export type { CreateIyowActivity$Params as CreateIyowActivity$Params } from './fn/activities/create-iyow-activity';

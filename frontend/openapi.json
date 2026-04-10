@@ -519,6 +519,73 @@
       }
     },
     "/api/courses/{course_id}/members/{pid}": {
+      "patch": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Update a member's role",
+        "description": "Updates a member's role in a course.\n\nOnly instructors may update member roles. Instructors may not change their\nown role through this endpoint.\n\nArgs:\n    subject: Authenticated subject.\n    course: Course loaded via DI and course_id path param.\n    target_user: User loaded via DI and pid path param.\n    body: Membership role update payload.\n    course_svc: Service used to manage memberships.\n\nReturns:\n    The updated membership.",
+        "operationId": "update_member_role",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated membership.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Only instructors can change member roles."
+          },
+          "404": {
+            "description": "Course, user, or membership not found."
+          },
+          "422": {
+            "description": "The membership cannot be updated."
+          }
+        }
+      },
       "delete": {
         "tags": [
           "Courses"
@@ -2621,6 +2688,19 @@
         ],
         "title": "UpdateIyowActivityRequest",
         "description": "Request body for updating an In Your Own Words activity."
+      },
+      "UpdateMemberRoleRequest": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/MembershipType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "UpdateMemberRoleRequest",
+        "description": "Payload for updating a member's role in a course."
       },
       "UpdateProfileRequest": {
         "properties": {

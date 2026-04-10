@@ -168,6 +168,47 @@ class CourseService:
             )
         )
 
+    def update_member_role(
+        self,
+        subject: User,
+        course: Course,
+        target_user: User,
+        membership_type: MembershipType,
+    ) -> Membership:
+        """Updates a member's role in a course.
+
+        Only an instructor of the course may update member roles.
+
+        Args:
+            subject: Authenticated subject performing the action.
+            course: Course whose membership should be updated.
+            target_user: User whose membership should be updated.
+            membership_type: New role to assign.
+
+        Returns:
+            The updated membership.
+
+        Raises:
+            AuthorizationError: If the requesting user is not an instructor or
+                attempts to change their own role.
+            ValueError: If the target membership does not exist or has already
+                been dropped.
+        """
+        self.authorize_instructor(subject, course)
+
+        if subject.pid == target_user.pid:
+            raise AuthorizationError("Instructors cannot change their own role")
+
+        target_membership = self._membership_repo.get_by_user_and_course(target_user, course)
+        if target_membership is None:
+            course_id = course.id if course.id is not None else "unknown"
+            raise ValueError(f"Target membership does not exist for course {course_id}")
+        if target_membership.state == MembershipState.DROPPED:
+            raise ValueError("Dropped memberships cannot change roles")
+
+        target_membership.type = membership_type
+        return self._membership_repo.update(target_membership)
+
     def drop_member(
         self,
         subject: User,

@@ -27,6 +27,7 @@ export type { SubmitIyowRequest } from './models/submit-iyow-request';
 export type { Term } from './models/term';
 export type { UpdateCourseRequest } from './models/update-course-request';
 export type { UpdateIyowActivityRequest } from './models/update-iyow-activity-request';
+export type { UpdateMemberRoleRequest } from './models/update-member-role-request';
 export type { UpdateProfileRequest } from './models/update-profile-request';
 export type { UserProfile } from './models/user-profile';
 export type { ValidationError } from './models/validation-error';

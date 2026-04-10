@@ -320,6 +320,105 @@ def test_add_member_raises_for_unpersisted_course() -> None:
         )
 
 
+# --- update_member_role ---
+
+
+def test_update_member_role_updates_target_membership() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    requesting_user = _make_user(pid=100)
+    course = _make_course()
+    target_user = _make_user(pid=200)
+    instructor_m = _make_membership(user_pid=100, type=MembershipType.INSTRUCTOR)
+    target_membership = _make_membership(user_pid=200, type=MembershipType.STUDENT)
+    membership_repo.get_by_user_and_course.side_effect = [instructor_m, target_membership]
+    membership_repo.update.side_effect = lambda membership: membership
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act
+    result = svc.update_member_role(requesting_user, course, target_user, MembershipType.TA)
+
+    # Assert
+    assert result is target_membership
+    assert result.type == MembershipType.TA
+
+
+def test_update_member_role_raises_for_non_instructor() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    membership_repo.get_by_user_and_course.return_value = _make_membership(type=MembershipType.STUDENT)
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError):
+        svc.update_member_role(
+            _make_user(pid=100),
+            _make_course(),
+            _make_user(pid=200),
+            MembershipType.TA,
+        )
+
+
+def test_update_member_role_raises_for_self_edit() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    requesting_user = _make_user(pid=100)
+    membership_repo.get_by_user_and_course.return_value = _make_membership(
+        user_pid=100,
+        type=MembershipType.INSTRUCTOR,
+    )
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act / Assert
+    with pytest.raises(AuthorizationError, match="own role"):
+        svc.update_member_role(
+            requesting_user,
+            _make_course(),
+            requesting_user,
+            MembershipType.TA,
+        )
+
+
+def test_update_member_role_raises_when_target_membership_is_missing() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    requesting_user = _make_user(pid=100)
+    membership_repo.get_by_user_and_course.side_effect = [
+        _make_membership(user_pid=100, type=MembershipType.INSTRUCTOR),
+        None,
+    ]
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Target membership does not exist"):
+        svc.update_member_role(
+            requesting_user,
+            _make_course(),
+            _make_user(pid=200),
+            MembershipType.TA,
+        )
+
+
+def test_update_member_role_raises_when_target_membership_is_dropped() -> None:
+    # Arrange
+    membership_repo = MagicMock(spec=MembershipRepository)
+    requesting_user = _make_user(pid=100)
+    membership_repo.get_by_user_and_course.side_effect = [
+        _make_membership(user_pid=100, type=MembershipType.INSTRUCTOR),
+        _make_membership(user_pid=200, type=MembershipType.STUDENT, state=MembershipState.DROPPED),
+    ]
+    svc = _build_service(membership_repo=membership_repo)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="Dropped memberships cannot change roles"):
+        svc.update_member_role(
+            requesting_user,
+            _make_course(),
+            _make_user(pid=200),
+            MembershipType.TA,
+        )
+
+
 # --- drop_member ---
 
 

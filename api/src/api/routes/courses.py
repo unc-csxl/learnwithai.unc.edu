@@ -26,6 +26,7 @@ from ..models import (
     PaginatedRosterResponse,
     RosterMemberResponse,
     UpdateCourseRequest,
+    UpdateMemberRoleRequest,
 )
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
@@ -216,6 +217,48 @@ def add_member(
         target_user,
         add_member_request.type,
     )
+    return MembershipResponse.model_validate(membership)
+
+
+@router.patch(
+    "/{course_id}/members/{pid}",
+    response_model=MembershipResponse,
+    summary="Update a member's role",
+    response_description="The updated membership.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Only instructors can change member roles."},
+        404: {"description": "Course, user, or membership not found."},
+        422: {"description": "The membership cannot be updated."},
+    },
+)
+def update_member_role(
+    subject: AuthenticatedUserDI,
+    course: CourseByCourseIDPathDI,
+    target_user: UserByPIDPathDI,
+    body: Annotated[UpdateMemberRoleRequest, Body()],
+    course_svc: CourseServiceDI,
+) -> MembershipResponse:
+    """Updates a member's role in a course.
+
+    Only instructors may update member roles. Instructors may not change their
+    own role through this endpoint.
+
+    Args:
+        subject: Authenticated subject.
+        course: Course loaded via DI and course_id path param.
+        target_user: User loaded via DI and pid path param.
+        body: Membership role update payload.
+        course_svc: Service used to manage memberships.
+
+    Returns:
+        The updated membership.
+    """
+    try:
+        membership = course_svc.update_member_role(subject, course, target_user, body.type)
+    except ValueError as exc:
+        status_code = 404 if str(exc).startswith("Target membership does not exist") else 422
+        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
     return MembershipResponse.model_validate(membership)
 
 
