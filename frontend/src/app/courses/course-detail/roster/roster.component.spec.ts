@@ -7,14 +7,23 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
 import { signal, WritableSignal } from '@angular/core';
 import { Roster } from './roster.component';
+import { AuthService } from '../../../auth.service';
 import { CourseService } from '../../course.service';
-import { PaginatedRoster, RosterMember, RosterUploadStatus } from '../../../api/models';
+import {
+  Course,
+  PaginatedRoster,
+  RosterMember,
+  RosterUploadStatus,
+  User,
+} from '../../../api/models';
 import { PageTitleService } from '../../../page-title.service';
 import { JobUpdateService, JobUpdate } from '../../../job-update.service';
 import { LayoutNavigationService } from '../../../layout/layout-navigation.service';
 import { RosterUploadResultDialog } from './roster-upload-result-dialog.component';
+import { SuccessSnackbarService } from '../../../success-snackbar.service';
 
 const fakeMembers: RosterMember[] = [
   {
@@ -53,13 +62,49 @@ describe('Roster', () => {
 
   let jobUpdateSignal: WritableSignal<JobUpdate | null>;
 
-  async function setup(options: { response?: PaginatedRoster; error?: { status: number } } = {}) {
+  async function setup(
+    options: {
+      response?: PaginatedRoster;
+      currentUser?: User | null;
+      error?: { status: number };
+      viewerCourseMissing?: boolean;
+      currentUserPid?: number;
+      viewerRoleError?: boolean;
+      viewerRole?: Course['membership']['type'];
+    } = {},
+  ) {
     jobUpdateSignal = signal<JobUpdate | null>(null);
+    const currentUserPid = options.currentUserPid ?? 100;
+    const viewerRole = options.viewerRole ?? 'instructor';
+
+    const mockCourses: Course[] = [
+      {
+        id: options.viewerCourseMissing ? 2 : 1,
+        course_number: 'COMP101',
+        name: 'Intro to CS',
+        description: '',
+        term: 'fall',
+        year: 2026,
+        membership: { type: viewerRole, state: 'enrolled' },
+      },
+    ];
 
     const mockService = {
+      getMyCourses: options.viewerRoleError
+        ? vi.fn(() => Promise.reject(new Error('viewer role failed')))
+        : vi.fn(() => Promise.resolve(mockCourses)),
       getRoster: options.error
         ? vi.fn(() => Promise.reject(options.error))
         : vi.fn(() => Promise.resolve(options.response ?? fakeResponse)),
+      updateMemberRole: vi.fn(
+        (courseId: number, pid: number, body: { type: RosterMember['type'] }) =>
+          Promise.resolve({
+            course_id: courseId,
+            user_pid: pid,
+            type: body.type,
+            state: 'enrolled',
+          }),
+      ),
       uploadRoster: vi.fn(() => Promise.resolve({ id: 42, status: 'pending' })),
       getRosterUploadStatus: vi.fn(),
     };
@@ -70,6 +115,21 @@ describe('Roster', () => {
       updateForJob: vi.fn(() => jobUpdateSignal.asReadonly()),
     };
     const mockLayoutNavigation = { clearContext: vi.fn() };
+    const mockSuccessSnackbar = { open: vi.fn() };
+    const currentUser =
+      'currentUser' in options
+        ? options.currentUser
+        : {
+            pid: currentUserPid,
+            onyen: 'testuser',
+            name: 'Test User',
+            given_name: 'Test',
+            family_name: 'User',
+            email: 'test@unc.edu',
+          };
+    const mockAuthService = {
+      user: signal<User | null>(currentUser ?? null).asReadonly(),
+    };
 
     const mockRoute = {
       parent: { snapshot: { paramMap: new Map([['id', '1']]) } },
@@ -82,6 +142,8 @@ describe('Roster', () => {
         { provide: CourseService, useValue: mockService },
         { provide: JobUpdateService, useValue: mockJobUpdateService },
         { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: SuccessSnackbarService, useValue: mockSuccessSnackbar },
         {
           provide: PageTitleService,
           useValue: {
@@ -109,6 +171,7 @@ describe('Roster', () => {
       mockService,
       mockJobUpdateService,
       mockLayoutNavigation,
+      mockSuccessSnackbar,
       snackBarOpen,
       snackBarDismiss,
       dialogOpen,
@@ -141,6 +204,12 @@ describe('Roster', () => {
     expect(input).toBeTruthy();
   });
 
+  it('should show role column header', async () => {
+    const { fixture } = await setup();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Role');
+  });
+
   it('should show paginator', async () => {
     const { fixture } = await setup();
     const el: HTMLElement = fixture.nativeElement;
@@ -168,6 +237,72 @@ describe('Roster', () => {
     const el: HTMLElement = fixture.nativeElement;
     const row = el.querySelector('tr[mat-row]');
     expect(row?.classList.contains('inactive-row')).toBe(true);
+  });
+
+  it('should render editable role selects for instructor viewers', async () => {
+    const { fixture } = await setup();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(2);
+    expect(el.querySelectorAll('.role-readonly').length).toBe(0);
+  });
+
+  it('should render self row role as read-only', async () => {
+    const { fixture } = await setup({ currentUserPid: 111 });
+    const el: HTMLElement = fixture.nativeElement;
+    const readonlyRole = el.querySelector('.role-readonly');
+    expect(readonlyRole?.textContent).toContain('Instructor');
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(1);
+  });
+
+  it('should render all role cells as read-only for non-instructor viewers', async () => {
+    const { fixture } = await setup({ viewerRole: 'ta' });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(0);
+    expect(el.querySelectorAll('.role-readonly').length).toBe(2);
+  });
+
+  it('should render dropped members as read-only even for instructors', async () => {
+    const response: PaginatedRoster = {
+      items: [
+        {
+          user_pid: 333,
+          course_id: 1,
+          type: 'student',
+          state: 'dropped',
+          given_name: 'Charlie',
+          family_name: 'Charlie',
+          email: 'charlie@unc.edu',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 25,
+    };
+    const { fixture } = await setup({ response });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(0);
+    expect(el.querySelector('.role-readonly')?.textContent).toContain('Student');
+  });
+
+  it('should fall back to read-only roles when viewer role lookup fails', async () => {
+    const { fixture } = await setup({ viewerRoleError: true });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(0);
+    expect(el.querySelectorAll('.role-readonly').length).toBe(2);
+  });
+
+  it('should fall back to read-only roles when the course membership is missing', async () => {
+    const { fixture } = await setup({ viewerCourseMissing: true });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(0);
+    expect(el.querySelectorAll('.role-readonly').length).toBe(2);
+  });
+
+  it('should fall back to read-only roles when the current user profile is unavailable', async () => {
+    const { fixture } = await setup({ currentUser: null });
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('.role-select-field mat-select').length).toBe(0);
+    expect(el.querySelectorAll('.role-readonly').length).toBe(2);
   });
 
   it('should show 403 error message', async () => {
@@ -317,6 +452,95 @@ describe('Roster', () => {
 
     // The query is '' which matches the initial searchQuery, so no new call
     expect(mockService.getRoster.mock.calls.length).toBe(initialCallCount);
+  });
+
+  it('should update a member role and show a success snackbar', async () => {
+    const { fixture, mockService, mockSuccessSnackbar } = await setup();
+    const component = fixture.componentInstance;
+
+    mockService.updateMemberRole.mockResolvedValue({
+      user_pid: 222,
+      course_id: 1,
+      type: 'ta',
+      state: 'enrolled',
+    });
+
+    await component['onRoleChange'](component['roster']()[1], 'ta');
+    fixture.detectChanges();
+
+    expect(mockService.updateMemberRole).toHaveBeenCalledWith(1, 222, { type: 'ta' });
+    expect(component['roster']()[1].type).toBe('ta');
+    expect(mockSuccessSnackbar.open).toHaveBeenCalledWith('Updated Bob Bravo to TA.');
+  });
+
+  it('should trigger role updates from the mat-select selectionChange binding', async () => {
+    const { fixture, mockService } = await setup();
+    mockService.updateMemberRole.mockResolvedValue({
+      user_pid: 222,
+      course_id: 1,
+      type: 'ta',
+      state: 'enrolled',
+    });
+
+    const roleSelect = fixture.debugElement.queryAll(By.css('.role-select-field mat-select'))[1];
+    roleSelect.triggerEventHandler('selectionChange', { value: 'ta' });
+    await flush();
+    fixture.detectChanges();
+
+    expect(mockService.updateMemberRole).toHaveBeenCalledWith(1, 222, { type: 'ta' });
+  });
+
+  it('should revert the role and show an error snackbar when update fails', async () => {
+    const { fixture, mockService, snackBarOpen } = await setup();
+    const component = fixture.componentInstance;
+
+    mockService.updateMemberRole.mockRejectedValue(new Error('fail'));
+
+    await component['onRoleChange'](component['roster']()[1], 'ta');
+    fixture.detectChanges();
+
+    expect(component['roster']()[1].type).toBe('student');
+    expect(snackBarOpen).toHaveBeenCalledWith('Failed to update member role.', 'Dismiss', {
+      duration: 5000,
+    });
+  });
+
+  it('should track row-level saving state while a role update is in flight', async () => {
+    const { fixture, mockService } = await setup();
+    const component = fixture.componentInstance;
+
+    let resolveUpdate!: (value: {
+      user_pid: number;
+      course_id: number;
+      type: RosterMember['type'];
+      state: 'enrolled';
+    }) => void;
+    mockService.updateMemberRole.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+
+    const updatePromise = component['onRoleChange'](component['roster']()[1], 'ta');
+    fixture.detectChanges();
+
+    expect(component['isSavingRole'](222)).toBe(true);
+    expect(component['isSavingRole'](111)).toBe(false);
+
+    resolveUpdate({ user_pid: 222, course_id: 1, type: 'ta', state: 'enrolled' });
+    await updatePromise;
+
+    expect(component['isSavingRole'](222)).toBe(false);
+  });
+
+  it('should ignore redundant role changes', async () => {
+    const { fixture, mockService } = await setup();
+    const component = fixture.componentInstance;
+
+    await component['onRoleChange'](component['roster']()[1], 'student');
+
+    expect(mockService.updateMemberRole).not.toHaveBeenCalled();
   });
 
   it('should clear debounce timer on destroy', async () => {

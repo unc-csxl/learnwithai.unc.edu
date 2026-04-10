@@ -12,6 +12,7 @@ import { updateCourse } from '../api/generated/fn/courses/update-course';
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember } from '../api/generated/fn/courses/add-member';
 import { dropMember } from '../api/generated/fn/courses/drop-member';
+import { updateMemberRole } from '../api/generated/fn/courses/update-member-role';
 import { uploadRosterCsv } from '../api/generated/fn/roster-uploads/upload-roster-csv';
 import { getRosterUploadStatus as getRosterUploadStatusFn } from '../api/generated/fn/roster-uploads/get-roster-upload-status';
 import {
@@ -20,6 +21,7 @@ import {
   Membership,
   RosterUpload,
   RosterUploadStatus,
+  UpdateMemberRole,
 } from '../api/models';
 
 describe('CourseService', () => {
@@ -135,6 +137,19 @@ describe('CourseService', () => {
     const result = await service.dropMember(1, 999);
     expect(result).toEqual(member);
     expect(api.invoke).toHaveBeenCalledWith(dropMember, { course_id: 1, pid: 999 });
+  });
+
+  it('updates a member role via updateMemberRole', async () => {
+    const member: Membership = { user_pid: 999, course_id: 1, type: 'ta', state: 'enrolled' };
+    const request: UpdateMemberRole = { type: 'ta' };
+    api.invoke.mockResolvedValue(member);
+    const result = await service.updateMemberRole(1, 999, request);
+    expect(result).toEqual(member);
+    expect(api.invoke).toHaveBeenCalledWith(updateMemberRole, {
+      course_id: 1,
+      pid: 999,
+      body: request,
+    });
   });
 
   it('uploads a roster CSV via uploadRosterCsv', async () => {

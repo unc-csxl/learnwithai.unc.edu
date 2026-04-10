@@ -27,6 +27,7 @@ from api.models import (
     MembershipResponse,
     RosterMemberResponse,
     UpdateCourseRequest,
+    UpdateMemberRoleRequest,
 )
 from api.routes.courses import (
     add_member,
@@ -35,6 +36,7 @@ from api.routes.courses import (
     get_course_roster,
     list_my_courses,
     update_course,
+    update_member_role,
 )
 
 # ---- helpers ----
@@ -248,6 +250,62 @@ def test_add_member_raises_404_when_target_user_is_missing() -> None:
     course_svc.add_member.assert_not_called()
 
 
+# ---- update_member_role ----
+
+
+def test_update_member_role_returns_membership_response() -> None:
+    # Arrange
+    user = _stub_user()
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    membership = _stub_membership(user_pid=999, type=MembershipType.TA)
+    course_svc = MagicMock()
+    course_svc.update_member_role.return_value = membership
+    body = UpdateMemberRoleRequest(type=MembershipType.TA)
+
+    # Act
+    result = update_member_role(user, course, target_user, body, course_svc)
+
+    # Assert
+    assert isinstance(result, MembershipResponse)
+    assert result.type == MembershipType.TA
+    course_svc.update_member_role.assert_called_once_with(user, course, target_user, MembershipType.TA)
+
+
+def test_update_member_role_returns_404_for_missing_membership() -> None:
+    # Arrange
+    user = _stub_user()
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    course_svc = MagicMock()
+    course_svc.update_member_role.side_effect = ValueError("Target membership does not exist for course 1")
+    body = UpdateMemberRoleRequest(type=MembershipType.TA)
+
+    # Act / Assert
+    with pytest.raises(Exception) as exc_info:
+        update_member_role(user, course, target_user, body, course_svc)
+
+    assert exc_info.value.status_code == 404  # type: ignore[union-attr]
+    assert exc_info.value.detail == "Target membership does not exist for course 1"  # type: ignore[union-attr]
+
+
+def test_update_member_role_returns_422_for_dropped_membership() -> None:
+    # Arrange
+    user = _stub_user()
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    course_svc = MagicMock()
+    course_svc.update_member_role.side_effect = ValueError("Dropped memberships cannot change roles")
+    body = UpdateMemberRoleRequest(type=MembershipType.TA)
+
+    # Act / Assert
+    with pytest.raises(Exception) as exc_info:
+        update_member_role(user, course, target_user, body, course_svc)
+
+    assert exc_info.value.status_code == 422  # type: ignore[union-attr]
+    assert exc_info.value.detail == "Dropped memberships cannot change roles"  # type: ignore[union-attr]
+
+
 # ---- drop_member ----
 
 
@@ -415,6 +473,71 @@ def test_add_member_endpoint(client: TestClient) -> None:
         target_user,
         MembershipType.STUDENT,
     )
+
+
+@pytest.mark.integration
+def test_update_member_role_endpoint(client: TestClient) -> None:
+    # Arrange
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    target_membership = _stub_membership(user_pid=999, type=MembershipType.TA)
+    mock_svc = MagicMock()
+    mock_svc.update_member_role.return_value = target_membership
+    app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_user_repo = MagicMock()
+    mock_user_repo.get_by_pid.return_value = target_user
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
+
+    # Act
+    response = client.patch(
+        "/api/courses/1/members/999",
+        json={"type": "ta"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["user_pid"] == 999
+    assert body["type"] == "ta"
+    mock_svc.update_member_role.assert_called_once_with(
+        user,
+        course,
+        target_user,
+        MembershipType.TA,
+    )
+
+
+@pytest.mark.integration
+def test_update_member_role_endpoint_returns_403_for_non_instructor(client: TestClient) -> None:
+    # Arrange
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    course = _stub_course()
+    target_user = _stub_user(pid=999, name="Target User", onyen="targetuser")
+    mock_svc = MagicMock()
+    mock_svc.update_member_role.side_effect = AuthorizationError("Only instructors can change member roles")
+    app.dependency_overrides[course_service_factory] = lambda: mock_svc
+    mock_course_repo = MagicMock()
+    mock_course_repo.get_by_id.return_value = course
+    app.dependency_overrides[course_repository_factory] = lambda: mock_course_repo
+    mock_user_repo = MagicMock()
+    mock_user_repo.get_by_pid.return_value = target_user
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
+
+    # Act
+    response = client.patch(
+        "/api/courses/1/members/999",
+        json={"type": "ta"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Only instructors can change member roles"}
 
 
 @pytest.mark.integration

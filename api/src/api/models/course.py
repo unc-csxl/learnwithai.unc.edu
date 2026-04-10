@@ -58,6 +58,12 @@ class AddMemberRequest(BaseModel):
     type: MembershipType
 
 
+class UpdateMemberRoleRequest(BaseModel):
+    """Payload for updating a member's role in a course."""
+
+    type: MembershipType
+
+
 class MembershipResponse(BaseModel):
     """Represents a membership returned by the API."""
 

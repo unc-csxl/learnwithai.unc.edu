@@ -20,6 +20,7 @@ export type { MembershipResponse as Membership } from './generated/models/member
 export type { AddMemberRequest as AddMember } from './generated/models/add-member-request';
 export type { UserProfile as User } from './generated/models/user-profile';
 export type { MembershipType } from './generated/models/membership-type';
+export { MEMBERSHIP_TYPE } from './generated/models/membership-type-array';
 export type { MembershipState } from './generated/models/membership-state';
 export type { RosterMemberResponse as RosterMember } from './generated/models/roster-member-response';
 export type { PaginatedRosterResponse as PaginatedRoster } from './generated/models/paginated-roster-response';
@@ -28,6 +29,7 @@ export type { RosterUploadStatusResponse as RosterUploadStatus } from './generat
 export type { BodyUploadRosterCsv as UploadRosterCsvBody } from './generated/models/body-upload-roster-csv';
 export type { UpdateProfileRequest as UpdateProfile } from './generated/models/update-profile-request';
 export type { UpdateCourseRequest as UpdateCourse } from './generated/models/update-course-request';
+export type { UpdateMemberRoleRequest as UpdateMemberRole } from './generated/models/update-member-role-request';
 export type { CreateJokeRequest as CreateJoke } from './generated/models/create-joke-request';
 export type { JokeResponse as JokeRequest } from './generated/models/joke-response';
 export type { AsyncJobInfo } from './generated/models/async-job-info';

@@ -23,6 +23,19 @@
   justify-content: flex-end;
 }
 
+.role-readonly {
+  display: inline-block;
+  min-width: 4rem;
+}
+
+.role-select-field {
+  --mat-form-field-container-height: 2.5rem;
+  --mat-form-field-container-vertical-padding: 0.5rem;
+
+  min-width: 8rem;
+  width: 9rem;
+}
+
 @media (max-width: 48rem) {
   .roster-toolbar {
     align-items: stretch;

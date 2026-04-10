@@ -20,6 +20,7 @@ from .course import (
     PaginatedRosterResponse,
     RosterMemberResponse,
     UpdateCourseRequest,
+    UpdateMemberRoleRequest,
 )
 from .joke_generation import CreateJokeRequest, JokeResponse
 from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
@@ -44,6 +45,7 @@ __all__ = [
     "RosterUploadStatusResponse",
     "StudentSubmissionRow",
     "SubmitIyowRequest",
+    "UpdateMemberRoleRequest",
     "UpdateCourseRequest",
     "UpdateIyowActivityRequest",
     "UpdateProfileRequest",

@@ -11,6 +11,7 @@ import { updateCourse as updateCourseFn } from '../api/generated/fn/courses/upda
 import { getCourseRoster } from '../api/generated/fn/courses/get-course-roster';
 import { addMember as addMemberFn } from '../api/generated/fn/courses/add-member';
 import { dropMember as dropMemberFn } from '../api/generated/fn/courses/drop-member';
+import { updateMemberRole as updateMemberRoleFn } from '../api/generated/fn/courses/update-member-role';
 import { uploadRosterCsv } from '../api/generated/fn/roster-uploads/upload-roster-csv';
 import { getRosterUploadStatus as getRosterUploadStatusFn } from '../api/generated/fn/roster-uploads/get-roster-upload-status';
 import {
@@ -20,6 +21,7 @@ import {
   PaginatedRoster,
   Membership,
   AddMember,
+  UpdateMemberRole,
   RosterUpload,
   RosterUploadStatus,
 } from '../api/models';
@@ -65,6 +67,15 @@ export class CourseService {
   /** Drops a member from a course. */
   dropMember(courseId: number, pid: number): Promise<Membership> {
     return this.api.invoke(dropMemberFn, { course_id: courseId, pid });
+  }
+
+  /** Updates a member's role in a course. */
+  updateMemberRole(courseId: number, pid: number, request: UpdateMemberRole): Promise<Membership> {
+    return this.api.invoke(updateMemberRoleFn, {
+      course_id: courseId,
+      pid,
+      body: request,
+    });
   }
 
   /** Uploads a Canvas gradebook CSV for asynchronous roster import. */
