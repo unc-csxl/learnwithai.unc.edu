@@ -22,11 +22,14 @@ def test_api_models_exports_expected_symbols() -> None:
         "ImpersonationTokenResponse",
         "IyowActivityResponse",
         "IyowSubmissionResponse",
+        "JobControlOverviewResponse",
+        "JobFailuresResponse",
         "JokeResponse",
         "MembershipResponse",
         "OperatorProfile",
         "OperatorResponse",
         "PaginatedRosterResponse",
+        "QueueInfoResponse",
         "RosterMemberResponse",
         "RosterUploadResponse",
         "RosterUploadStatusResponse",
@@ -39,6 +42,7 @@ def test_api_models_exports_expected_symbols() -> None:
         "UpdateProfileRequest",
         "UsageMetricsResponse",
         "UserProfile",
+        "WorkerInfoResponse",
         "UserSearchResult",
     }
 

@@ -20,6 +20,7 @@ from api.di import (
     iyow_activity_service_factory,
     iyow_submission_repository_factory,
     iyow_submission_service_factory,
+    job_control_service_factory,
     joke_generation_service_factory,
     joke_repository_factory,
     metrics_service_factory,
@@ -264,3 +265,18 @@ def test_metrics_service_factory_returns_service() -> None:
     result = metrics_service_factory(session, operator_svc)
 
     assert isinstance(result, MetricsService)
+
+
+def test_job_control_service_factory_returns_service() -> None:
+    from learnwithai.services.job_control_service import JobControlService
+
+    session = MagicMock()
+    operator_svc = MagicMock()
+    settings = MagicMock()
+    settings.effective_rabbitmq_management_url = "http://rabbitmq:15672"
+    settings.rabbitmq_management_user = "guest"
+    settings.rabbitmq_management_password = "guest"
+
+    result = job_control_service_factory(session, operator_svc, settings)
+
+    assert isinstance(result, JobControlService)

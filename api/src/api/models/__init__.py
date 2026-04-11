@@ -22,6 +22,12 @@ from .course import (
     UpdateCourseRequest,
     UpdateMemberRoleRequest,
 )
+from .job_control import (
+    JobControlOverviewResponse,
+    JobFailuresResponse,
+    QueueInfoResponse,
+    WorkerInfoResponse,
+)
 from .joke_generation import CreateJokeRequest, JokeResponse
 from .metrics import UsageMetricsResponse
 from .operator import (
@@ -48,11 +54,14 @@ __all__ = [
     "ImpersonationTokenResponse",
     "IyowActivityResponse",
     "IyowSubmissionResponse",
+    "JobControlOverviewResponse",
+    "JobFailuresResponse",
     "JokeResponse",
     "MembershipResponse",
     "OperatorProfile",
     "OperatorResponse",
     "PaginatedRosterResponse",
+    "QueueInfoResponse",
     "RosterMemberResponse",
     "RosterUploadResponse",
     "RosterUploadStatusResponse",
@@ -65,5 +74,6 @@ __all__ = [
     "UpdateProfileRequest",
     "UsageMetricsResponse",
     "UserProfile",
+    "WorkerInfoResponse",
     "UserSearchResult",
 ]

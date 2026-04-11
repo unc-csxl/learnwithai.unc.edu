@@ -10,6 +10,7 @@ from learnwithai.tables.operator import effective_permissions
 
 from ..di import (
     AuthenticatedUserDI,
+    JobControlServiceDI,
     MetricsServiceDI,
     OperatorServiceDI,
     SettingsDI,
@@ -18,10 +19,14 @@ from ..di import (
 from ..models import (
     GrantOperatorRequest,
     ImpersonationTokenResponse,
+    JobControlOverviewResponse,
+    JobFailuresResponse,
     OperatorResponse,
+    QueueInfoResponse,
     UpdateOperatorRoleRequest,
     UsageMetricsResponse,
     UserSearchResult,
+    WorkerInfoResponse,
 )
 
 router = APIRouter(prefix="/operations", tags=["Operations"])
@@ -317,3 +322,148 @@ def search_users(
     operator_svc.require_permission(subject, OperatorPermission.IMPERSONATE)
     users = user_repo.search_users(q)
     return [UserSearchResult.model_validate(u, from_attributes=True) for u in users]
+
+
+# --- Job Control ---
+
+
+@router.get(
+    "/jobs/overview",
+    response_model=JobControlOverviewResponse,
+    summary="Get broker health overview",
+    response_description="High-level broker status and queue depths.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_JOBS permission."},
+    },
+)
+def get_jobs_overview(
+    subject: AuthenticatedUserDI,
+    job_control_svc: JobControlServiceDI,
+) -> JobControlOverviewResponse:
+    """Returns broker health overview including queue depths and alarms.
+
+    Requires VIEW_JOBS permission.
+
+    Args:
+        subject: Authenticated operator.
+        job_control_svc: Service for job control operations.
+
+    Returns:
+        Broker health overview.
+    """
+    overview = job_control_svc.get_overview(subject)
+    return JobControlOverviewResponse.model_validate(overview, from_attributes=True)
+
+
+@router.get(
+    "/jobs/queues",
+    response_model=list[QueueInfoResponse],
+    summary="List queue statistics",
+    response_description="Per-queue statistics.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_JOBS permission."},
+    },
+)
+def get_jobs_queues(
+    subject: AuthenticatedUserDI,
+    job_control_svc: JobControlServiceDI,
+) -> list[QueueInfoResponse]:
+    """Returns per-queue statistics from the broker.
+
+    Requires VIEW_JOBS permission.
+
+    Args:
+        subject: Authenticated operator.
+        job_control_svc: Service for job control operations.
+
+    Returns:
+        List of queue statistics.
+    """
+    queues = job_control_svc.get_queues(subject)
+    return [QueueInfoResponse.model_validate(q, from_attributes=True) for q in queues]
+
+
+@router.get(
+    "/jobs/workers",
+    response_model=list[WorkerInfoResponse],
+    summary="List active workers",
+    response_description="Active consumer information.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_JOBS permission."},
+    },
+)
+def get_jobs_workers(
+    subject: AuthenticatedUserDI,
+    job_control_svc: JobControlServiceDI,
+) -> list[WorkerInfoResponse]:
+    """Returns active worker (consumer) information.
+
+    Requires VIEW_JOBS permission.
+
+    Args:
+        subject: Authenticated operator.
+        job_control_svc: Service for job control operations.
+
+    Returns:
+        List of active workers.
+    """
+    workers = job_control_svc.get_workers(subject)
+    return [WorkerInfoResponse.model_validate(w, from_attributes=True) for w in workers]
+
+
+@router.get(
+    "/jobs/failures",
+    response_model=JobFailuresResponse,
+    summary="Get failure summary",
+    response_description="DLQ depth, recent failures, and error buckets.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_JOBS permission."},
+    },
+)
+def get_jobs_failures(
+    subject: AuthenticatedUserDI,
+    job_control_svc: JobControlServiceDI,
+) -> JobFailuresResponse:
+    """Returns failure summary with DLQ messages, recent failures, and buckets.
+
+    Requires VIEW_JOBS permission.
+
+    Args:
+        subject: Authenticated operator.
+        job_control_svc: Service for job control operations.
+
+    Returns:
+        Failure summary.
+    """
+    failures = job_control_svc.get_failures(subject)
+    return JobFailuresResponse.model_validate(failures, from_attributes=True)
+
+
+@router.post(
+    "/jobs/queues/{queue_name}/purge",
+    status_code=204,
+    summary="Purge a queue",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires MANAGE_OPERATORS permission (ADMIN)."},
+    },
+)
+def purge_queue(
+    subject: AuthenticatedUserDI,
+    queue_name: str,
+    job_control_svc: JobControlServiceDI,
+) -> None:
+    """Purges all messages from the specified queue.
+
+    Requires ADMIN role (MANAGE_OPERATORS permission).
+
+    Args:
+        subject: Authenticated operator.
+        queue_name: Name of the queue to purge (path parameter).
+        job_control_svc: Service for job control operations.
+    """
+    job_control_svc.purge_queue(subject, queue_name)

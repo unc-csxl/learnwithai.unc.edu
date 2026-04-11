@@ -16,6 +16,7 @@ from learnwithai.config import Settings, get_settings
 from learnwithai.db import get_session
 from learnwithai.interfaces import JobQueue
 from learnwithai.pagination import PaginationParams
+from learnwithai.rabbitmq_management import RabbitMQManagementClient
 from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.course_repository import CourseRepository
@@ -29,6 +30,7 @@ from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
+from learnwithai.services.job_control_service import JobControlService
 from learnwithai.services.metrics_service import MetricsService
 from learnwithai.services.operator_service import OperatorService
 from learnwithai.services.roster_upload_service import RosterUploadService
@@ -56,6 +58,7 @@ __all__ = [
     "IyowSubmissionServiceDI",
     "JokeGenerationServiceDI",
     "JokeRepositoryDI",
+    "JobControlServiceDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
     "MetricsServiceDI",
@@ -83,6 +86,7 @@ __all__ = [
     "iyow_activity_service_factory",
     "iyow_submission_repository_factory",
     "iyow_submission_service_factory",
+    "job_control_service_factory",
     "joke_generation_service_factory",
     "joke_repository_factory",
     "job_queue_factory",
@@ -337,6 +341,23 @@ def metrics_service_factory(
 
 
 MetricsServiceDI: TypeAlias = Annotated[MetricsService, Depends(metrics_service_factory)]
+
+
+def job_control_service_factory(
+    session: SessionDI,
+    operator_svc: OperatorServiceDI,
+    settings: SettingsDI,
+) -> JobControlService:
+    """Creates the job control service for the current request."""
+    client = RabbitMQManagementClient(
+        base_url=settings.effective_rabbitmq_management_url,
+        username=settings.rabbitmq_management_user,
+        password=settings.rabbitmq_management_password,
+    )
+    return JobControlService(session, operator_svc, client)
+
+
+JobControlServiceDI: TypeAlias = Annotated[JobControlService, Depends(job_control_service_factory)]
 
 
 def joke_generation_service_factory(

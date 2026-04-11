@@ -15,6 +15,7 @@ from learnwithai.tables.operator import OperatorRole
 
 from api.di import (
     get_authenticated_user,
+    job_control_service_factory,
     metrics_service_factory,
     operator_service_factory,
     user_repository_factory,
@@ -23,15 +24,24 @@ from api.main import app
 from api.models import (
     GrantOperatorRequest,
     ImpersonationTokenResponse,
+    JobControlOverviewResponse,
+    JobFailuresResponse,
     OperatorResponse,
+    QueueInfoResponse,
     UpdateOperatorRoleRequest,
     UsageMetricsResponse,
+    WorkerInfoResponse,
 )
 from api.routes.operations import (
+    get_jobs_failures,
+    get_jobs_overview,
+    get_jobs_queues,
+    get_jobs_workers,
     get_usage_metrics,
     grant_operator,
     impersonate_user,
     list_operators,
+    purge_queue,
     revoke_operator,
     search_users,
     update_operator_role,
@@ -506,3 +516,214 @@ def test_get_usage_metrics_returns_403_for_unauthorized(client: TestClient) -> N
 def test_get_usage_metrics_returns_401_without_token(client: TestClient) -> None:
     response = client.get("/api/operations/metrics")
     assert response.status_code == 401
+
+
+# ---- get_jobs_overview (unit) ----
+
+
+def test_get_jobs_overview_returns_response() -> None:
+    from learnwithai.services.job_control_service import JobControlOverview
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.get_overview.return_value = JobControlOverview(
+        total_queued=10,
+        total_unacked=2,
+        dlq_depth=1,
+        retry_depth=0,
+        consumers_online=4,
+        broker_alarms=[],
+    )
+
+    result = get_jobs_overview(subject, mock_svc)
+
+    assert isinstance(result, JobControlOverviewResponse)
+    assert result.total_queued == 10
+    assert result.consumers_online == 4
+    mock_svc.get_overview.assert_called_once_with(subject)
+
+
+@pytest.mark.integration
+def test_get_jobs_overview_endpoint(client: TestClient) -> None:
+    from learnwithai.services.job_control_service import JobControlOverview
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_overview.return_value = JobControlOverview(
+        total_queued=5,
+        total_unacked=1,
+        dlq_depth=0,
+        retry_depth=0,
+        consumers_online=2,
+        broker_alarms=["disk"],
+    )
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/overview")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_queued"] == 5
+    assert body["broker_alarms"] == ["disk"]
+
+
+# ---- get_jobs_queues (unit) ----
+
+
+def test_get_jobs_queues_returns_response() -> None:
+    from learnwithai.services.job_control_service import QueueInfo
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.get_queues.return_value = [
+        QueueInfo(name="default", ready=5, unacked=1, consumers=2, ack_rate=1.5, is_dlq=False, is_retry=False),
+    ]
+
+    result = get_jobs_queues(subject, mock_svc)
+
+    assert len(result) == 1
+    assert isinstance(result[0], QueueInfoResponse)
+    assert result[0].name == "default"
+    mock_svc.get_queues.assert_called_once_with(subject)
+
+
+@pytest.mark.integration
+def test_get_jobs_queues_endpoint(client: TestClient) -> None:
+    from learnwithai.services.job_control_service import QueueInfo
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_queues.return_value = [
+        QueueInfo(name="default", ready=3, unacked=0, consumers=1, ack_rate=0.0, is_dlq=False, is_retry=False),
+        QueueInfo(name="default.DQ", ready=1, unacked=0, consumers=0, ack_rate=0.0, is_dlq=True, is_retry=False),
+    ]
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/queues")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2
+    assert body[1]["is_dlq"] is True
+
+
+# ---- get_jobs_workers (unit) ----
+
+
+def test_get_jobs_workers_returns_response() -> None:
+    from learnwithai.services.job_control_service import WorkerInfo
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.get_workers.return_value = [
+        WorkerInfo(consumer_tag="worker.1", queue="default", channel_details="ch-1", prefetch_count=1),
+    ]
+
+    result = get_jobs_workers(subject, mock_svc)
+
+    assert len(result) == 1
+    assert isinstance(result[0], WorkerInfoResponse)
+    assert result[0].consumer_tag == "worker.1"
+
+
+@pytest.mark.integration
+def test_get_jobs_workers_endpoint(client: TestClient) -> None:
+    from learnwithai.services.job_control_service import WorkerInfo
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_workers.return_value = [
+        WorkerInfo(consumer_tag="w.1", queue="default", channel_details="ch", prefetch_count=2),
+    ]
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/workers")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["consumer_tag"] == "w.1"
+
+
+# ---- get_jobs_failures (unit) ----
+
+
+def test_get_jobs_failures_returns_response() -> None:
+    from learnwithai.services.job_control_service import JobFailures
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.get_failures.return_value = JobFailures(
+        dlq_messages=2,
+        recent_failed_jobs=[],
+        error_buckets={"roster_upload": 1},
+    )
+
+    result = get_jobs_failures(subject, mock_svc)
+
+    assert isinstance(result, JobFailuresResponse)
+    assert result.dlq_messages == 2
+    assert result.error_buckets == {"roster_upload": 1}
+
+
+@pytest.mark.integration
+def test_get_jobs_failures_endpoint(client: TestClient) -> None:
+    from learnwithai.services.job_control_service import JobFailures
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_failures.return_value = JobFailures(
+        dlq_messages=0,
+        recent_failed_jobs=[],
+        error_buckets={},
+    )
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/failures")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["dlq_messages"] == 0
+    assert body["recent_failed_jobs"] == []
+
+
+# ---- purge_queue (unit) ----
+
+
+def test_purge_queue_calls_service() -> None:
+    subject = _stub_user()
+    mock_svc = MagicMock()
+
+    purge_queue(subject, "default", mock_svc)
+
+    mock_svc.purge_queue.assert_called_once_with(subject, "default")
+
+
+@pytest.mark.integration
+def test_purge_queue_endpoint(client: TestClient) -> None:
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.post("/api/operations/jobs/queues/default/purge")
+
+    assert response.status_code == 204
+    mock_svc.purge_queue.assert_called_once_with(user, "default")
+
+
+@pytest.mark.integration
+def test_get_jobs_overview_returns_403_for_unauthorized(client: TestClient) -> None:
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_overview.side_effect = AuthorizationError("Missing permission")
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/overview")
+
+    assert response.status_code == 403
