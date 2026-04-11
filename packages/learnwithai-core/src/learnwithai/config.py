@@ -51,6 +51,9 @@ class Settings(BaseSettings):
 
     # Queue / broker
     rabbitmq_url: str | None = None
+    rabbitmq_management_url: str | None = None
+    rabbitmq_management_user: str = "guest"
+    rabbitmq_management_password: str = "guest"
 
     # App / API
     api_host: str = "0.0.0.0"
@@ -128,6 +131,15 @@ class Settings(BaseSettings):
 
         # Default for devcontainer / compose network
         return "amqp://guest:guest@rabbitmq:5672/"
+
+    @computed_field
+    @property
+    def effective_rabbitmq_management_url(self) -> str:
+        """Returns the configured RabbitMQ Management API URL or the default."""
+        if self.rabbitmq_management_url:
+            return self.rabbitmq_management_url
+
+        return "http://rabbitmq:15672"
 
     @computed_field
     @property

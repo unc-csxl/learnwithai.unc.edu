@@ -17,6 +17,9 @@ def build_settings(**overrides: Any) -> Settings:
         "database_url": None,
         "db_echo": False,
         "rabbitmq_url": None,
+        "rabbitmq_management_url": None,
+        "rabbitmq_management_user": "guest",
+        "rabbitmq_management_password": "guest",
         "api_host": "0.0.0.0",
         "api_port": 8000,
         "log_level": "INFO",
@@ -87,6 +90,31 @@ def test_effective_rabbitmq_url_uses_default_value(
 
     # Assert
     assert rabbitmq_url == "amqp://guest:guest@rabbitmq:5672/"
+
+
+def test_effective_rabbitmq_management_url_uses_explicit_value() -> None:
+    # Arrange
+    settings = build_settings(rabbitmq_management_url="http://custom:15672")
+
+    # Act
+    url = settings.effective_rabbitmq_management_url
+
+    # Assert
+    assert url == "http://custom:15672"
+
+
+def test_effective_rabbitmq_management_url_uses_default_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    monkeypatch.delenv("RABBITMQ_MANAGEMENT_URL", raising=False)
+    settings = build_settings()
+
+    # Act
+    url = settings.effective_rabbitmq_management_url
+
+    # Assert
+    assert url == "http://rabbitmq:15672"
 
 
 def test_environment_flags_reflect_current_environment() -> None:
