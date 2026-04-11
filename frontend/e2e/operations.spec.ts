@@ -28,7 +28,13 @@ async function logout(page: Page): Promise<void> {
 async function openOperations(page: Page): Promise<void> {
   await page.getByRole('link', { name: 'Operations' }).click();
   await page.waitForURL('**/operations/metrics');
-  await expect(page.getByText('Usage metrics coming soon.')).toBeVisible();
+  await expect(page.getByText('Active Users')).toBeVisible();
+}
+
+async function openJobControl(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Job Control' }).click();
+  await page.waitForURL('**/operations/jobs');
+  await expect(page.getByRole('region', { name: 'Job Control' })).toBeVisible();
 }
 
 async function goToOperators(page: Page): Promise<void> {
@@ -196,5 +202,32 @@ test.describe('operations e2e flows', () => {
     await openOperations(page);
     await expectOperationsContextLinks(page, ['Usage Metrics', 'Job Control']);
     await expectOperationsContextLinksAbsent(page, ['Impersonate', 'Operators']);
+  });
+
+  test('shows usage metrics cards on the metrics page', async ({ page }) => {
+    await loginAs(page, PID.amy);
+    await openOperations(page);
+
+    const metricsRegion = page.getByRole('region', { name: 'Usage Metrics' });
+    await expect(metricsRegion).toBeVisible();
+    await expect(metricsRegion.getByText('Active Users')).toBeVisible();
+    await expect(metricsRegion.getByText('Active Courses')).toBeVisible();
+    await expect(metricsRegion.getByText('Submissions')).toBeVisible();
+    await expect(metricsRegion.getByText('Jobs Run')).toBeVisible();
+    await expect(metricsRegion.locator('.metric-card')).toHaveCount(4);
+  });
+
+  test('shows job control panes and queue table for operators', async ({ page }) => {
+    await loginAs(page, PID.amy);
+    await openOperations(page);
+    await openJobControl(page);
+
+    const jobControlRegion = page.getByRole('region', { name: 'Job Control' });
+    await expect(jobControlRegion.getByRole('heading', { name: 'Now' })).toBeVisible();
+    await expect(jobControlRegion.getByRole('heading', { name: 'Queues' })).toBeVisible();
+    await expect(jobControlRegion.getByRole('heading', { name: 'Failures' })).toBeVisible();
+    await expect(jobControlRegion.getByRole('heading', { name: 'Workers' })).toBeVisible();
+    await expect(page.getByRole('switch', { name: 'Toggle auto-refresh' })).toBeVisible();
+    await expect(jobControlRegion.locator('.queue-table')).toBeVisible();
   });
 });
