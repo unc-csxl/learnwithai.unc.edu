@@ -2082,6 +2082,193 @@
         }
       }
     },
+    "/api/operations/jobs/overview": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Get broker health overview",
+        "description": "Returns broker health overview including queue depths and alarms.\n\nRequires VIEW_JOBS permission.\n\nArgs:\n    subject: Authenticated operator.\n    job_control_svc: Service for job control operations.\n\nReturns:\n    Broker health overview.",
+        "operationId": "get_jobs_overview",
+        "responses": {
+          "200": {
+            "description": "High-level broker status and queue depths.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobControlOverviewResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_JOBS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operations/jobs/queues": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "List queue statistics",
+        "description": "Returns per-queue statistics from the broker.\n\nRequires VIEW_JOBS permission.\n\nArgs:\n    subject: Authenticated operator.\n    job_control_svc: Service for job control operations.\n\nReturns:\n    List of queue statistics.",
+        "operationId": "get_jobs_queues",
+        "responses": {
+          "200": {
+            "description": "Per-queue statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QueueInfoResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Jobs Queues"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_JOBS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operations/jobs/workers": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "List active workers",
+        "description": "Returns active worker (consumer) information.\n\nRequires VIEW_JOBS permission.\n\nArgs:\n    subject: Authenticated operator.\n    job_control_svc: Service for job control operations.\n\nReturns:\n    List of active workers.",
+        "operationId": "get_jobs_workers",
+        "responses": {
+          "200": {
+            "description": "Active consumer information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkerInfoResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Jobs Workers"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_JOBS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operations/jobs/failures": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Get failure summary",
+        "description": "Returns failure summary with DLQ messages, recent failures, and buckets.\n\nRequires VIEW_JOBS permission.\n\nArgs:\n    subject: Authenticated operator.\n    job_control_svc: Service for job control operations.\n\nReturns:\n    Failure summary.",
+        "operationId": "get_jobs_failures",
+        "responses": {
+          "200": {
+            "description": "DLQ depth, recent failures, and error buckets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobFailuresResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_JOBS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/operations/jobs/queues/{queue_name}/purge": {
+      "post": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Purge a queue",
+        "description": "Purges all messages from the specified queue.\n\nRequires ADMIN role (MANAGE_OPERATORS permission).\n\nArgs:\n    subject: Authenticated operator.\n    queue_name: Name of the queue to purge (path parameter).\n    job_control_svc: Service for job control operations.",
+        "operationId": "purge_queue",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "queue_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Queue Name"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires MANAGE_OPERATORS permission (ADMIN)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dev/users": {
       "get": {
         "tags": [
@@ -2668,6 +2855,78 @@
         "title": "IyowSubmissionResponse",
         "description": "Response for a single IYOW submission."
       },
+      "JobControlOverviewResponse": {
+        "properties": {
+          "total_queued": {
+            "type": "integer",
+            "title": "Total Queued"
+          },
+          "total_unacked": {
+            "type": "integer",
+            "title": "Total Unacked"
+          },
+          "dlq_depth": {
+            "type": "integer",
+            "title": "Dlq Depth"
+          },
+          "retry_depth": {
+            "type": "integer",
+            "title": "Retry Depth"
+          },
+          "consumers_online": {
+            "type": "integer",
+            "title": "Consumers Online"
+          },
+          "broker_alarms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Broker Alarms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_queued",
+          "total_unacked",
+          "dlq_depth",
+          "retry_depth",
+          "consumers_online",
+          "broker_alarms"
+        ],
+        "title": "JobControlOverviewResponse",
+        "description": "High-level broker health and queue depth summary."
+      },
+      "JobFailuresResponse": {
+        "properties": {
+          "dlq_messages": {
+            "type": "integer",
+            "title": "Dlq Messages"
+          },
+          "recent_failed_jobs": {
+            "items": {
+              "$ref": "#/components/schemas/RecentFailedJobResponse"
+            },
+            "type": "array",
+            "title": "Recent Failed Jobs"
+          },
+          "error_buckets": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Error Buckets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dlq_messages",
+          "recent_failed_jobs",
+          "error_buckets"
+        ],
+        "title": "JobFailuresResponse",
+        "description": "Failure summary: DLQ depth, recent failed jobs, and error buckets."
+      },
       "JokeResponse": {
         "properties": {
           "id": {
@@ -2894,6 +3153,105 @@
         ],
         "title": "PaginatedRosterResponse",
         "description": "Paginated wrapper around roster member entries."
+      },
+      "QueueInfoResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ready": {
+            "type": "integer",
+            "title": "Ready"
+          },
+          "unacked": {
+            "type": "integer",
+            "title": "Unacked"
+          },
+          "consumers": {
+            "type": "integer",
+            "title": "Consumers"
+          },
+          "ack_rate": {
+            "type": "number",
+            "title": "Ack Rate"
+          },
+          "is_dlq": {
+            "type": "boolean",
+            "title": "Is Dlq"
+          },
+          "is_retry": {
+            "type": "boolean",
+            "title": "Is Retry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "ready",
+          "unacked",
+          "consumers",
+          "ack_rate",
+          "is_dlq",
+          "is_retry"
+        ],
+        "title": "QueueInfoResponse",
+        "description": "Per-queue statistics from the RabbitMQ Management API."
+      },
+      "RecentFailedJobResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "course_id": {
+            "type": "integer",
+            "title": "Course Id"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "course_id",
+          "error_message",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "RecentFailedJobResponse",
+        "description": "A recently failed job from the database."
       },
       "RosterMemberResponse": {
         "properties": {
@@ -3384,6 +3742,35 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WorkerInfoResponse": {
+        "properties": {
+          "consumer_tag": {
+            "type": "string",
+            "title": "Consumer Tag"
+          },
+          "queue": {
+            "type": "string",
+            "title": "Queue"
+          },
+          "channel_details": {
+            "type": "string",
+            "title": "Channel Details"
+          },
+          "prefetch_count": {
+            "type": "integer",
+            "title": "Prefetch Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consumer_tag",
+          "queue",
+          "channel_details",
+          "prefetch_count"
+        ],
+        "title": "WorkerInfoResponse",
+        "description": "Consumer (worker) information from the RabbitMQ Management API."
       }
     },
     "securitySchemes": {

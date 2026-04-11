@@ -52,3 +52,10 @@ export type { UpdateOperatorRoleRequest as UpdateOperatorRole } from './generate
 export type { ImpersonationTokenResponse } from './generated/models/impersonation-token-response';
 export type { UserSearchResult } from './generated/models/user-search-result';
 export type { UsageMetricsResponse as UsageMetrics } from './generated/models/usage-metrics-response';
+
+// Job Control
+export type { JobControlOverviewResponse as JobControlOverview } from './generated/models/job-control-overview-response';
+export type { QueueInfoResponse as QueueInfo } from './generated/models/queue-info-response';
+export type { WorkerInfoResponse as WorkerInfo } from './generated/models/worker-info-response';
+export type { JobFailuresResponse as JobFailures } from './generated/models/job-failures-response';
+export type { RecentFailedJobResponse as RecentFailedJob } from './generated/models/recent-failed-job-response';

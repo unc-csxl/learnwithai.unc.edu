@@ -1,0 +1,178 @@
+<div class="job-control-container" role="region" aria-label="Job Control">
+  @if (loading() && !overview()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  } @else if (errorMessage()) {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <div class="toolbar-row">
+      <mat-slide-toggle
+        [checked]="autoRefresh()"
+        (change)="toggleAutoRefresh()"
+        aria-label="Toggle auto-refresh"
+      >
+        Auto-refresh (10s)
+      </mat-slide-toggle>
+    </div>
+
+    <!-- Pane 1: Now -->
+    @if (overview(); as o) {
+      <section class="pane" aria-label="Overview">
+        <h2 class="pane-title">Now</h2>
+        @if (o.broker_alarms.length > 0) {
+          <div class="alarm-banner" role="alert">
+            <mat-icon>warning</mat-icon>
+            <span>Broker alarms: {{ o.broker_alarms.join(', ') }}</span>
+          </div>
+        }
+        <div class="stat-bar">
+          <div class="stat-item">
+            <span class="stat-value">{{ o.total_queued }}</span>
+            <span class="stat-label">Queued</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ o.total_unacked }}</span>
+            <span class="stat-label">Unacked</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ o.dlq_depth }}</span>
+            <span class="stat-label">DLQ</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ o.retry_depth }}</span>
+            <span class="stat-label">Retry</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ o.consumers_online }}</span>
+            <span class="stat-label">Consumers</span>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Pane 2: Queues -->
+    <section class="pane" aria-label="Queues">
+      <h2 class="pane-title">Queues</h2>
+      @if (queues().length === 0) {
+        <p class="empty-state">No queues found.</p>
+      } @else {
+        <table mat-table [dataSource]="queues()" class="queue-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let q">
+              {{ q.name }}
+              @if (q.is_dlq) {
+                <span class="badge badge-dlq">DLQ</span>
+              }
+              @if (q.is_retry) {
+                <span class="badge badge-retry">Retry</span>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="ready">
+            <th mat-header-cell *matHeaderCellDef>Ready</th>
+            <td mat-cell *matCellDef="let q">{{ q.ready }}</td>
+          </ng-container>
+          <ng-container matColumnDef="unacked">
+            <th mat-header-cell *matHeaderCellDef>Unacked</th>
+            <td mat-cell *matCellDef="let q">{{ q.unacked }}</td>
+          </ng-container>
+          <ng-container matColumnDef="consumers">
+            <th mat-header-cell *matHeaderCellDef>Consumers</th>
+            <td mat-cell *matCellDef="let q">{{ q.consumers }}</td>
+          </ng-container>
+          <ng-container matColumnDef="ack_rate">
+            <th mat-header-cell *matHeaderCellDef>Ack Rate</th>
+            <td mat-cell *matCellDef="let q">{{ q.ack_rate | number: '1.1-1' }}/s</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let q">
+              @if (q.ready > 0) {
+                <button
+                  mat-icon-button
+                  (click)="confirmPurge(q)"
+                  [attr.aria-label]="'Purge ' + q.name"
+                >
+                  <mat-icon>delete_sweep</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="queueColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: queueColumns"></tr>
+        </table>
+      }
+    </section>
+
+    <!-- Pane 3: Failures -->
+    @if (failures(); as f) {
+      <section class="pane" aria-label="Failures">
+        <h2 class="pane-title">Failures</h2>
+        <div class="stat-bar compact">
+          <div class="stat-item">
+            <span class="stat-value">{{ f.dlq_messages }}</span>
+            <span class="stat-label">DLQ Messages</span>
+          </div>
+          @for (entry of f.error_buckets | keyvalue; track entry.key) {
+            <div class="stat-item">
+              <span class="stat-value">{{ entry.value }}</span>
+              <span class="stat-label">{{ entry.key }}</span>
+            </div>
+          }
+        </div>
+        @if (f.recent_failed_jobs.length > 0) {
+          <h3 class="sub-heading">Recent Failed Jobs</h3>
+          <div class="failed-jobs-list">
+            @for (job of f.recent_failed_jobs; track job.id) {
+              <mat-card appearance="outlined" class="failed-job-card">
+                <mat-card-content>
+                  <div class="failed-job-header">
+                    <span class="failed-job-kind">{{ job.kind }}</span>
+                    <span class="failed-job-id">#{{ job.id }}</span>
+                    <span class="failed-job-time">{{ job.created_at | date: 'short' }}</span>
+                  </div>
+                  @if (job.error_message) {
+                    <p class="failed-job-error">{{ job.error_message }}</p>
+                  }
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        } @else {
+          <p class="empty-state">No recent failures.</p>
+        }
+      </section>
+    }
+
+    <!-- Pane 4: Workers -->
+    <section class="pane" aria-label="Workers">
+      <h2 class="pane-title">Workers</h2>
+      @if (workers().length === 0) {
+        <p class="empty-state">No active workers.</p>
+      } @else {
+        <table mat-table [dataSource]="workers()" class="worker-table">
+          <ng-container matColumnDef="consumer_tag">
+            <th mat-header-cell *matHeaderCellDef>Consumer Tag</th>
+            <td mat-cell *matCellDef="let w">{{ w.consumer_tag }}</td>
+          </ng-container>
+          <ng-container matColumnDef="queue">
+            <th mat-header-cell *matHeaderCellDef>Queue</th>
+            <td mat-cell *matCellDef="let w">{{ w.queue }}</td>
+          </ng-container>
+          <ng-container matColumnDef="channel_details">
+            <th mat-header-cell *matHeaderCellDef>Channel</th>
+            <td mat-cell *matCellDef="let w">{{ w.channel_details }}</td>
+          </ng-container>
+          <ng-container matColumnDef="prefetch_count">
+            <th mat-header-cell *matHeaderCellDef>Prefetch</th>
+            <td mat-cell *matCellDef="let w">{{ w.prefetch_count }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="workerColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: workerColumns"></tr>
+        </table>
+      }
+    </section>
+  }
+</div>

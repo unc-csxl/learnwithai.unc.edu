@@ -98,4 +98,47 @@ describe('OperationsService', () => {
     expect(result).toEqual(metrics);
     expect(mockApi.invoke).toHaveBeenCalled();
   });
+
+  it('getJobsOverview calls api.invoke', async () => {
+    const { service, mockApi } = setup();
+    const overview = { total_queued: 5 };
+    mockApi.invoke.mockResolvedValue(overview);
+    const result = await service.getJobsOverview();
+    expect(result).toEqual(overview);
+    expect(mockApi.invoke).toHaveBeenCalled();
+  });
+
+  it('getJobsQueues calls api.invoke', async () => {
+    const { service, mockApi } = setup();
+    const queues = [{ name: 'default' }];
+    mockApi.invoke.mockResolvedValue(queues);
+    const result = await service.getJobsQueues();
+    expect(result).toEqual(queues);
+    expect(mockApi.invoke).toHaveBeenCalled();
+  });
+
+  it('getJobsWorkers calls api.invoke', async () => {
+    const { service, mockApi } = setup();
+    const workers = [{ consumer_tag: 'w.1' }];
+    mockApi.invoke.mockResolvedValue(workers);
+    const result = await service.getJobsWorkers();
+    expect(result).toEqual(workers);
+    expect(mockApi.invoke).toHaveBeenCalled();
+  });
+
+  it('getJobsFailures calls api.invoke', async () => {
+    const { service, mockApi } = setup();
+    const failures = { dlq_messages: 0 };
+    mockApi.invoke.mockResolvedValue(failures);
+    const result = await service.getJobsFailures();
+    expect(result).toEqual(failures);
+    expect(mockApi.invoke).toHaveBeenCalled();
+  });
+
+  it('purgeQueue calls api.invoke with queue name', async () => {
+    const { service, mockApi } = setup();
+    mockApi.invoke.mockResolvedValue(undefined);
+    await service.purgeQueue('default');
+    expect(mockApi.invoke).toHaveBeenCalledWith(expect.any(Function), { queue_name: 'default' });
+  });
 });

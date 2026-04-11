@@ -19,6 +19,16 @@ export type { ImpersonateUser$Params as ImpersonateUser$Params } from './fn/oper
 export { impersonateUser as impersonateUser } from './fn/operations/impersonate-user';
 export type { SearchUsers$Params as SearchUsers$Params } from './fn/operations/search-users';
 export { searchUsers as searchUsers } from './fn/operations/search-users';
+export type { GetJobsOverview$Params as GetJobsOverview$Params } from './fn/operations/get-jobs-overview';
+export { getJobsOverview as getJobsOverview } from './fn/operations/get-jobs-overview';
+export type { GetJobsQueues$Params as GetJobsQueues$Params } from './fn/operations/get-jobs-queues';
+export { getJobsQueues as getJobsQueues } from './fn/operations/get-jobs-queues';
+export type { GetJobsWorkers$Params as GetJobsWorkers$Params } from './fn/operations/get-jobs-workers';
+export { getJobsWorkers as getJobsWorkers } from './fn/operations/get-jobs-workers';
+export type { GetJobsFailures$Params as GetJobsFailures$Params } from './fn/operations/get-jobs-failures';
+export { getJobsFailures as getJobsFailures } from './fn/operations/get-jobs-failures';
+export type { PurgeQueue$Params as PurgeQueue$Params } from './fn/operations/purge-queue';
+export { purgeQueue as purgeQueue } from './fn/operations/purge-queue';
 export type { OnyenLoginRedirect$Params as OnyenLoginRedirect$Params } from './fn/authentication/onyen-login-redirect';
 export { onyenLoginRedirect as onyenLoginRedirect } from './fn/authentication/onyen-login-redirect';
 export type { AuthenticateWithCsxlCallback$Params as AuthenticateWithCsxlCallback$Params } from './fn/authentication/authenticate-with-csxl-callback';

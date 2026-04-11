@@ -12,12 +12,21 @@ import { revokeOperator } from '../api/generated/fn/operations/revoke-operator';
 import { impersonateUser } from '../api/generated/fn/operations/impersonate-user';
 import { searchUsers } from '../api/generated/fn/operations/search-users';
 import { getUsageMetrics } from '../api/generated/fn/operations/get-usage-metrics';
+import { getJobsOverview } from '../api/generated/fn/operations/get-jobs-overview';
+import { getJobsQueues } from '../api/generated/fn/operations/get-jobs-queues';
+import { getJobsWorkers } from '../api/generated/fn/operations/get-jobs-workers';
+import { getJobsFailures } from '../api/generated/fn/operations/get-jobs-failures';
+import { purgeQueue } from '../api/generated/fn/operations/purge-queue';
 import {
   Operator,
   OperatorRole,
   ImpersonationTokenResponse,
   UsageMetrics,
   UserSearchResult,
+  JobControlOverview,
+  QueueInfo,
+  WorkerInfo,
+  JobFailures,
 } from '../api/models';
 import { ImpersonationService } from './impersonation.service';
 
@@ -66,5 +75,30 @@ export class OperationsService {
   /** Fetches monthly usage metrics. */
   async getUsageMetrics(): Promise<UsageMetrics> {
     return this.api.invoke(getUsageMetrics);
+  }
+
+  /** Fetches broker health overview. */
+  async getJobsOverview(): Promise<JobControlOverview> {
+    return this.api.invoke(getJobsOverview);
+  }
+
+  /** Fetches per-queue statistics. */
+  async getJobsQueues(): Promise<QueueInfo[]> {
+    return this.api.invoke(getJobsQueues);
+  }
+
+  /** Fetches active workers. */
+  async getJobsWorkers(): Promise<WorkerInfo[]> {
+    return this.api.invoke(getJobsWorkers);
+  }
+
+  /** Fetches failure summary. */
+  async getJobsFailures(): Promise<JobFailures> {
+    return this.api.invoke(getJobsFailures);
+  }
+
+  /** Purges all messages from a queue. */
+  async purgeQueue(queueName: string): Promise<void> {
+    return this.api.invoke(purgeQueue, { queue_name: queueName });
   }
 }
