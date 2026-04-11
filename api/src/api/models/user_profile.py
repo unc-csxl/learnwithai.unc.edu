@@ -5,6 +5,8 @@
 
 from pydantic import BaseModel, ConfigDict
 
+from .operator import OperatorProfile
+
 
 class UserProfile(BaseModel):
     """Represents the authenticated user profile returned by the API."""
@@ -17,6 +19,7 @@ class UserProfile(BaseModel):
     given_name: str
     family_name: str
     email: str
+    operator: OperatorProfile | None = None
 
 
 class UpdateProfileRequest(BaseModel):

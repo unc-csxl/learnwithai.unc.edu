@@ -5,6 +5,7 @@
 
 import { Routes } from '@angular/router';
 import { authGuard, landingGuard } from './auth.guard';
+import { adminGuard } from './admin.guard';
 
 /** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
@@ -127,6 +128,34 @@ export const routes: Routes = [
               ),
           },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+        ],
+      },
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./admin/admin-shell/admin-shell.component').then((m) => m.AdminShell),
+        children: [
+          {
+            path: 'operators',
+            loadComponent: () =>
+              import('./admin/operators/operators.component').then((m) => m.Operators),
+          },
+          {
+            path: 'jobs',
+            loadComponent: () =>
+              import('./admin/job-control/job-control.component').then(
+                (m) => m.JobControlComponent,
+              ),
+          },
+          {
+            path: 'metrics',
+            loadComponent: () =>
+              import('./admin/usage-metrics/usage-metrics.component').then(
+                (m) => m.UsageMetricsComponent,
+              ),
+          },
+          { path: '', redirectTo: 'operators', pathMatch: 'full' },
         ],
       },
       {

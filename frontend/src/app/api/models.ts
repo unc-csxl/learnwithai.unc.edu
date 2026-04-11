@@ -41,3 +41,12 @@ export type { CreateIyowActivityRequest as CreateIyowActivity } from './generate
 export type { UpdateIyowActivityRequest as UpdateIyowActivity } from './generated/models/update-iyow-activity-request';
 export type { SubmitIyowRequest as SubmitIyow } from './generated/models/submit-iyow-request';
 export type { StudentSubmissionRow } from './generated/models/student-submission-row';
+
+// Operator / Admin
+export type { OperatorProfile } from './generated/models/operator-profile';
+export type { OperatorResponse as Operator } from './generated/models/operator-response';
+export type { OperatorRole } from './generated/models/operator-role';
+export type { OperatorPermission } from './generated/models/operator-permission';
+export type { GrantOperatorRequest as GrantOperator } from './generated/models/grant-operator-request';
+export type { UpdateOperatorRoleRequest as UpdateOperatorRole } from './generated/models/update-operator-role-request';
+export type { ImpersonationTokenResponse } from './generated/models/impersonation-token-response';

@@ -140,7 +140,7 @@
           "Authentication"
         ],
         "summary": "Get the authenticated user profile",
-        "description": "Returns the authenticated subject's profile payload.\n\nArgs:\n    subject: Authenticated subject resolved from the bearer token.\n\nReturns:\n    A UserProfile model for the API.",
+        "description": "Returns the authenticated subject's profile payload.\n\nArgs:\n    subject: Authenticated subject resolved from the bearer token.\n    operator_repo: Repository used to check operator status.\n\nReturns:\n    A UserProfile model for the API.",
         "operationId": "get_current_subject_profile",
         "responses": {
           "200": {
@@ -1721,6 +1721,275 @@
         }
       }
     },
+    "/api/admin/operators": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List all operators",
+        "description": "Returns all operator records.\n\nRequires MANAGE_OPERATORS permission.\n\nArgs:\n    subject: Authenticated operator.\n    operator_svc: Service used to enforce permissions and list operators.\n\nReturns:\n    List of all operator records.",
+        "operationId": "list_operators",
+        "responses": {
+          "200": {
+            "description": "All system operators with user details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OperatorResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Operators"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires MANAGE_OPERATORS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Grant operator access",
+        "description": "Grants operator access to an existing user.\n\nRequires MANAGE_OPERATORS permission. Only a SUPERADMIN may grant\nthe SUPERADMIN role.\n\nArgs:\n    subject: Authenticated operator performing the grant.\n    body: Grant request payload with user PID and role.\n    operator_svc: Service used to enforce permissions and create operator.\n    user_repo: Repository used to load the target user.\n\nReturns:\n    The newly created operator record.",
+        "operationId": "grant_operator",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantOperatorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The newly created operator record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperatorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires MANAGE_OPERATORS permission."
+          },
+          "404": {
+            "description": "User not found."
+          },
+          "409": {
+            "description": "User is already an operator."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/admin/operators/{pid}": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update an operator's role",
+        "description": "Changes the role of an existing operator.\n\nRequires MANAGE_OPERATORS permission. Only a SUPERADMIN may assign\nthe SUPERADMIN role.\n\nArgs:\n    subject: Authenticated operator performing the update.\n    pid: PID of the operator to update (path parameter).\n    body: Update request payload with new role.\n    operator_svc: Service used to enforce permissions and update role.\n    user_repo: Repository used to load the target user.\n\nReturns:\n    The updated operator record.",
+        "operationId": "update_operator_role",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOperatorRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated operator record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperatorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires MANAGE_OPERATORS permission."
+          },
+          "404": {
+            "description": "User or operator not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Revoke operator access",
+        "description": "Removes operator access from a user.\n\nRequires MANAGE_OPERATORS permission. Cannot revoke own access.\nOnly a SUPERADMIN may revoke another SUPERADMIN.\n\nArgs:\n    subject: Authenticated operator performing the revocation.\n    pid: PID of the operator to revoke (path parameter).\n    operator_svc: Service used to enforce permissions and revoke access.\n    user_repo: Repository used to load the target user.",
+        "operationId": "revoke_operator",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires MANAGE_OPERATORS permission."
+          },
+          "404": {
+            "description": "User or operator not found."
+          },
+          "409": {
+            "description": "Cannot revoke own access."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/impersonate/{pid}": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Issue an impersonation token",
+        "description": "Issues a JWT that authenticates as the target user.\n\nRequires IMPERSONATE permission (currently only SUPERADMIN).\nThe issued token carries an ``impersonator`` claim for audit purposes.\n\nArgs:\n    subject: Authenticated operator requesting impersonation.\n    pid: PID of the user to impersonate (path parameter).\n    operator_svc: Service used to enforce permissions and issue token.\n    user_repo: Repository used to load the target user.\n    settings: Application settings for JWT encoding.\n\nReturns:\n    An ImpersonationTokenResponse containing the JWT.",
+        "operationId": "impersonate_user",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT token for impersonating the target user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpersonationTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires IMPERSONATE permission."
+          },
+          "404": {
+            "description": "User not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dev/users": {
       "get": {
         "tags": [
@@ -2122,6 +2391,24 @@
         "title": "CreateJokeRequest",
         "description": "Request body for submitting a joke generation request."
       },
+      "GrantOperatorRequest": {
+        "properties": {
+          "user_pid": {
+            "type": "integer",
+            "title": "User Pid"
+          },
+          "role": {
+            "$ref": "#/components/schemas/OperatorRole"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_pid",
+          "role"
+        ],
+        "title": "GrantOperatorRequest",
+        "description": "Payload for granting operator access to a user."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2134,6 +2421,20 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImpersonationTokenResponse": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "ImpersonationTokenResponse",
+        "description": "JWT token issued for user impersonation."
       },
       "IyowActivityResponse": {
         "properties": {
@@ -2365,6 +2666,110 @@
         ],
         "title": "MembershipType",
         "description": "Role a user holds within a course."
+      },
+      "OperatorPermission": {
+        "type": "string",
+        "enum": [
+          "manage_operators",
+          "view_metrics",
+          "view_jobs",
+          "view_system",
+          "impersonate"
+        ],
+        "title": "OperatorPermission",
+        "description": "Individual capability that can be checked at authorization boundaries."
+      },
+      "OperatorProfile": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/OperatorRole"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/OperatorPermission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "permissions"
+        ],
+        "title": "OperatorProfile",
+        "description": "Operator summary included in the authenticated user profile."
+      },
+      "OperatorResponse": {
+        "properties": {
+          "user_pid": {
+            "type": "integer",
+            "title": "User Pid"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/OperatorRole"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/OperatorPermission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "created_by_pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Pid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_pid",
+          "user_name",
+          "user_email",
+          "role",
+          "permissions",
+          "created_at",
+          "created_by_pid"
+        ],
+        "title": "OperatorResponse",
+        "description": "Detailed operator record returned by admin endpoints."
+      },
+      "OperatorRole": {
+        "type": "string",
+        "enum": [
+          "superadmin",
+          "admin",
+          "helpdesk"
+        ],
+        "title": "OperatorRole",
+        "description": "Tier of system access granted to an operator."
       },
       "PaginatedRosterResponse": {
         "properties": {
@@ -2702,6 +3107,19 @@
         "title": "UpdateMemberRoleRequest",
         "description": "Payload for updating a member's role in a course."
       },
+      "UpdateOperatorRoleRequest": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/OperatorRole"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "UpdateOperatorRoleRequest",
+        "description": "Payload for changing an operator's role."
+      },
       "UpdateProfileRequest": {
         "properties": {
           "given_name": {
@@ -2746,6 +3164,16 @@
           "email": {
             "type": "string",
             "title": "Email"
+          },
+          "operator": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperatorProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2828,6 +3256,10 @@
     {
       "name": "Instructor Tools",
       "description": "AI-powered instructor tools including joke generation."
+    },
+    {
+      "name": "Admin",
+      "description": "System operator management, impersonation, and admin tools."
     }
   ]
 }

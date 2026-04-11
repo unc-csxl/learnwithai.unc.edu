@@ -59,6 +59,16 @@ export type { GetJokeRequest$Params as GetJokeRequest$Params } from './fn/instru
 export { getJokeRequest as getJokeRequest } from './fn/instructor-tools/get-joke-request';
 export type { DeleteJokeRequest$Params as DeleteJokeRequest$Params } from './fn/instructor-tools/delete-joke-request';
 export { deleteJokeRequest as deleteJokeRequest } from './fn/instructor-tools/delete-joke-request';
+export type { ListOperators$Params as ListOperators$Params } from './fn/admin/list-operators';
+export { listOperators as listOperators } from './fn/admin/list-operators';
+export type { GrantOperator$Params as GrantOperator$Params } from './fn/admin/grant-operator';
+export { grantOperator as grantOperator } from './fn/admin/grant-operator';
+export type { UpdateOperatorRole$Params as UpdateOperatorRole$Params } from './fn/admin/update-operator-role';
+export { updateOperatorRole as updateOperatorRole } from './fn/admin/update-operator-role';
+export type { RevokeOperator$Params as RevokeOperator$Params } from './fn/admin/revoke-operator';
+export { revokeOperator as revokeOperator } from './fn/admin/revoke-operator';
+export type { ImpersonateUser$Params as ImpersonateUser$Params } from './fn/admin/impersonate-user';
+export { impersonateUser as impersonateUser } from './fn/admin/impersonate-user';
 export type { DevListUsers$Params as DevListUsers$Params } from './fn/development/dev-list-users';
 export { devListUsers as devListUsers } from './fn/development/dev-list-users';
 export type { DevLoginAs$Params as DevLoginAs$Params } from './fn/development/dev-login-as';

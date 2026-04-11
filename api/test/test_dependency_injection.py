@@ -22,6 +22,8 @@ from api.di import (
     iyow_submission_service_factory,
     joke_generation_service_factory,
     joke_repository_factory,
+    operator_repository_factory,
+    operator_service_factory,
     roster_upload_service_factory,
     submission_repository_factory,
 )
@@ -229,3 +231,24 @@ def test_get_activity_by_path_id_raises_for_missing_activity() -> None:
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Activity not found."
+
+
+def test_operator_repository_factory_returns_repository() -> None:
+    from learnwithai.repositories.operator_repository import OperatorRepository
+
+    session = MagicMock()
+
+    result = operator_repository_factory(session)
+
+    assert isinstance(result, OperatorRepository)
+
+
+def test_operator_service_factory_returns_service() -> None:
+    from learnwithai.services.operator_service import OperatorService
+
+    operator_repo = MagicMock()
+    user_repo = MagicMock()
+
+    result = operator_service_factory(operator_repo, user_repo)
+
+    assert isinstance(result, OperatorService)

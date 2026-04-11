@@ -20,6 +20,7 @@ from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.repositories.operator_repository import OperatorRepository
 from learnwithai.repositories.submission_repository import SubmissionRepository
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.services.activity_service import ActivityService
@@ -28,6 +29,7 @@ from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
+from learnwithai.services.operator_service import OperatorService
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.activity import Activity
 from learnwithai.tables.course import Course
@@ -55,6 +57,8 @@ __all__ = [
     "JokeRepositoryDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
+    "OperatorRepositoryDI",
+    "OperatorServiceDI",
     "PaginationParamsDI",
     "SessionDI",
     "SettingsDI",
@@ -81,6 +85,8 @@ __all__ = [
     "joke_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
+    "operator_repository_factory",
+    "operator_service_factory",
     "roster_upload_service_factory",
     "settings_factory",
     "submission_repository_factory",
@@ -295,6 +301,28 @@ def roster_upload_service_factory(
 
 
 RosterUploadServiceDI: TypeAlias = Annotated[RosterUploadService, Depends(roster_upload_service_factory)]
+
+
+# ---- Operator DI ----
+
+
+def operator_repository_factory(session: SessionDI) -> OperatorRepository:
+    """Constructs an operator repository bound to the current request session."""
+    return OperatorRepository(session)
+
+
+OperatorRepositoryDI: TypeAlias = Annotated[OperatorRepository, Depends(operator_repository_factory)]
+
+
+def operator_service_factory(
+    operator_repo: OperatorRepositoryDI,
+    user_repo: UserRepositoryDI,
+) -> OperatorService:
+    """Creates the operator service for the current request."""
+    return OperatorService(operator_repo, user_repo)
+
+
+OperatorServiceDI: TypeAlias = Annotated[OperatorService, Depends(operator_service_factory)]
 
 
 def joke_generation_service_factory(

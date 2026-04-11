@@ -1,0 +1,31 @@
+<!--
+  Copyright (c) 2026 Kris Jordan
+  SPDX-License-Identifier: MIT
+-->
+
+<h2 mat-dialog-title>Add Operator</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="grant-form">
+    <mat-form-field appearance="outline">
+      <mat-label>User PID</mat-label>
+      <input matInput formControlName="pid" type="number" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        @for (role of availableRoles; track role) {
+          <mat-option [value]="role">{{ role }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-raised-button [disabled]="form.invalid || submitting()" (click)="submit()">
+    Grant Access
+  </button>
+</mat-dialog-actions>

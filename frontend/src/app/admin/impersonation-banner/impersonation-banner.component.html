@@ -1,0 +1,12 @@
+<!--
+  Copyright (c) 2026 Kris Jordan
+  SPDX-License-Identifier: MIT
+-->
+
+<div class="impersonation-banner" role="alert">
+  <mat-icon>warning</mat-icon>
+  <span class="impersonation-message">
+    Viewing as <strong>{{ auth.user()?.name }}</strong> ({{ auth.user()?.pid }})
+  </span>
+  <button mat-raised-button color="warn" (click)="exitImpersonation()">Exit Impersonation</button>
+</div>

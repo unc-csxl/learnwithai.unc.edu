@@ -19,6 +19,8 @@ import { AuthService } from '../auth.service';
 import { ThemeService, ThemeMode } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
 import { LayoutNavigationService } from './layout-navigation.service';
+import { ImpersonationService } from '../admin/impersonation.service';
+import { ImpersonationBanner } from '../admin/impersonation-banner/impersonation-banner.component';
 
 /** App shell with a responsive toolbar and sidenav. */
 @Component({
@@ -35,6 +37,7 @@ import { LayoutNavigationService } from './layout-navigation.service';
     RouterLink,
     RouterLinkActive,
     NgOptimizedImage,
+    ImpersonationBanner,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -45,6 +48,7 @@ export class Layout {
   protected theme = inject(ThemeService);
   protected pageTitle = inject(PageTitleService);
   protected layoutNavigation = inject(LayoutNavigationService);
+  protected impersonation = inject(ImpersonationService);
   protected readonly exactLinkActiveOptions = { exact: true };
   protected readonly subtreeLinkActiveOptions = { exact: false };
 

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from learnwithai.repositories.operator_repository import OperatorRepository
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.tables.user import User
 from pydantic import ValidationError
@@ -41,9 +42,11 @@ def _stub_user(
 def test_get_current_subject_profile_returns_user_profile() -> None:
     # Arrange
     user = _stub_user(email="test@example.com")
+    operator_repo = MagicMock(spec=OperatorRepository)
+    operator_repo.get_by_user_pid.return_value = None
 
     # Act
-    result = get_current_subject_profile(user)
+    result = get_current_subject_profile(user, operator_repo)
 
     # Assert
     assert result == UserProfile(
@@ -59,10 +62,29 @@ def test_get_current_subject_profile_returns_user_profile() -> None:
 def test_get_current_subject_profile_raises_when_email_missing() -> None:
     # Arrange
     user = _stub_user(email=None)
+    operator_repo = MagicMock(spec=OperatorRepository)
+    operator_repo.get_by_user_pid.return_value = None
 
     # Act / Assert
     with pytest.raises(ValidationError):
-        get_current_subject_profile(user)
+        get_current_subject_profile(user, operator_repo)
+
+
+def test_get_current_subject_profile_includes_operator_profile() -> None:
+    """When the user is an operator, the profile includes operator info."""
+    from learnwithai.tables.operator import Operator, OperatorRole
+
+    user = _stub_user(email="op@example.com")
+    operator = MagicMock(spec=Operator)
+    operator.role = OperatorRole.ADMIN
+    operator_repo = MagicMock(spec=OperatorRepository)
+    operator_repo.get_by_user_pid.return_value = operator
+
+    result = get_current_subject_profile(user, operator_repo)
+
+    assert result.operator is not None
+    assert result.operator.role == OperatorRole.ADMIN
+    assert len(result.operator.permissions) > 0
 
 
 @pytest.mark.integration
