@@ -1721,6 +1721,39 @@
         }
       }
     },
+    "/api/operations/metrics": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Get platform usage metrics",
+        "description": "Returns monthly usage metrics for the platform.\n\nRequires VIEW_METRICS permission.\n\nArgs:\n    subject: Authenticated operator.\n    metrics_svc: Service for computing usage metrics.\n\nReturns:\n    Monthly usage statistics.",
+        "operationId": "get_usage_metrics",
+        "responses": {
+          "200": {
+            "description": "Monthly usage statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageMetricsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_METRICS permission."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/operations/operators": {
       "get": {
         "tags": [
@@ -3197,6 +3230,40 @@
         ],
         "title": "UpdateProfileRequest",
         "description": "Payload for updating the authenticated user's profile."
+      },
+      "UsageMetricsResponse": {
+        "properties": {
+          "month_label": {
+            "type": "string",
+            "title": "Month Label"
+          },
+          "active_users": {
+            "type": "integer",
+            "title": "Active Users"
+          },
+          "active_courses": {
+            "type": "integer",
+            "title": "Active Courses"
+          },
+          "submissions": {
+            "type": "integer",
+            "title": "Submissions"
+          },
+          "jobs_run": {
+            "type": "integer",
+            "title": "Jobs Run"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month_label",
+          "active_users",
+          "active_courses",
+          "submissions",
+          "jobs_run"
+        ],
+        "title": "UsageMetricsResponse",
+        "description": "Monthly usage statistics returned by the metrics endpoint."
       },
       "UserProfile": {
         "properties": {

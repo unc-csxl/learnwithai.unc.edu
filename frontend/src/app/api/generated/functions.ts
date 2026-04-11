@@ -5,6 +5,8 @@ export type { Health$Params as Health$Params } from './fn/operations/health';
 export { health as health } from './fn/operations/health';
 export type { Queue$Params as Queue$Params } from './fn/operations/queue';
 export { queue as queue } from './fn/operations/queue';
+export type { GetUsageMetrics$Params as GetUsageMetrics$Params } from './fn/operations/get-usage-metrics';
+export { getUsageMetrics as getUsageMetrics } from './fn/operations/get-usage-metrics';
 export type { ListOperators$Params as ListOperators$Params } from './fn/operations/list-operators';
 export { listOperators as listOperators } from './fn/operations/list-operators';
 export type { GrantOperator$Params as GrantOperator$Params } from './fn/operations/grant-operator';

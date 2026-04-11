@@ -51,3 +51,4 @@ export type { GrantOperatorRequest as GrantOperator } from './generated/models/g
 export type { UpdateOperatorRoleRequest as UpdateOperatorRole } from './generated/models/update-operator-role-request';
 export type { ImpersonationTokenResponse } from './generated/models/impersonation-token-response';
 export type { UserSearchResult } from './generated/models/user-search-result';
+export type { UsageMetricsResponse as UsageMetrics } from './generated/models/usage-metrics-response';

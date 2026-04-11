@@ -83,4 +83,19 @@ describe('OperationsService', () => {
     expect(result).toEqual(results);
     expect(mockApi.invoke).toHaveBeenCalledWith(expect.any(Function), { q: 'alice' });
   });
+
+  it('getUsageMetrics calls api.invoke', async () => {
+    const { service, mockApi } = setup();
+    const metrics = {
+      month_label: 'April 2026',
+      active_users: 10,
+      active_courses: 3,
+      submissions: 50,
+      jobs_run: 20,
+    };
+    mockApi.invoke.mockResolvedValue(metrics);
+    const result = await service.getUsageMetrics();
+    expect(result).toEqual(metrics);
+    expect(mockApi.invoke).toHaveBeenCalled();
+  });
 });

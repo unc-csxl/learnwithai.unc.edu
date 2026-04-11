@@ -11,10 +11,12 @@ import { updateOperatorRole } from '../api/generated/fn/operations/update-operat
 import { revokeOperator } from '../api/generated/fn/operations/revoke-operator';
 import { impersonateUser } from '../api/generated/fn/operations/impersonate-user';
 import { searchUsers } from '../api/generated/fn/operations/search-users';
+import { getUsageMetrics } from '../api/generated/fn/operations/get-usage-metrics';
 import {
   Operator,
   OperatorRole,
   ImpersonationTokenResponse,
+  UsageMetrics,
   UserSearchResult,
 } from '../api/models';
 import { ImpersonationService } from './impersonation.service';
@@ -59,5 +61,10 @@ export class OperationsService {
   /** Searches users by name, PID, or email. */
   async searchUsers(query: string): Promise<UserSearchResult[]> {
     return this.api.invoke(searchUsers, { q: query });
+  }
+
+  /** Fetches monthly usage metrics. */
+  async getUsageMetrics(): Promise<UsageMetrics> {
+    return this.api.invoke(getUsageMetrics);
   }
 }
