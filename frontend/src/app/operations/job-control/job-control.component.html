@@ -61,12 +61,16 @@
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Name</th>
             <td mat-cell *matCellDef="let q">
-              {{ q.name }}
+              <div class="queue-name-block">
+                <span class="queue-display-name">{{ queueDisplayName(q) }}</span>
+                <span class="queue-actual-name">RabbitMQ name: {{ q.name }}</span>
+                <span class="queue-purpose">{{ queueRoleSummary(q) }}</span>
+              </div>
               @if (q.is_dlq) {
                 <span class="badge badge-dlq">DLQ</span>
               }
               @if (q.is_retry) {
-                <span class="badge badge-retry">Retry</span>
+                <span class="badge badge-retry">Retry Delay</span>
               }
             </td>
           </ng-container>
@@ -93,7 +97,7 @@
                 <button
                   mat-icon-button
                   (click)="confirmPurge(q)"
-                  [attr.aria-label]="'Purge ' + q.name"
+                  [attr.aria-label]="purgeQueueLabel(q)"
                 >
                   <mat-icon>delete_sweep</mat-icon>
                 </button>
@@ -146,6 +150,58 @@
       </section>
     }
 
+    <section class="pane" aria-label="Retry Queues">
+      <h2 class="pane-title">Retry Queues</h2>
+      <p class="pane-caption">
+        Retry queues intentionally hold messages for a short delay before RabbitMQ returns them to
+        the main work queue. This view helps explain when a queue is merely waiting versus when it
+        needs intervention.
+      </p>
+
+      @if (retryQueues().length === 0) {
+        <p class="empty-state">No retry queues are configured right now.</p>
+      } @else {
+        <div class="retry-queue-list">
+          @for (queue of retryQueues(); track queue.name) {
+            <mat-card
+              appearance="outlined"
+              class="retry-queue-card"
+              [class.retry-queue-card-attention]="retryQueueNeedsAttention(queue)"
+            >
+              <mat-card-content>
+                <div class="retry-queue-header">
+                  <div>
+                    <div class="retry-queue-title">{{ queueDisplayName(queue) }}</div>
+                    <div class="queue-actual-name">RabbitMQ name: {{ queue.name }}</div>
+                  </div>
+                  <span class="retry-queue-status">{{ queueStatusLabel(queue) }}</span>
+                </div>
+
+                <p class="retry-queue-insight">{{ retryQueueInsight(queue) }}</p>
+
+                <div class="retry-queue-facts">
+                  <div class="retry-fact">
+                    <span class="retry-fact-label">Waiting now</span>
+                    <span class="retry-fact-value">{{ queue.ready }}</span>
+                  </div>
+                  <div class="retry-fact">
+                    <span class="retry-fact-label">Retry delay</span>
+                    <span class="retry-fact-value">{{
+                      formatRetryDelay(queue.message_ttl_ms)
+                    }}</span>
+                  </div>
+                  <div class="retry-fact">
+                    <span class="retry-fact-label">Returns to</span>
+                    <span class="retry-fact-value">{{ retryReturnDestination(queue) }}</span>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      }
+    </section>
+
     <!-- Pane 4: Workers -->
     <section class="pane" aria-label="Workers">
       <h2 class="pane-title">Workers</h2>
@@ -159,7 +215,12 @@
           </ng-container>
           <ng-container matColumnDef="queue">
             <th mat-header-cell *matHeaderCellDef>Queue</th>
-            <td mat-cell *matCellDef="let w">{{ w.queue }}</td>
+            <td mat-cell *matCellDef="let w">
+              <div class="queue-name-block compact">
+                <span class="queue-display-name">{{ queueDisplayNameFromName(w.queue) }}</span>
+                <span class="queue-actual-name">RabbitMQ name: {{ w.queue }}</span>
+              </div>
+            </td>
           </ng-container>
           <ng-container matColumnDef="channel_details">
             <th mat-header-cell *matHeaderCellDef>Channel</th>

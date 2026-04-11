@@ -577,7 +577,18 @@ def test_get_jobs_queues_returns_response() -> None:
     subject = _stub_user()
     mock_svc = MagicMock()
     mock_svc.get_queues.return_value = [
-        QueueInfo(name="default", ready=5, unacked=1, consumers=2, ack_rate=1.5, is_dlq=False, is_retry=False),
+        QueueInfo(
+            name="default",
+            ready=5,
+            unacked=1,
+            consumers=2,
+            ack_rate=1.5,
+            is_dlq=False,
+            is_retry=False,
+            message_ttl_ms=None,
+            dead_letter_exchange=None,
+            dead_letter_routing_key=None,
+        ),
     ]
 
     result = get_jobs_queues(subject, mock_svc)
@@ -585,6 +596,7 @@ def test_get_jobs_queues_returns_response() -> None:
     assert len(result) == 1
     assert isinstance(result[0], QueueInfoResponse)
     assert result[0].name == "default"
+    assert result[0].message_ttl_ms is None
     mock_svc.get_queues.assert_called_once_with(subject)
 
 
@@ -596,8 +608,30 @@ def test_get_jobs_queues_endpoint(client: TestClient) -> None:
     app.dependency_overrides[get_authenticated_user] = lambda: user
     mock_svc = MagicMock()
     mock_svc.get_queues.return_value = [
-        QueueInfo(name="default", ready=3, unacked=0, consumers=1, ack_rate=0.0, is_dlq=False, is_retry=False),
-        QueueInfo(name="default.DQ", ready=1, unacked=0, consumers=0, ack_rate=0.0, is_dlq=True, is_retry=False),
+        QueueInfo(
+            name="default",
+            ready=3,
+            unacked=0,
+            consumers=1,
+            ack_rate=0.0,
+            is_dlq=False,
+            is_retry=False,
+            message_ttl_ms=None,
+            dead_letter_exchange=None,
+            dead_letter_routing_key=None,
+        ),
+        QueueInfo(
+            name="default.XQ",
+            ready=1,
+            unacked=0,
+            consumers=0,
+            ack_rate=0.0,
+            is_dlq=False,
+            is_retry=True,
+            message_ttl_ms=30000,
+            dead_letter_exchange="",
+            dead_letter_routing_key="default",
+        ),
     ]
     app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
 
@@ -606,7 +640,9 @@ def test_get_jobs_queues_endpoint(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert len(body) == 2
-    assert body[1]["is_dlq"] is True
+    assert body[1]["is_retry"] is True
+    assert body[1]["message_ttl_ms"] == 30000
+    assert body[1]["dead_letter_routing_key"] == "default"
 
 
 # ---- get_jobs_workers (unit) ----

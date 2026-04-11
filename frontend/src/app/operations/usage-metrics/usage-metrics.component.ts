@@ -8,6 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UsageMetrics } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 import { OperationsService } from '../operations.service';
 
 @Component({
@@ -19,10 +20,15 @@ import { OperationsService } from '../operations.service';
 })
 export class UsageMetricsComponent implements OnInit {
   private operationsService = inject(OperationsService);
+  private pageTitle = inject(PageTitleService);
 
   protected readonly metrics = signal<UsageMetrics | null>(null);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal('');
+
+  constructor() {
+    this.pageTitle.setTitle('Usage Metrics');
+  }
 
   async ngOnInit(): Promise<void> {
     await this.loadMetrics();

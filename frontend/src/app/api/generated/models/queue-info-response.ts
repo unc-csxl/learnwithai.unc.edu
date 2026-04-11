@@ -8,8 +8,11 @@
 export interface QueueInfoResponse {
   ack_rate: number;
   consumers: number;
+  dead_letter_exchange?: (string | null);
+  dead_letter_routing_key?: (string | null);
   is_dlq: boolean;
   is_retry: boolean;
+  message_ttl_ms?: (number | null);
   name: string;
   ready: number;
   unacked: number;

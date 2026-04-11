@@ -3183,6 +3183,39 @@
           "is_retry": {
             "type": "boolean",
             "title": "Is Retry"
+          },
+          "message_ttl_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Ttl Ms"
+          },
+          "dead_letter_exchange": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dead Letter Exchange"
+          },
+          "dead_letter_routing_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dead Letter Routing Key"
           }
         },
         "type": "object",

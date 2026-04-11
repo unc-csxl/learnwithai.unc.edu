@@ -34,6 +34,12 @@
   opacity: 0.9;
 }
 
+.pane-caption {
+  margin: -0.5rem 0 1rem;
+  max-width: 70ch;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .alarm-banner {
   display: flex;
   align-items: center;
@@ -90,6 +96,25 @@
   width: 100%;
 }
 
+.queue-name-block {
+  display: grid;
+  gap: 0.125rem;
+
+  &.compact {
+    gap: 0;
+  }
+}
+
+.queue-display-name {
+  font-weight: 600;
+}
+
+.queue-actual-name,
+.queue-purpose {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .badge {
   display: inline-block;
   font-size: 0.65rem;
@@ -116,6 +141,72 @@
   font-weight: 500;
   margin: 1rem 0 0.75rem;
   opacity: 0.8;
+}
+
+.retry-queue-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.retry-queue-card {
+  border-radius: 14px;
+}
+
+.retry-queue-card-attention {
+  border-color: var(--mat-sys-error);
+}
+
+.retry-queue-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.retry-queue-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.retry-queue-status {
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.retry-queue-insight {
+  margin: 0.875rem 0;
+  color: var(--mat-sys-on-surface);
+}
+
+.retry-queue-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.retry-fact {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--mat-sys-surface-container);
+}
+
+.retry-fact-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.retry-fact-value {
+  font-weight: 600;
 }
 
 .failed-jobs-list {
@@ -176,5 +267,9 @@
 
   .stat-label {
     font-size: 0.625rem;
+  }
+
+  .retry-queue-header {
+    flex-direction: column;
   }
 }

@@ -9,6 +9,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UsageMetricsComponent } from './usage-metrics.component';
 import { OperationsService } from '../operations.service';
 import { UsageMetrics } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 
 const STUB_METRICS: UsageMetrics = {
   month_label: 'April 2026',
@@ -19,6 +20,10 @@ const STUB_METRICS: UsageMetrics = {
 };
 
 function setup(opts: { metrics?: UsageMetrics; error?: boolean } = {}) {
+  const mockTitle = {
+    setTitle: vi.fn(),
+    title: vi.fn(),
+  };
   const mockService = {
     getUsageMetrics: opts.error
       ? vi.fn().mockRejectedValue(new Error('fail'))
@@ -27,19 +32,28 @@ function setup(opts: { metrics?: UsageMetrics; error?: boolean } = {}) {
 
   TestBed.configureTestingModule({
     imports: [NoopAnimationsModule],
-    providers: [{ provide: OperationsService, useValue: mockService }],
+    providers: [
+      { provide: OperationsService, useValue: mockService },
+      { provide: PageTitleService, useValue: mockTitle },
+    ],
   });
 
   const fixture = TestBed.createComponent(UsageMetricsComponent);
   fixture.detectChanges();
 
-  return { fixture, mockService };
+  return { fixture, mockService, mockTitle };
 }
 
 describe('UsageMetricsComponent', () => {
   it('should create the component', () => {
     const { fixture } = setup();
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should set the page title', () => {
+    const { mockTitle } = setup();
+
+    expect(mockTitle.setTitle).toHaveBeenCalledWith('Usage Metrics');
   });
 
   it('should display four metric cards after loading', async () => {

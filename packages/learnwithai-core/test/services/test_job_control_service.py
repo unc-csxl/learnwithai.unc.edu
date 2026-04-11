@@ -113,6 +113,109 @@ class TestGetQueues:
         assert result[0].is_dlq is False
         assert result[1].is_dlq is True
 
+    def test_parses_retry_queue_arguments(self) -> None:
+        svc, _, _, _ = _build_service(
+            queues=[
+                {
+                    "name": "default.XQ",
+                    "messages_ready": 2,
+                    "messages_unacknowledged": 0,
+                    "consumers": 0,
+                    "arguments": {
+                        "x-message-ttl": "30000",
+                        "x-dead-letter-exchange": "",
+                        "x-dead-letter-routing-key": "default",
+                    },
+                },
+            ],
+        )
+
+        result = svc.get_queues(_stub_user())
+
+        assert result[0].is_retry is True
+        assert result[0].message_ttl_ms == 30000
+        assert result[0].dead_letter_exchange == ""
+        assert result[0].dead_letter_routing_key == "default"
+
+    def test_ignores_non_numeric_or_non_text_arguments(self) -> None:
+        svc, _, _, _ = _build_service(
+            queues=[
+                {
+                    "name": "default.XQ",
+                    "messages_ready": 1,
+                    "messages_unacknowledged": 0,
+                    "consumers": 0,
+                    "arguments": {
+                        "x-message-ttl": "soon",
+                        "x-dead-letter-exchange": {"name": "default"},
+                        "x-dead-letter-routing-key": False,
+                    },
+                },
+            ],
+        )
+
+        result = svc.get_queues(_stub_user())
+
+        assert result[0].message_ttl_ms is None
+        assert result[0].dead_letter_exchange is None
+        assert result[0].dead_letter_routing_key is None
+
+    def test_handles_non_dict_arguments_payload(self) -> None:
+        svc, _, _, _ = _build_service(
+            queues=[
+                {
+                    "name": "default.XQ",
+                    "messages_ready": 1,
+                    "messages_unacknowledged": 0,
+                    "consumers": 0,
+                    "arguments": ["not", "a", "dict"],
+                },
+            ],
+        )
+
+        result = svc.get_queues(_stub_user())
+
+        assert result[0].message_ttl_ms is None
+        assert result[0].dead_letter_exchange is None
+        assert result[0].dead_letter_routing_key is None
+
+    def test_coerces_bool_and_float_retry_arguments(self) -> None:
+        svc, _, _, _ = _build_service(
+            queues=[
+                {
+                    "name": "default.XQ",
+                    "messages_ready": 1,
+                    "messages_unacknowledged": 0,
+                    "consumers": 0,
+                    "arguments": {
+                        "x-message-ttl": 30_000.9,
+                        "x-dead-letter-exchange": "",
+                        "x-dead-letter-routing-key": True,
+                    },
+                },
+                {
+                    "name": "fallback.XQ",
+                    "messages_ready": 1,
+                    "messages_unacknowledged": 0,
+                    "consumers": 0,
+                    "arguments": {
+                        "x-message-ttl": False,
+                        "x-dead-letter-exchange": "retry-exchange",
+                        "x-dead-letter-routing-key": "retry-key",
+                    },
+                },
+            ],
+        )
+
+        result = svc.get_queues(_stub_user())
+
+        assert result[0].message_ttl_ms == 30000
+        assert result[0].dead_letter_exchange == ""
+        assert result[0].dead_letter_routing_key is None
+        assert result[1].message_ttl_ms is None
+        assert result[1].dead_letter_exchange == "retry-exchange"
+        assert result[1].dead_letter_routing_key == "retry-key"
+
     def test_enforces_view_jobs_permission(self) -> None:
         svc, _, operator_svc, _ = _build_service()
         operator_svc.require_permission.side_effect = AuthorizationError("denied")

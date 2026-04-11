@@ -35,6 +35,9 @@ class QueueInfo(BaseModel):
     ack_rate: float
     is_dlq: bool
     is_retry: bool
+    message_ttl_ms: int | None = None
+    dead_letter_exchange: str | None = None
+    dead_letter_routing_key: str | None = None
 
 
 class WorkerInfo(BaseModel):
@@ -158,10 +161,13 @@ class JobControlService:
         for q in queues:
             name = q.get("name", "")
             details = q.get("message_stats", {})
+            arguments = q.get("arguments", {})
             ack_rate = 0.0
             if details:
                 ack_details = details.get("ack_details", {})
                 ack_rate = ack_details.get("rate", 0.0)
+            if not isinstance(arguments, dict):
+                arguments = {}
 
             result.append(
                 QueueInfo(
@@ -172,6 +178,9 @@ class JobControlService:
                     ack_rate=ack_rate,
                     is_dlq=name.endswith(".DQ"),
                     is_retry=name.endswith(".XQ"),
+                    message_ttl_ms=self._coerce_optional_int(arguments.get("x-message-ttl")),
+                    dead_letter_exchange=self._coerce_optional_str(arguments.get("x-dead-letter-exchange")),
+                    dead_letter_routing_key=self._coerce_optional_str(arguments.get("x-dead-letter-routing-key")),
                 )
             )
 
@@ -282,3 +291,20 @@ class JobControlService:
         from ..tables.operator import OperatorPermission
 
         self._operator_service.require_permission(subject, OperatorPermission.VIEW_JOBS)
+
+    def _coerce_optional_int(self, value: object) -> int | None:
+        """Returns an int when the management API argument is numeric."""
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int | float):
+            return int(value)
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                return None
+        return None
+
+    def _coerce_optional_str(self, value: object) -> str | None:
+        """Returns a string when the management API argument is textual."""
+        return value if isinstance(value, str) else None

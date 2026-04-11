@@ -29,12 +29,14 @@ async function openOperations(page: Page): Promise<void> {
   await page.getByRole('link', { name: 'Operations' }).click();
   await page.waitForURL('**/operations/metrics');
   await expect(page.getByText('Active Users')).toBeVisible();
+  await expect(page).toHaveTitle(/Usage Metrics/);
 }
 
 async function openJobControl(page: Page): Promise<void> {
   await page.getByRole('link', { name: 'Job Control' }).click();
   await page.waitForURL('**/operations/jobs');
   await expect(page.getByRole('region', { name: 'Job Control' })).toBeVisible();
+  await expect(page).toHaveTitle(/Job Control/);
 }
 
 async function goToOperators(page: Page): Promise<void> {
@@ -223,10 +225,19 @@ test.describe('operations e2e flows', () => {
     await openJobControl(page);
 
     const jobControlRegion = page.getByRole('region', { name: 'Job Control' });
-    await expect(jobControlRegion.getByRole('heading', { name: 'Now' })).toBeVisible();
-    await expect(jobControlRegion.getByRole('heading', { name: 'Queues' })).toBeVisible();
-    await expect(jobControlRegion.getByRole('heading', { name: 'Failures' })).toBeVisible();
-    await expect(jobControlRegion.getByRole('heading', { name: 'Workers' })).toBeVisible();
+    await expect(jobControlRegion.getByRole('heading', { name: 'Now', exact: true })).toBeVisible();
+    await expect(
+      jobControlRegion.getByRole('heading', { name: 'Queues', exact: true }),
+    ).toBeVisible();
+    await expect(
+      jobControlRegion.getByRole('heading', { name: 'Failures', exact: true }),
+    ).toBeVisible();
+    await expect(
+      jobControlRegion.getByRole('heading', { name: 'Retry Queues', exact: true }),
+    ).toBeVisible();
+    await expect(
+      jobControlRegion.getByRole('heading', { name: 'Workers', exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole('switch', { name: 'Toggle auto-refresh' })).toBeVisible();
     await expect(jobControlRegion.locator('.queue-table')).toBeVisible();
   });

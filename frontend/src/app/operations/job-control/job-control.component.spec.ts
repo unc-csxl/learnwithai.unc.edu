@@ -10,6 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { JobControlComponent } from './job-control.component';
 import { OperationsService } from '../operations.service';
 import { JobControlOverview, QueueInfo, WorkerInfo, JobFailures } from '../../api/models';
+import { PageTitleService } from '../../page-title.service';
 
 const STUB_OVERVIEW: JobControlOverview = {
   total_queued: 10,
@@ -29,6 +30,9 @@ const STUB_QUEUES: QueueInfo[] = [
     ack_rate: 1.5,
     is_dlq: false,
     is_retry: false,
+    message_ttl_ms: null,
+    dead_letter_exchange: null,
+    dead_letter_routing_key: null,
   },
   {
     name: 'default.DQ',
@@ -38,6 +42,9 @@ const STUB_QUEUES: QueueInfo[] = [
     ack_rate: 0,
     is_dlq: true,
     is_retry: false,
+    message_ttl_ms: null,
+    dead_letter_exchange: null,
+    dead_letter_routing_key: null,
   },
 ];
 
@@ -96,19 +103,24 @@ function setup(opts: SetupOptions = {}) {
       afterClosed: () => ({ toPromise: () => Promise.resolve(opts.dialogConfirmed ?? false) }),
     }),
   };
+  const mockTitle = {
+    setTitle: vi.fn(),
+    title: vi.fn(),
+  };
 
   TestBed.configureTestingModule({
     imports: [NoopAnimationsModule],
     providers: [
       { provide: OperationsService, useValue: mockService },
       { provide: MatDialog, useValue: mockDialog },
+      { provide: PageTitleService, useValue: mockTitle },
     ],
   });
 
   const fixture = TestBed.createComponent(JobControlComponent);
   fixture.detectChanges();
 
-  return { fixture, mockService, mockDialog };
+  return { fixture, mockService, mockDialog, mockTitle };
 }
 
 async function setupAndLoad(opts: SetupOptions = {}) {
@@ -123,6 +135,12 @@ describe('JobControlComponent', () => {
   it('should create the component', () => {
     const { fixture } = setup();
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should set the page title', () => {
+    const { mockTitle } = setup();
+
+    expect(mockTitle.setTitle).toHaveBeenCalledWith('Job Control');
   });
 
   it('should show loading spinner initially', () => {
@@ -163,6 +181,8 @@ describe('JobControlComponent', () => {
       '.queue-table tbody tr, .queue-table mat-row',
     );
     expect(rows.length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Default work queue');
+    expect(fixture.nativeElement.textContent).toContain('RabbitMQ name: default.DQ');
   });
 
   it('should display DLQ badge for DLQ queues', async () => {
@@ -326,15 +346,22 @@ describe('JobControlComponent', () => {
           ack_rate: 0,
           is_dlq: false,
           is_retry: true,
+          message_ttl_ms: 30000,
+          dead_letter_exchange: '',
+          dead_letter_routing_key: 'default',
         },
       ],
     });
 
     const retryBadge = fixture.nativeElement.querySelector('.badge-retry');
     expect(retryBadge).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Default retry delay queue');
+    expect(fixture.nativeElement.textContent).toContain(
+      'No messages are waiting in this retry queue right now.',
+    );
 
     const purgeButton = fixture.nativeElement.querySelector(
-      'button[aria-label="Purge default.XQ"]',
+      'button[aria-label="Purge default retry delay queue (default.XQ)"]',
     );
     expect(purgeButton).toBeNull();
   });
@@ -346,7 +373,9 @@ describe('JobControlComponent', () => {
     };
     const confirmPurgeSpy = vi.spyOn(component, 'confirmPurge').mockResolvedValue();
 
-    const purgeButton = fixture.nativeElement.querySelector('button[aria-label="Purge default"]');
+    const purgeButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Purge default work queue (default)"]',
+    );
     expect(purgeButton).toBeTruthy();
 
     purgeButton.click();
@@ -372,7 +401,57 @@ describe('JobControlComponent', () => {
 
     expect(emptyStates).toContain('No queues found.');
     expect(emptyStates).toContain('No recent failures.');
+    expect(emptyStates).toContain('No retry queues are configured right now.');
     expect(emptyStates).toContain('No active workers.');
+  });
+
+  it('should explain why retry messages are waiting', async () => {
+    const { fixture } = await setupAndLoad({
+      queues: [
+        {
+          name: 'default.XQ',
+          ready: 2,
+          unacked: 0,
+          consumers: 0,
+          ack_rate: 0,
+          is_dlq: false,
+          is_retry: true,
+          message_ttl_ms: 30000,
+          dead_letter_exchange: '',
+          dead_letter_routing_key: 'default',
+        },
+      ],
+    });
+
+    expect(fixture.nativeElement.textContent).toContain(
+      '2 messages are waiting about 30s before RabbitMQ routes them back to default.',
+    );
+    expect(fixture.nativeElement.textContent).toContain('Returns to');
+  });
+
+  it('should flag retry queues that are missing delay configuration', async () => {
+    const { fixture } = await setupAndLoad({
+      queues: [
+        {
+          name: 'default.XQ',
+          ready: 1,
+          unacked: 0,
+          consumers: 0,
+          ack_rate: 0,
+          is_dlq: false,
+          is_retry: true,
+          message_ttl_ms: null,
+          dead_letter_exchange: null,
+          dead_letter_routing_key: null,
+        },
+      ],
+    });
+
+    const attentionCard = fixture.nativeElement.querySelector('.retry-queue-card-attention');
+    expect(attentionCard).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain(
+      'Messages are waiting here, but no retry delay is configured, so they will not move on their own.',
+    );
   });
 
   it('should hide overview pane when overview state is null', async () => {

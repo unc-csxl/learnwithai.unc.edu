@@ -29,6 +29,9 @@ class QueueInfoResponse(BaseModel):
     ack_rate: float
     is_dlq: bool
     is_retry: bool
+    message_ttl_ms: int | None = None
+    dead_letter_exchange: str | None = None
+    dead_letter_routing_key: str | None = None
 
 
 class WorkerInfoResponse(BaseModel):
