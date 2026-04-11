@@ -23,6 +23,7 @@ from .course import (
     UpdateMemberRoleRequest,
 )
 from .joke_generation import CreateJokeRequest, JokeResponse
+from .metrics import UsageMetricsResponse
 from .operator import (
     GrantOperatorRequest,
     ImpersonationTokenResponse,
@@ -62,6 +63,7 @@ __all__ = [
     "UpdateIyowActivityRequest",
     "UpdateOperatorRoleRequest",
     "UpdateProfileRequest",
+    "UsageMetricsResponse",
     "UserProfile",
     "UserSearchResult",
 ]

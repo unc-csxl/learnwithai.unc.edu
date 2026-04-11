@@ -22,6 +22,7 @@ from api.di import (
     iyow_submission_service_factory,
     joke_generation_service_factory,
     joke_repository_factory,
+    metrics_service_factory,
     operator_repository_factory,
     operator_service_factory,
     roster_upload_service_factory,
@@ -252,3 +253,14 @@ def test_operator_service_factory_returns_service() -> None:
     result = operator_service_factory(operator_repo, user_repo)
 
     assert isinstance(result, OperatorService)
+
+
+def test_metrics_service_factory_returns_service() -> None:
+    from learnwithai.services.metrics_service import MetricsService
+
+    session = MagicMock()
+    operator_svc = MagicMock()
+
+    result = metrics_service_factory(session, operator_svc)
+
+    assert isinstance(result, MetricsService)

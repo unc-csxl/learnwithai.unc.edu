@@ -10,6 +10,7 @@ from learnwithai.tables.operator import effective_permissions
 
 from ..di import (
     AuthenticatedUserDI,
+    MetricsServiceDI,
     OperatorServiceDI,
     SettingsDI,
     UserRepositoryDI,
@@ -19,10 +20,46 @@ from ..models import (
     ImpersonationTokenResponse,
     OperatorResponse,
     UpdateOperatorRoleRequest,
+    UsageMetricsResponse,
     UserSearchResult,
 )
 
 router = APIRouter(prefix="/operations", tags=["Operations"])
+
+
+@router.get(
+    "/metrics",
+    response_model=UsageMetricsResponse,
+    summary="Get platform usage metrics",
+    response_description="Monthly usage statistics.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_METRICS permission."},
+    },
+)
+def get_usage_metrics(
+    subject: AuthenticatedUserDI,
+    metrics_svc: MetricsServiceDI,
+) -> UsageMetricsResponse:
+    """Returns monthly usage metrics for the platform.
+
+    Requires VIEW_METRICS permission.
+
+    Args:
+        subject: Authenticated operator.
+        metrics_svc: Service for computing usage metrics.
+
+    Returns:
+        Monthly usage statistics.
+    """
+    metrics = metrics_svc.get_usage_metrics(subject)
+    return UsageMetricsResponse(
+        month_label=metrics.month_label,
+        active_users=metrics.active_users,
+        active_courses=metrics.active_courses,
+        submissions=metrics.submissions,
+        jobs_run=metrics.jobs_run,
+    )
 
 
 def _build_operator_response(operator) -> OperatorResponse:  # noqa: ANN001

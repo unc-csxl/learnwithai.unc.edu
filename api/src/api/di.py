@@ -29,6 +29,7 @@ from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
+from learnwithai.services.metrics_service import MetricsService
 from learnwithai.services.operator_service import OperatorService
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.activity import Activity
@@ -57,6 +58,7 @@ __all__ = [
     "JokeRepositoryDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
+    "MetricsServiceDI",
     "OperatorRepositoryDI",
     "OperatorServiceDI",
     "PaginationParamsDI",
@@ -85,6 +87,7 @@ __all__ = [
     "joke_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
+    "metrics_service_factory",
     "operator_repository_factory",
     "operator_service_factory",
     "roster_upload_service_factory",
@@ -323,6 +326,17 @@ def operator_service_factory(
 
 
 OperatorServiceDI: TypeAlias = Annotated[OperatorService, Depends(operator_service_factory)]
+
+
+def metrics_service_factory(
+    session: SessionDI,
+    operator_svc: OperatorServiceDI,
+) -> MetricsService:
+    """Creates the metrics service for the current request."""
+    return MetricsService(session, operator_svc)
+
+
+MetricsServiceDI: TypeAlias = Annotated[MetricsService, Depends(metrics_service_factory)]
 
 
 def joke_generation_service_factory(

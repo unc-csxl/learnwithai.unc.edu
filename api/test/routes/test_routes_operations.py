@@ -15,6 +15,7 @@ from learnwithai.tables.operator import OperatorRole
 
 from api.di import (
     get_authenticated_user,
+    metrics_service_factory,
     operator_service_factory,
     user_repository_factory,
 )
@@ -24,8 +25,10 @@ from api.models import (
     ImpersonationTokenResponse,
     OperatorResponse,
     UpdateOperatorRoleRequest,
+    UsageMetricsResponse,
 )
 from api.routes.operations import (
+    get_usage_metrics,
     grant_operator,
     impersonate_user,
     list_operators,
@@ -431,3 +434,75 @@ def test_search_users_endpoint(client: TestClient) -> None:
     body = response.json()
     assert len(body) == 1
     assert body[0]["name"] == "Sally Student"
+
+
+# ---- get_usage_metrics (unit) ----
+
+
+def test_get_usage_metrics_returns_response() -> None:
+    from learnwithai.services.metrics_service import UsageMetrics
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.get_usage_metrics.return_value = UsageMetrics(
+        month_label="April 2026",
+        active_users=42,
+        active_courses=5,
+        submissions=128,
+        jobs_run=64,
+    )
+
+    result = get_usage_metrics(subject, mock_svc)
+
+    assert isinstance(result, UsageMetricsResponse)
+    assert result.month_label == "April 2026"
+    assert result.active_users == 42
+    assert result.active_courses == 5
+    assert result.submissions == 128
+    assert result.jobs_run == 64
+
+
+@pytest.mark.integration
+def test_get_usage_metrics_endpoint(client: TestClient) -> None:
+    from learnwithai.services.metrics_service import UsageMetrics
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_usage_metrics.return_value = UsageMetrics(
+        month_label="April 2026",
+        active_users=10,
+        active_courses=3,
+        submissions=50,
+        jobs_run=20,
+    )
+    app.dependency_overrides[metrics_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/metrics")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["month_label"] == "April 2026"
+    assert body["active_users"] == 10
+    assert body["active_courses"] == 3
+    assert body["submissions"] == 50
+    assert body["jobs_run"] == 20
+
+
+@pytest.mark.integration
+def test_get_usage_metrics_returns_403_for_unauthorized(client: TestClient) -> None:
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.get_usage_metrics.side_effect = AuthorizationError("Missing permission")
+    app.dependency_overrides[metrics_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/metrics")
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_get_usage_metrics_returns_401_without_token(client: TestClient) -> None:
+    response = client.get("/api/operations/metrics")
+    assert response.status_code == 401

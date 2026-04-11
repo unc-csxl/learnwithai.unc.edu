@@ -37,6 +37,7 @@ def test_api_models_exports_expected_symbols() -> None:
         "UpdateMemberRoleRequest",
         "UpdateOperatorRoleRequest",
         "UpdateProfileRequest",
+        "UsageMetricsResponse",
         "UserProfile",
         "UserSearchResult",
     }
