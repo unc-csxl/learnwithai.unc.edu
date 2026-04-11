@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Operators } from './operators.component';
-import { AdminService } from '../admin.service';
+import { OperationsService } from '../operations.service';
 import { AuthService } from '../../auth.service';
 import { PageTitleService } from '../../page-title.service';
 import { of } from 'rxjs';
@@ -32,7 +32,6 @@ const STUB_OPERATORS: Operator[] = [
 function setup(
   opts: {
     operators?: Operator[];
-    canImpersonate?: boolean;
     noOperator?: boolean;
     nullUser?: boolean;
   } = {},
@@ -41,11 +40,8 @@ function setup(
     listOperators: vi.fn().mockResolvedValue(opts.operators ?? STUB_OPERATORS),
     updateOperatorRole: vi.fn().mockResolvedValue({}),
     revokeOperator: vi.fn().mockResolvedValue(undefined),
-    impersonate: vi.fn().mockResolvedValue(undefined),
   };
 
-  const permissions =
-    opts.canImpersonate !== false ? ['manage_operators', 'impersonate'] : ['manage_operators'];
   const mockAuth = {
     user: signal(
       opts.nullUser
@@ -55,7 +51,7 @@ function setup(
           : {
               pid: 999,
               name: 'Op',
-              operator: { role: 'superadmin', permissions },
+              operator: { role: 'superadmin', permissions: ['manage_operators'] },
             },
     ),
   };
@@ -67,7 +63,7 @@ function setup(
   TestBed.configureTestingModule({
     imports: [NoopAnimationsModule],
     providers: [
-      { provide: AdminService, useValue: mockAdmin },
+      { provide: OperationsService, useValue: mockAdmin },
       { provide: AuthService, useValue: mockAuth },
       { provide: MatDialog, useValue: mockDialog },
       { provide: MatSnackBar, useValue: mockSnackBar },
@@ -91,7 +87,6 @@ function setup(
 async function setupLoaded(
   opts: {
     operators?: Operator[];
-    canImpersonate?: boolean;
     noOperator?: boolean;
     nullUser?: boolean;
   } = {},
@@ -178,34 +173,6 @@ describe('Operators', () => {
     });
   });
 
-  it('should impersonate via impersonate button click', async () => {
-    const { fixture, mockAdmin } = await setupLoaded();
-    const el: HTMLElement = fixture.nativeElement;
-    const impersonateButton = el.querySelector(
-      'button[matTooltip="Impersonate"]',
-    ) as HTMLButtonElement;
-    expect(impersonateButton).toBeTruthy();
-    impersonateButton.click();
-    await vi.waitFor(() => {
-      expect(mockAdmin.impersonate).toHaveBeenCalledWith(111);
-    });
-  });
-
-  it('should handle onImpersonate error via button', async () => {
-    const { fixture, mockAdmin, mockSnackBar } = await setupLoaded();
-    mockAdmin.impersonate.mockRejectedValue(new Error('fail'));
-    const el: HTMLElement = fixture.nativeElement;
-    const impersonateButton = el.querySelector(
-      'button[matTooltip="Impersonate"]',
-    ) as HTMLButtonElement;
-    impersonateButton.click();
-    await vi.waitFor(() => {
-      expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to start impersonation', undefined, {
-        duration: 5000,
-      });
-    });
-  });
-
   it('should show error message when loadOperators fails', async () => {
     const { fixture, mockAdmin } = setup();
     mockAdmin.listOperators.mockRejectedValue(new Error('fail'));
@@ -224,20 +191,6 @@ describe('Operators', () => {
     const { fixture } = await setupLoaded();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('table')).toBeTruthy();
-  });
-
-  it('should hide impersonate button when canImpersonate is false', async () => {
-    const { fixture } = await setupLoaded({ canImpersonate: false });
-    const el: HTMLElement = fixture.nativeElement;
-    const impersonateButtons = el.querySelectorAll('button[matTooltip="Impersonate"]');
-    expect(impersonateButtons.length).toBe(0);
-  });
-
-  it('should hide impersonate button when user has no operator profile', async () => {
-    const { fixture } = await setupLoaded({ noOperator: true });
-    const el: HTMLElement = fixture.nativeElement;
-    const impersonateButtons = el.querySelectorAll('button[matTooltip="Impersonate"]');
-    expect(impersonateButtons.length).toBe(0);
   });
 
   it('should default currentUserPid to 0 when user is null', async () => {

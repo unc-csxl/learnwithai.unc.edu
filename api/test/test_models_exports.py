@@ -38,6 +38,7 @@ def test_api_models_exports_expected_symbols() -> None:
         "UpdateOperatorRoleRequest",
         "UpdateProfileRequest",
         "UserProfile",
+        "UserSearchResult",
     }
 
     for export_name in models.__all__:

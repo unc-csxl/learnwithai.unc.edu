@@ -13,7 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../auth.service';
-import { AdminService } from '../admin.service';
+import { OperationsService } from '../operations.service';
 import { PageTitleService } from '../../page-title.service';
 import { Operator, OperatorRole } from '../../api/models';
 import { GrantOperatorDialog } from './grant-operator-dialog.component';
@@ -35,7 +35,7 @@ import { GrantOperatorDialog } from './grant-operator-dialog.component';
 })
 export class Operators {
   private auth = inject(AuthService);
-  private adminService = inject(AdminService);
+  private operationsService = inject(OperationsService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private titleService = inject(PageTitleService);
@@ -43,17 +43,12 @@ export class Operators {
   protected readonly operators = signal<Operator[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal('');
-  protected readonly displayedColumns = ['name', 'pid', 'role', 'permissions', 'actions'];
+  protected readonly displayedColumns = ['name', 'pid', 'role', 'actions'];
   protected readonly availableRoles: OperatorRole[] = ['superadmin', 'admin', 'helpdesk'];
 
   protected readonly currentUserPid = computed(() => {
     const user = this.auth.user();
     return user ? user.pid : 0;
-  });
-  protected readonly canImpersonate = computed(() => {
-    const user = this.auth.user();
-    if (!user?.operator) return false;
-    return user.operator.permissions.includes('impersonate');
   });
 
   constructor() {
@@ -74,7 +69,7 @@ export class Operators {
 
   protected async onRoleChange(op: Operator, newRole: OperatorRole): Promise<void> {
     try {
-      await this.adminService.updateOperatorRole(op.user_pid, newRole);
+      await this.operationsService.updateOperatorRole(op.user_pid, newRole);
       this.snackBar.open('Role updated', undefined, { duration: 3000 });
       await this.loadOperators();
     } catch {
@@ -84,7 +79,7 @@ export class Operators {
 
   protected async onRevoke(op: Operator): Promise<void> {
     try {
-      await this.adminService.revokeOperator(op.user_pid);
+      await this.operationsService.revokeOperator(op.user_pid);
       this.snackBar.open(`${op.user_name} removed as operator`, undefined, { duration: 3000 });
       await this.loadOperators();
     } catch {
@@ -92,19 +87,11 @@ export class Operators {
     }
   }
 
-  protected async onImpersonate(pid: number): Promise<void> {
-    try {
-      await this.adminService.impersonate(pid);
-    } catch {
-      this.snackBar.open('Failed to start impersonation', undefined, { duration: 5000 });
-    }
-  }
-
   private async loadOperators(): Promise<void> {
     this.loading.set(true);
     this.errorMessage.set('');
     try {
-      const ops = await this.adminService.listOperators();
+      const ops = await this.operationsService.listOperators();
       this.operators.set(ops);
     } catch {
       this.errorMessage.set('Failed to load operators.');

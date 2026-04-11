@@ -36,7 +36,7 @@ def get_current_subject_profile(
     from learnwithai.tables.operator import effective_permissions
 
     profile = UserProfile.model_validate(subject.model_dump(mode="json"))
-    operator = operator_repo.get_by_user_pid(subject.pid)
+    operator = operator_repo.get_by_id(subject.pid)
     if operator is not None:
         profile.operator = OperatorProfile(
             role=operator.role,

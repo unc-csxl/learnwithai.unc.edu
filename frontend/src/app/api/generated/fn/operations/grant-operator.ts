@@ -7,18 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { GrantOperatorRequest } from '../../models/grant-operator-request';
 import { OperatorResponse } from '../../models/operator-response';
-import { UpdateOperatorRoleRequest } from '../../models/update-operator-role-request';
 
-export interface UpdateOperatorRole$Params {
-  pid: number;
-      body: UpdateOperatorRoleRequest
+export interface GrantOperator$Params {
+      body: GrantOperatorRequest
 }
 
-export function updateOperatorRole(http: HttpClient, rootUrl: string, params: UpdateOperatorRole$Params, context?: HttpContext): Observable<StrictHttpResponse<OperatorResponse>> {
-  const rb = new RequestBuilder(rootUrl, updateOperatorRole.PATH, 'put');
+export function grantOperator(http: HttpClient, rootUrl: string, params: GrantOperator$Params, context?: HttpContext): Observable<StrictHttpResponse<OperatorResponse>> {
+  const rb = new RequestBuilder(rootUrl, grantOperator.PATH, 'post');
   if (params) {
-    rb.path('pid', params.pid, {});
     rb.body(params.body, 'application/json');
   }
 
@@ -32,4 +30,4 @@ export function updateOperatorRole(http: HttpClient, rootUrl: string, params: Up
   );
 }
 
-updateOperatorRole.PATH = '/api/admin/operators/{pid}';
+grantOperator.PATH = '/api/operations/operators';

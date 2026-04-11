@@ -27,4 +27,4 @@ export function listOperators(http: HttpClient, rootUrl: string, params?: ListOp
   );
 }
 
-listOperators.PATH = '/api/admin/operators';
+listOperators.PATH = '/api/operations/operators';

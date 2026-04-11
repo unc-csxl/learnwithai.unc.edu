@@ -16,7 +16,7 @@ import { ThemeService } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
 import { User } from '../api/models';
 import { LayoutNavigationSection, LayoutNavigationService } from './layout-navigation.service';
-import { ImpersonationService } from '../admin/impersonation.service';
+import { ImpersonationService } from '../operations/impersonation.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -341,15 +341,15 @@ describe('Layout', () => {
     fixture.detectChanges();
   });
 
-  it('should show Admin Tools link when user is operator', () => {
+  it('should show Operations link when user is operator', () => {
     const { fixture } = setup({
       authenticated: true,
       operator: { role: 'admin', permissions: ['manage_operators'] },
     });
     const el: HTMLElement = fixture.nativeElement;
-    const adminLink = el.querySelector('a[href="/admin"]');
-    expect(adminLink).toBeTruthy();
-    expect(adminLink?.textContent).toContain('Admin Tools');
+    const operationsLink = el.querySelector('a[href="/operations"]');
+    expect(operationsLink).toBeTruthy();
+    expect(operationsLink?.textContent).toContain('Operations');
   });
 
   it('should close sidenav on admin link click in handset mode', () => {
@@ -359,17 +359,17 @@ describe('Layout', () => {
       operator: { role: 'admin', permissions: ['manage_operators'] },
     });
     const el: HTMLElement = fixture.nativeElement;
-    const adminLink = el.querySelector('a[href="/admin"]') as HTMLElement;
-    expect(adminLink).toBeTruthy();
-    adminLink.click();
+    const operationsLink = el.querySelector('a[href="/operations"]') as HTMLElement;
+    expect(operationsLink).toBeTruthy();
+    operationsLink.click();
     fixture.detectChanges();
   });
 
-  it('should not show Admin Tools link for non-operators', () => {
+  it('should not show Operations link for non-operators', () => {
     const { fixture } = setup({ authenticated: true });
     const el: HTMLElement = fixture.nativeElement;
-    const adminLink = el.querySelector('a[href="/admin"]');
-    expect(adminLink).toBeFalsy();
+    const operationsLink = el.querySelector('a[href="/operations"]');
+    expect(operationsLink).toBeFalsy();
   });
 
   it('should show impersonation banner when impersonating', () => {

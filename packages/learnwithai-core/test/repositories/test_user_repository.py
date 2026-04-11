@@ -110,3 +110,65 @@ def test_update_user_persists_changes(session: Session) -> None:
     fetched = repo.get_by_pid(123456789)
     assert fetched is not None
     assert fetched.name == "New Name"
+
+
+# --- search_users ---
+
+
+@pytest.mark.integration
+def test_search_users_matches_name(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="Sally Student", onyen="sally", email="sally@unc.edu"))
+    session.add(User(pid=100000002, name="Tatum TA", onyen="tatum", email="tatum@unc.edu"))
+    session.flush()
+
+    result = repo.search_users("Sally")
+
+    assert len(result) == 1
+    assert result[0].pid == 100000001
+
+
+@pytest.mark.integration
+def test_search_users_matches_email(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="Sally Student", onyen="sally", email="sally@unc.edu"))
+    session.flush()
+
+    result = repo.search_users("sally@unc")
+
+    assert len(result) == 1
+    assert result[0].pid == 100000001
+
+
+@pytest.mark.integration
+def test_search_users_matches_pid(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="Sally Student", onyen="sally"))
+    session.flush()
+
+    result = repo.search_users("100000001")
+
+    assert len(result) == 1
+    assert result[0].pid == 100000001
+
+
+@pytest.mark.integration
+def test_search_users_returns_empty_for_no_match(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="Sally Student", onyen="sally"))
+    session.flush()
+
+    result = repo.search_users("xyz")
+
+    assert result == []
+
+
+@pytest.mark.integration
+def test_search_users_is_case_insensitive(session: Session) -> None:
+    repo = UserRepository(session)
+    session.add(User(pid=100000001, name="Sally Student", onyen="sally"))
+    session.flush()
+
+    result = repo.search_users("sally")
+
+    assert len(result) == 1

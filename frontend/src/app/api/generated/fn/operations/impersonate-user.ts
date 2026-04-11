@@ -7,25 +7,26 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ImpersonationTokenResponse } from '../../models/impersonation-token-response';
 
-export interface RevokeOperator$Params {
+export interface ImpersonateUser$Params {
   pid: number;
 }
 
-export function revokeOperator(http: HttpClient, rootUrl: string, params: RevokeOperator$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, revokeOperator.PATH, 'delete');
+export function impersonateUser(http: HttpClient, rootUrl: string, params: ImpersonateUser$Params, context?: HttpContext): Observable<StrictHttpResponse<ImpersonationTokenResponse>> {
+  const rb = new RequestBuilder(rootUrl, impersonateUser.PATH, 'post');
   if (params) {
     rb.path('pid', params.pid, {});
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<ImpersonationTokenResponse>;
     })
   );
 }
 
-revokeOperator.PATH = '/api/admin/operators/{pid}';
+impersonateUser.PATH = '/api/operations/impersonate/{pid}';

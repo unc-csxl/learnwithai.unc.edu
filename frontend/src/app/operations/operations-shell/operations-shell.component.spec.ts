@@ -6,13 +6,13 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { vi } from 'vitest';
-import { AdminShell } from './admin-shell.component';
+import { OperationsShell } from './operations-shell.component';
 import { AuthService } from '../../auth.service';
 import { PageTitleService } from '../../page-title.service';
 import { LayoutNavigationService } from '../../layout/layout-navigation.service';
 import { provideRouter } from '@angular/router';
 
-describe('AdminShell', () => {
+describe('OperationsShell', () => {
   function setup(operator: { role: string; permissions: string[] } | null) {
     const mockAuth = {
       user: signal(operator ? { name: 'Admin', pid: 123, operator } : { name: 'User', pid: 456 }),
@@ -29,33 +29,34 @@ describe('AdminShell', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(AdminShell);
+    const fixture = TestBed.createComponent(OperationsShell);
     fixture.detectChanges();
 
     return { fixture, component: fixture.componentInstance, mockTitle, mockNav };
   }
 
-  it('should set page title to Admin Tools', () => {
+  it('should set page title to Operations', () => {
     const { mockTitle } = setup({
       role: 'superadmin',
-      permissions: ['manage_operators', 'view_jobs', 'view_metrics'],
+      permissions: ['manage_operators', 'view_jobs', 'view_metrics', 'impersonate'],
     });
-    expect(mockTitle.setTitle).toHaveBeenCalledWith('Admin Tools');
+    expect(mockTitle.setTitle).toHaveBeenCalledWith('Operations');
   });
 
   it('should build navigation with all permissions', () => {
     const { mockNav } = setup({
       role: 'superadmin',
-      permissions: ['manage_operators', 'view_jobs', 'view_metrics'],
+      permissions: ['manage_operators', 'view_jobs', 'view_metrics', 'impersonate'],
     });
     expect(mockNav.setSection).toHaveBeenCalledWith(
       expect.objectContaining({
         groups: [
           expect.objectContaining({
             items: expect.arrayContaining([
-              expect.objectContaining({ route: '/admin/operators' }),
-              expect.objectContaining({ route: '/admin/jobs' }),
-              expect.objectContaining({ route: '/admin/metrics' }),
+              expect.objectContaining({ route: '/operations/operators' }),
+              expect.objectContaining({ route: '/operations/jobs' }),
+              expect.objectContaining({ route: '/operations/metrics' }),
+              expect.objectContaining({ route: '/operations/impersonate' }),
             ]),
           }),
         ],
@@ -70,7 +71,7 @@ describe('AdminShell', () => {
     });
     const section = mockNav.setSection.mock.calls[0][0];
     expect(section.groups[0].items).toHaveLength(1);
-    expect(section.groups[0].items[0].route).toBe('/admin/jobs');
+    expect(section.groups[0].items[0].route).toBe('/operations/jobs');
   });
 
   it('should show error when no operator access', () => {

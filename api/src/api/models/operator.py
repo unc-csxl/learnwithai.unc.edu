@@ -49,3 +49,13 @@ class ImpersonationTokenResponse(BaseModel):
     """JWT token issued for user impersonation."""
 
     token: str
+
+
+class UserSearchResult(BaseModel):
+    """Minimal user record returned by user search."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    pid: int
+    name: str
+    email: str | None

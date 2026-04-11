@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Kris Jordan
 # SPDX-License-Identifier: MIT
 
-"""Tests for admin routes (operator CRUD and impersonation)."""
+"""Tests for operations routes (operator CRUD and impersonation)."""
 
 from __future__ import annotations
 
@@ -25,11 +25,12 @@ from api.models import (
     OperatorResponse,
     UpdateOperatorRoleRequest,
 )
-from api.routes.admin import (
+from api.routes.operations import (
     grant_operator,
     impersonate_user,
     list_operators,
     revoke_operator,
+    search_users,
     update_operator_role,
 )
 
@@ -274,7 +275,7 @@ def test_list_operators_endpoint(client: TestClient) -> None:
     ]
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
-    response = client.get("/api/admin/operators")
+    response = client.get("/api/operations/operators")
 
     assert response.status_code == 200
     body = response.json()
@@ -291,7 +292,7 @@ def test_list_operators_returns_403_for_non_operator(client: TestClient) -> None
     mock_svc.list_operators.side_effect = AuthorizationError("Operator access required.")
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
-    response = client.get("/api/admin/operators")
+    response = client.get("/api/operations/operators")
 
     assert response.status_code == 403
 
@@ -310,7 +311,7 @@ def test_grant_operator_endpoint(client: TestClient) -> None:
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
     response = client.post(
-        "/api/admin/operators",
+        "/api/operations/operators",
         json={"user_pid": 222222222, "role": "admin"},
     )
 
@@ -334,7 +335,7 @@ def test_update_operator_role_endpoint(client: TestClient) -> None:
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
     response = client.put(
-        "/api/admin/operators/222222222",
+        "/api/operations/operators/222222222",
         json={"role": "admin"},
     )
 
@@ -354,7 +355,7 @@ def test_revoke_operator_endpoint(client: TestClient) -> None:
     mock_svc = MagicMock()
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
-    response = client.delete("/api/admin/operators/222222222")
+    response = client.delete("/api/operations/operators/222222222")
 
     assert response.status_code == 204
     mock_svc.revoke_operator.assert_called_once()
@@ -372,7 +373,7 @@ def test_impersonate_endpoint(client: TestClient) -> None:
     mock_svc.issue_impersonation_token.return_value = "impersonation.jwt.token"
     app.dependency_overrides[operator_service_factory] = lambda: mock_svc
 
-    response = client.post("/api/admin/impersonate/222222222")
+    response = client.post("/api/operations/impersonate/222222222")
 
     assert response.status_code == 200
     body = response.json()
@@ -381,5 +382,52 @@ def test_impersonate_endpoint(client: TestClient) -> None:
 
 @pytest.mark.integration
 def test_admin_routes_return_401_without_token(client: TestClient) -> None:
-    response = client.get("/api/admin/operators")
+    response = client.get("/api/operations/operators")
     assert response.status_code == 401
+
+
+# ---- search_users (unit) ----
+
+
+def test_search_users_returns_results() -> None:
+    subject = _stub_user()
+    operator_svc = MagicMock()
+    user_repo = MagicMock()
+    target = _stub_user(pid=222222222, name="Sally Student", email="sally@unc.edu")
+    user_repo.search_users.return_value = [target]
+
+    result = search_users(subject, "Sally", operator_svc, user_repo)
+
+    assert len(result) == 1
+    assert result[0].pid == 222222222
+    assert result[0].name == "Sally Student"
+    operator_svc.require_permission.assert_called_once()
+
+
+def test_search_users_raises_for_unauthorized() -> None:
+    subject = _stub_user()
+    operator_svc = MagicMock()
+    operator_svc.require_permission.side_effect = AuthorizationError("Forbidden")
+    user_repo = MagicMock()
+
+    with pytest.raises(AuthorizationError):
+        search_users(subject, "test", operator_svc, user_repo)
+
+
+@pytest.mark.integration
+def test_search_users_endpoint(client: TestClient) -> None:
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    app.dependency_overrides[operator_service_factory] = lambda: mock_svc
+    mock_user_repo = MagicMock()
+    target = _stub_user(pid=222222222, name="Sally Student", email="sally@unc.edu")
+    mock_user_repo.search_users.return_value = [target]
+    app.dependency_overrides[user_repository_factory] = lambda: mock_user_repo
+
+    response = client.get("/api/operations/users/search?q=Sally")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["name"] == "Sally Student"

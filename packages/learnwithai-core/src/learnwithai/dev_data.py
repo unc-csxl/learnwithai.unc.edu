@@ -69,11 +69,6 @@ def seed(session: Session) -> None:
     # --- Operator records ---
     operators = [
         Operator(user_pid=admin.pid, role=OperatorRole.SUPERADMIN),
-        Operator(
-            user_pid=instructor.pid,
-            role=OperatorRole.ADMIN,
-            created_by_pid=admin.pid,
-        ),
     ]
     session.add_all(operators)
     session.flush()

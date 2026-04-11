@@ -7,17 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { GrantOperatorRequest } from '../../models/grant-operator-request';
-import { OperatorResponse } from '../../models/operator-response';
+import { UserSearchResult } from '../../models/user-search-result';
 
-export interface GrantOperator$Params {
-      body: GrantOperatorRequest
+export interface SearchUsers$Params {
+  q: string;
 }
 
-export function grantOperator(http: HttpClient, rootUrl: string, params: GrantOperator$Params, context?: HttpContext): Observable<StrictHttpResponse<OperatorResponse>> {
-  const rb = new RequestBuilder(rootUrl, grantOperator.PATH, 'post');
+export function searchUsers(http: HttpClient, rootUrl: string, params: SearchUsers$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<UserSearchResult>>> {
+  const rb = new RequestBuilder(rootUrl, searchUsers.PATH, 'get');
   if (params) {
-    rb.body(params.body, 'application/json');
+    rb.query('q', params.q, {});
   }
 
   return http.request(
@@ -25,9 +24,9 @@ export function grantOperator(http: HttpClient, rootUrl: string, params: GrantOp
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<OperatorResponse>;
+      return r as StrictHttpResponse<Array<UserSearchResult>>;
     })
   );
 }
 
-grantOperator.PATH = '/api/admin/operators';
+searchUsers.PATH = '/api/operations/users/search';

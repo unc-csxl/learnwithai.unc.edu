@@ -18,17 +18,6 @@ class OperatorRepository(BaseRepository[Operator, int]):
         """Returns the SQLModel class managed by this repository."""
         return Operator
 
-    def get_by_user_pid(self, pid: int) -> Operator | None:
-        """Looks up an operator record by user PID.
-
-        Args:
-            pid: UNC person identifier.
-
-        Returns:
-            The matching operator when found; otherwise, ``None``.
-        """
-        return self.get_by_id(pid)
-
     def list_all(self) -> list[Operator]:
         """Returns all operator records with user data eagerly loaded.
 

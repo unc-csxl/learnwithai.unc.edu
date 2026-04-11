@@ -3,7 +3,8 @@
 
 """Persistence helpers for user records."""
 
-from sqlmodel import select
+from sqlalchemy import or_
+from sqlmodel import col, select
 
 from ..tables.user import User
 from .base_repository import BaseRepository
@@ -57,3 +58,26 @@ class UserRepository(BaseRepository[User, int]):
             The updated user with refreshed database state.
         """
         return self.update(user)
+
+    def search_users(self, query: str, *, limit: int = 20) -> list[User]:
+        """Searches users by name, PID, or email.
+
+        The search is case-insensitive and matches partial strings for name
+        and email. PID matches are exact when the query is numeric.
+
+        Args:
+            query: Search term.
+            limit: Maximum number of results to return.
+
+        Returns:
+            A list of matching user records.
+        """
+        pattern = f"%{query}%"
+        conditions = [
+            col(User.name).ilike(pattern),
+            col(User.email).ilike(pattern),
+        ]
+        if query.isdigit():
+            conditions.append(col(User.pid) == int(query))  # type: ignore
+        stmt = select(User).where(or_(*conditions)).limit(limit)
+        return list(self._session.exec(stmt).all())

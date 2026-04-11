@@ -12,14 +12,14 @@ import {
   LayoutNavigationService,
 } from '../../layout/layout-navigation.service';
 
-/** Admin area shell — sets up admin sidenav navigation. */
+/** Operations area shell — sets up operations sidenav navigation. */
 @Component({
-  selector: 'app-admin-shell',
+  selector: 'app-operations-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet],
-  templateUrl: './admin-shell.component.html',
+  templateUrl: './operations-shell.component.html',
 })
-export class AdminShell implements OnDestroy {
+export class OperationsShell implements OnDestroy {
   private auth = inject(AuthService);
   private titleService = inject(PageTitleService);
   private layoutNavigation = inject(LayoutNavigationService);
@@ -27,7 +27,7 @@ export class AdminShell implements OnDestroy {
   protected readonly errorMessage = signal('');
 
   constructor() {
-    this.titleService.setTitle('Admin Tools');
+    this.titleService.setTitle('Operations');
     const user = this.auth.user();
     if (!user?.operator) {
       this.errorMessage.set('Operator access required.');
@@ -45,37 +45,46 @@ export class AdminShell implements OnDestroy {
 
     const items = [];
 
-    if (permSet.has('manage_operators')) {
-      items.push({
-        route: '/admin/operators',
-        label: 'Operators',
-        description: 'Manage system operators',
-        icon: 'admin_panel_settings',
-      });
-    }
-
-    if (permSet.has('view_jobs')) {
-      items.push({
-        route: '/admin/jobs',
-        label: 'Job Control',
-        description: 'View background job status',
-        icon: 'work',
-      });
-    }
-
     if (permSet.has('view_metrics')) {
       items.push({
-        route: '/admin/metrics',
+        route: '/operations/metrics',
         label: 'Usage Metrics',
         description: 'View platform usage statistics',
         icon: 'analytics',
       });
     }
 
+    if (permSet.has('impersonate')) {
+      items.push({
+        route: '/operations/impersonate',
+        label: 'Impersonate',
+        description: 'Act as another user',
+        icon: 'swap_horiz',
+      });
+    }
+
+    if (permSet.has('view_jobs')) {
+      items.push({
+        route: '/operations/jobs',
+        label: 'Job Control',
+        description: 'View background job status',
+        icon: 'work',
+      });
+    }
+
+    if (permSet.has('manage_operators')) {
+      items.push({
+        route: '/operations/operators',
+        label: 'Operators',
+        description: 'Manage system operators',
+        icon: 'admin_panel_settings',
+      });
+    }
+
     return {
       groups: [
         {
-          label: 'Admin',
+          label: 'Operations',
           items,
         },
       ],

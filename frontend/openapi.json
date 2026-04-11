@@ -1721,10 +1721,10 @@
         }
       }
     },
-    "/api/admin/operators": {
+    "/api/operations/operators": {
       "get": {
         "tags": [
-          "Admin"
+          "Operations"
         ],
         "summary": "List all operators",
         "description": "Returns all operator records.\n\nRequires MANAGE_OPERATORS permission.\n\nArgs:\n    subject: Authenticated operator.\n    operator_svc: Service used to enforce permissions and list operators.\n\nReturns:\n    List of all operator records.",
@@ -1759,7 +1759,7 @@
       },
       "post": {
         "tags": [
-          "Admin"
+          "Operations"
         ],
         "summary": "Grant operator access",
         "description": "Grants operator access to an existing user.\n\nRequires MANAGE_OPERATORS permission. Only a SUPERADMIN may grant\nthe SUPERADMIN role.\n\nArgs:\n    subject: Authenticated operator performing the grant.\n    body: Grant request payload with user PID and role.\n    operator_svc: Service used to enforce permissions and create operator.\n    user_repo: Repository used to load the target user.\n\nReturns:\n    The newly created operator record.",
@@ -1815,10 +1815,10 @@
         ]
       }
     },
-    "/api/admin/operators/{pid}": {
+    "/api/operations/operators/{pid}": {
       "put": {
         "tags": [
-          "Admin"
+          "Operations"
         ],
         "summary": "Update an operator's role",
         "description": "Changes the role of an existing operator.\n\nRequires MANAGE_OPERATORS permission. Only a SUPERADMIN may assign\nthe SUPERADMIN role.\n\nArgs:\n    subject: Authenticated operator performing the update.\n    pid: PID of the operator to update (path parameter).\n    body: Update request payload with new role.\n    operator_svc: Service used to enforce permissions and update role.\n    user_repo: Repository used to load the target user.\n\nReturns:\n    The updated operator record.",
@@ -1883,7 +1883,7 @@
       },
       "delete": {
         "tags": [
-          "Admin"
+          "Operations"
         ],
         "summary": "Revoke operator access",
         "description": "Removes operator access from a user.\n\nRequires MANAGE_OPERATORS permission. Cannot revoke own access.\nOnly a SUPERADMIN may revoke another SUPERADMIN.\n\nArgs:\n    subject: Authenticated operator performing the revocation.\n    pid: PID of the operator to revoke (path parameter).\n    operator_svc: Service used to enforce permissions and revoke access.\n    user_repo: Repository used to load the target user.",
@@ -1933,10 +1933,10 @@
         }
       }
     },
-    "/api/admin/impersonate/{pid}": {
+    "/api/operations/impersonate/{pid}": {
       "post": {
         "tags": [
-          "Admin"
+          "Operations"
         ],
         "summary": "Issue an impersonation token",
         "description": "Issues a JWT that authenticates as the target user.\n\nRequires IMPERSONATE permission (currently only SUPERADMIN).\nThe issued token carries an ``impersonator`` claim for audit purposes.\n\nArgs:\n    subject: Authenticated operator requesting impersonation.\n    pid: PID of the user to impersonate (path parameter).\n    operator_svc: Service used to enforce permissions and issue token.\n    user_repo: Repository used to load the target user.\n    settings: Application settings for JWT encoding.\n\nReturns:\n    An ImpersonationTokenResponse containing the JWT.",
@@ -1976,6 +1976,65 @@
           },
           "404": {
             "description": "User not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/operations/users/search": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Search users by name, PID, or email",
+        "description": "Searches for users by name, PID, or email.\n\nRequires IMPERSONATE permission. Returns at most 20 results.\n\nArgs:\n    subject: Authenticated operator.\n    q: Search query string.\n    operator_svc: Service used to enforce permissions.\n    user_repo: Repository used to search users.\n\nReturns:\n    List of matching users.",
+        "operationId": "search_users",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users matching the search query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserSearchResult"
+                  },
+                  "title": "Response Search Users"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires IMPERSONATE permission."
           },
           "422": {
             "description": "Validation Error",
@@ -3187,6 +3246,37 @@
         ],
         "title": "UserProfile",
         "description": "Represents the authenticated user profile returned by the API."
+      },
+      "UserSearchResult": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid",
+          "name",
+          "email"
+        ],
+        "title": "UserSearchResult",
+        "description": "Minimal user record returned by user search."
       },
       "ValidationError": {
         "properties": {

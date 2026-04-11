@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminService } from '../admin.service';
+import { OperationsService } from '../operations.service';
 import { OperatorRole } from '../../api/models';
 
 /** Dialog for granting operator access to an existing user. */
@@ -30,7 +30,7 @@ import { OperatorRole } from '../../api/models';
   styleUrl: './grant-operator-dialog.component.scss',
 })
 export class GrantOperatorDialog {
-  private adminService = inject(AdminService);
+  private operationsService = inject(OperationsService);
   private dialogRef = inject(MatDialogRef<GrantOperatorDialog>);
   private snackBar = inject(MatSnackBar);
 
@@ -51,7 +51,7 @@ export class GrantOperatorDialog {
     this.submitting.set(true);
     this.errorMessage.set('');
     try {
-      await this.adminService.grantOperator(pid, role);
+      await this.operationsService.grantOperator(pid, role);
       this.snackBar.open('Operator access granted', undefined, { duration: 3000 });
       this.dialogRef.close(true);
     } catch (err: unknown) {

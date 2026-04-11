@@ -9,7 +9,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GrantOperatorDialog } from './grant-operator-dialog.component';
-import { AdminService } from '../admin.service';
+import { OperationsService } from '../operations.service';
 
 describe('GrantOperatorDialog', () => {
   function setup() {
@@ -26,7 +26,7 @@ describe('GrantOperatorDialog', () => {
     TestBed.configureTestingModule({
       imports: [NoopAnimationsModule],
       providers: [
-        { provide: AdminService, useValue: mockAdmin },
+        { provide: OperationsService, useValue: mockAdmin },
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MatSnackBar, useValue: mockSnackBar },
       ],

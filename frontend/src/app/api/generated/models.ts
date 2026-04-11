@@ -37,4 +37,5 @@ export type { UpdateMemberRoleRequest } from './models/update-member-role-reques
 export type { UpdateOperatorRoleRequest } from './models/update-operator-role-request';
 export type { UpdateProfileRequest } from './models/update-profile-request';
 export type { UserProfile } from './models/user-profile';
+export type { UserSearchResult } from './models/user-search-result';
 export type { ValidationError } from './models/validation-error';

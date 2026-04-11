@@ -43,7 +43,7 @@ def test_get_current_subject_profile_returns_user_profile() -> None:
     # Arrange
     user = _stub_user(email="test@example.com")
     operator_repo = MagicMock(spec=OperatorRepository)
-    operator_repo.get_by_user_pid.return_value = None
+    operator_repo.get_by_id.return_value = None
 
     # Act
     result = get_current_subject_profile(user, operator_repo)
@@ -63,7 +63,7 @@ def test_get_current_subject_profile_raises_when_email_missing() -> None:
     # Arrange
     user = _stub_user(email=None)
     operator_repo = MagicMock(spec=OperatorRepository)
-    operator_repo.get_by_user_pid.return_value = None
+    operator_repo.get_by_id.return_value = None
 
     # Act / Assert
     with pytest.raises(ValidationError):
@@ -78,7 +78,7 @@ def test_get_current_subject_profile_includes_operator_profile() -> None:
     operator = MagicMock(spec=Operator)
     operator.role = OperatorRole.ADMIN
     operator_repo = MagicMock(spec=OperatorRepository)
-    operator_repo.get_by_user_pid.return_value = operator
+    operator_repo.get_by_id.return_value = operator
 
     result = get_current_subject_profile(user, operator_repo)
 

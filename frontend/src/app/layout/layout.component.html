@@ -40,13 +40,13 @@
           <a
             mat-list-item
             class="sidenav-nav-link"
-            routerLink="/admin"
+            routerLink="/operations"
             routerLinkActive="active-link"
-            [routerLinkActiveOptions]="subtreeLinkActiveOptions"
+            [routerLinkActiveOptions]="exactLinkActiveOptions"
             (click)="closeMobileSidenav()"
           >
             <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
-            <span matListItemTitle>Admin Tools</span>
+            <span matListItemTitle>Operations</span>
           </a>
         }
         <a

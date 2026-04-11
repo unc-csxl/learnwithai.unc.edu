@@ -48,7 +48,7 @@ class OperatorService:
         Returns:
             The operator record when the user is an operator; otherwise, ``None``.
         """
-        return self._operator_repo.get_by_user_pid(subject.pid)
+        return self._operator_repo.get_by_id(subject.pid)
 
     def require_operator(self, subject: User) -> Operator:
         """Verifies the subject is a system operator.
@@ -133,7 +133,7 @@ class OperatorService:
         operator = self.require_permission(subject, OperatorPermission.MANAGE_OPERATORS)
         self._require_superadmin_for_superadmin_role(operator, role)
 
-        existing = self._operator_repo.get_by_user_pid(target_user.pid)
+        existing = self._operator_repo.get_by_id(target_user.pid)
         if existing is not None:
             raise ValueError("User is already an operator.")
 
@@ -171,7 +171,7 @@ class OperatorService:
         caller = self.require_permission(subject, OperatorPermission.MANAGE_OPERATORS)
         self._require_superadmin_for_superadmin_role(caller, role)
 
-        target_op = self._operator_repo.get_by_user_pid(target_user.pid)
+        target_op = self._operator_repo.get_by_id(target_user.pid)
         if target_op is None:
             raise ValueError("Target user is not an operator.")
 
@@ -202,7 +202,7 @@ class OperatorService:
         if subject.pid == target_user.pid:
             raise ValueError("Cannot revoke your own operator access.")
 
-        target_op = self._operator_repo.get_by_user_pid(target_user.pid)
+        target_op = self._operator_repo.get_by_id(target_user.pid)
         if target_op is None:
             raise ValueError("Target user is not an operator.")
 

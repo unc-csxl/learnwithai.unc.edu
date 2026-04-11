@@ -19,27 +19,27 @@ def _seed_user(session: Session, pid: int = 111111111, name: str = "Test User", 
     return user
 
 
-# --- get_by_user_pid ---
+# --- get_by_id ---
 
 
 @pytest.mark.integration
-def test_get_by_user_pid_returns_none_when_not_operator(session: Session) -> None:
+def test_get_by_id_returns_none_when_not_operator(session: Session) -> None:
     _seed_user(session)
     repo = OperatorRepository(session)
 
-    result = repo.get_by_user_pid(111111111)
+    result = repo.get_by_id(111111111)
 
     assert result is None
 
 
 @pytest.mark.integration
-def test_get_by_user_pid_returns_operator_when_exists(session: Session) -> None:
+def test_get_by_id_returns_operator_when_exists(session: Session) -> None:
     user = _seed_user(session)
     session.add(Operator(user_pid=user.pid, role=OperatorRole.ADMIN))
     session.flush()
     repo = OperatorRepository(session)
 
-    result = repo.get_by_user_pid(user.pid)
+    result = repo.get_by_id(user.pid)
 
     assert result is not None
     assert result.user_pid == user.pid
@@ -110,7 +110,7 @@ def test_create_persists_operator(session: Session) -> None:
     assert op.created_by_pid == creator.pid
     assert op.created_at is not None
 
-    fetched = repo.get_by_user_pid(target.pid)
+    fetched = repo.get_by_id(target.pid)
     assert fetched is not None
     assert fetched.user_pid == op.user_pid
 
@@ -125,14 +125,14 @@ def test_update_changes_role(session: Session) -> None:
     session.flush()
     repo = OperatorRepository(session)
 
-    op = repo.get_by_user_pid(user.pid)
+    op = repo.get_by_id(user.pid)
     assert op is not None
     op.role = OperatorRole.ADMIN
     updated = repo.update(op)
 
     assert updated.role == OperatorRole.ADMIN
 
-    fetched = repo.get_by_user_pid(user.pid)
+    fetched = repo.get_by_id(user.pid)
     assert fetched is not None
     assert fetched.role == OperatorRole.ADMIN
 
@@ -147,8 +147,8 @@ def test_delete_removes_operator(session: Session) -> None:
     session.flush()
     repo = OperatorRepository(session)
 
-    op = repo.get_by_user_pid(user.pid)
+    op = repo.get_by_id(user.pid)
     assert op is not None
     repo.delete(op)
 
-    assert repo.get_by_user_pid(user.pid) is None
+    assert repo.get_by_id(user.pid) is None

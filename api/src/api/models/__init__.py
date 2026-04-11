@@ -29,6 +29,7 @@ from .operator import (
     OperatorProfile,
     OperatorResponse,
     UpdateOperatorRoleRequest,
+    UserSearchResult,
 )
 from .roster_upload import RosterUploadResponse, RosterUploadStatusResponse
 from .user_profile import UpdateProfileRequest, UserProfile
@@ -62,4 +63,5 @@ __all__ = [
     "UpdateOperatorRoleRequest",
     "UpdateProfileRequest",
     "UserProfile",
+    "UserSearchResult",
 ]

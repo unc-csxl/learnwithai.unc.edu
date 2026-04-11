@@ -7,7 +7,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { vi } from 'vitest';
-import { adminGuard } from './admin.guard';
+import { operationsGuard } from './operations.guard';
 import { AuthService } from './auth.service';
 
 function setup(operator: { role: string; permissions: string[] } | null) {
@@ -20,7 +20,7 @@ function setup(operator: { role: string; permissions: string[] } | null) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([
-        { path: 'admin', canActivate: [adminGuard], component: class {} as never },
+        { path: 'operations', canActivate: [operationsGuard], component: class {} as never },
         { path: 'courses', component: class {} as never },
       ]),
       { provide: AuthService, useValue: mockAuth },
@@ -30,11 +30,11 @@ function setup(operator: { role: string; permissions: string[] } | null) {
   return { router: TestBed.inject(Router), mockAuth };
 }
 
-describe('adminGuard', () => {
+describe('operationsGuard', () => {
   it('should allow access for operators', async () => {
     setup({ role: 'admin', permissions: ['manage_operators'] });
     const result = await TestBed.runInInjectionContext(() =>
-      adminGuard({} as never, { url: '/admin' } as never),
+      operationsGuard({} as never, { url: '/operations' } as never),
     );
     expect(result).toBe(true);
   });
@@ -42,7 +42,7 @@ describe('adminGuard', () => {
   it('should redirect non-operators to courses', async () => {
     const { router } = setup(null);
     const result = await TestBed.runInInjectionContext(() =>
-      adminGuard({} as never, { url: '/admin' } as never),
+      operationsGuard({} as never, { url: '/operations' } as never),
     );
     expect(result).toEqual(router.createUrlTree(['/courses']));
   });

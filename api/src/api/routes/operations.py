@@ -1,11 +1,11 @@
 # Copyright (c) 2026 Kris Jordan
 # SPDX-License-Identifier: MIT
 
-"""Admin routes for system operator management and impersonation."""
+"""Operations routes for system operator management and impersonation."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Query
 from learnwithai.tables.operator import effective_permissions
 
 from ..di import (
@@ -19,9 +19,10 @@ from ..models import (
     ImpersonationTokenResponse,
     OperatorResponse,
     UpdateOperatorRoleRequest,
+    UserSearchResult,
 )
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/operations", tags=["Operations"])
 
 
 def _build_operator_response(operator) -> OperatorResponse:  # noqa: ANN001
@@ -243,3 +244,39 @@ def impersonate_user(
 
     token = operator_svc.issue_impersonation_token(subject, target_user, settings)
     return ImpersonationTokenResponse(token=token)
+
+
+@router.get(
+    "/users/search",
+    response_model=list[UserSearchResult],
+    summary="Search users by name, PID, or email",
+    response_description="Users matching the search query.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires IMPERSONATE permission."},
+    },
+)
+def search_users(
+    subject: AuthenticatedUserDI,
+    q: Annotated[str, Query(min_length=1)],
+    operator_svc: OperatorServiceDI,
+    user_repo: UserRepositoryDI,
+) -> list[UserSearchResult]:
+    """Searches for users by name, PID, or email.
+
+    Requires IMPERSONATE permission. Returns at most 20 results.
+
+    Args:
+        subject: Authenticated operator.
+        q: Search query string.
+        operator_svc: Service used to enforce permissions.
+        user_repo: Repository used to search users.
+
+    Returns:
+        List of matching users.
+    """
+    from learnwithai.tables.operator import OperatorPermission
+
+    operator_svc.require_permission(subject, OperatorPermission.IMPERSONATE)
+    users = user_repo.search_users(q)
+    return [UserSearchResult.model_validate(u, from_attributes=True) for u in users]

@@ -8,7 +8,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 /** Redirects non-operator users to the courses page. */
-export const adminGuard: CanActivateFn = async () => {
+export const operationsGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 

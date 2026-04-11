@@ -64,7 +64,6 @@ oc whoami >/dev/null 2>&1 || fail "Not logged into OKD. Run: oc login <cluster-u
 APP_REPLICAS="0"
 WORKER_REPLICAS="0"
 RESTORE_REPLICAS=false
-BOOTSTRAP_CONFIGMAP=""
 JOB_MANIFEST=""
 
 restore_replicas() {
@@ -82,10 +81,6 @@ cleanup() {
 
     if [ $exit_code -ne 0 ]; then
         warn "Database reset failed. Restoring app and worker replica counts."
-    fi
-
-    if [ -n "$BOOTSTRAP_CONFIGMAP" ]; then
-        oc delete configmap "$BOOTSTRAP_CONFIGMAP" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
     fi
 
     if [ -n "$JOB_MANIFEST" ]; then
@@ -144,12 +139,7 @@ POSTGRESQL_USER="$(secret_value learnwithai-postgres-credentials POSTGRESQL_USER
 POSTGRESQL_DATABASE="$(secret_value learnwithai-postgres-credentials POSTGRESQL_DATABASE)"
 
 BOOTSTRAP_JOB="learnwithai-db-bootstrap-$(date +%s)"
-BOOTSTRAP_CONFIGMAP="${BOOTSTRAP_JOB}-script"
 BOOTSTRAP_IMAGE="image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest"
-BOOTSTRAP_SCRIPT_LOCAL="$REPO_ROOT/packages/learnwithai-core/scripts/bootstrap_deployment_db.py"
-BOOTSTRAP_SCRIPT_MOUNT_PATH="/bootstrap/bootstrap_deployment_db.py"
-
-[ -f "$BOOTSTRAP_SCRIPT_LOCAL" ] || fail "Bootstrap script not found at $BOOTSTRAP_SCRIPT_LOCAL"
 
 info "Scaling app and worker down..."
 RESTORE_REPLICAS=true
@@ -162,8 +152,6 @@ oc exec deployment/learnwithai-postgres -n "$NAMESPACE" -- sh -lc "psql -v ON_ER
 
 info "Running SQLModel bootstrap job $BOOTSTRAP_JOB..."
 oc delete job "$BOOTSTRAP_JOB" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
-oc delete configmap "$BOOTSTRAP_CONFIGMAP" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
-oc create configmap "$BOOTSTRAP_CONFIGMAP" -n "$NAMESPACE" --from-file="bootstrap_deployment_db.py=$BOOTSTRAP_SCRIPT_LOCAL"
 JOB_MANIFEST="$(mktemp)"
 cat > "$JOB_MANIFEST" <<EOF
 {
@@ -183,14 +171,6 @@ cat > "$JOB_MANIFEST" <<EOF
             },
             "spec": {
                 "restartPolicy": "Never",
-                "volumes": [
-                    {
-                        "name": "bootstrap-script",
-                        "configMap": {
-                            "name": "$BOOTSTRAP_CONFIGMAP"
-                        }
-                    }
-                ],
                 "containers": [
                     {
                         "name": "bootstrap",
@@ -198,7 +178,8 @@ cat > "$JOB_MANIFEST" <<EOF
                         "imagePullPolicy": "Always",
                         "command": [
                             "/app/.venv/bin/python",
-                            "$BOOTSTRAP_SCRIPT_MOUNT_PATH"
+                            "-c",
+                            "import learnwithai.tables; from learnwithai.db import create_db_and_tables; create_db_and_tables(); print('Created tables.')"
                         ],
                         "envFrom": [
                             {
@@ -211,13 +192,6 @@ cat > "$JOB_MANIFEST" <<EOF
                             {
                                 "name": "ENVIRONMENT",
                                 "value": "production"
-                            }
-                        ],
-                        "volumeMounts": [
-                            {
-                                "name": "bootstrap-script",
-                                "mountPath": "/bootstrap",
-                                "readOnly": true
                             }
                         ]
                     }
@@ -234,8 +208,6 @@ JOB_MANIFEST=""
 oc wait --for=condition=complete "job/$BOOTSTRAP_JOB" -n "$NAMESPACE" --timeout=180s
 oc logs "job/$BOOTSTRAP_JOB" -n "$NAMESPACE"
 oc delete job "$BOOTSTRAP_JOB" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
-oc delete configmap "$BOOTSTRAP_CONFIGMAP" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
-BOOTSTRAP_CONFIGMAP=""
 
 restore_replicas
 RESTORE_REPLICAS=false

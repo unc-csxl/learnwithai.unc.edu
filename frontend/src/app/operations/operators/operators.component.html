@@ -44,23 +44,9 @@
         </td>
       </ng-container>
 
-      <ng-container matColumnDef="permissions">
-        <th mat-header-cell *matHeaderCellDef>Permissions</th>
-        <td mat-cell *matCellDef="let op">
-          @for (perm of op.permissions; track perm) {
-            <span class="permission-chip">{{ perm }}</span>
-          }
-        </td>
-      </ng-container>
-
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
         <td mat-cell *matCellDef="let op">
-          @if (canImpersonate() && op.user_pid !== currentUserPid()) {
-            <button mat-icon-button matTooltip="Impersonate" (click)="onImpersonate(op.user_pid)">
-              <mat-icon>swap_horiz</mat-icon>
-            </button>
-          }
           @if (op.user_pid !== currentUserPid()) {
             <button mat-icon-button matTooltip="Remove operator" (click)="onRevoke(op)">
               <mat-icon>delete</mat-icon>

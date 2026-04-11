@@ -7,16 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { ImpersonationTokenResponse } from '../../models/impersonation-token-response';
+import { OperatorResponse } from '../../models/operator-response';
+import { UpdateOperatorRoleRequest } from '../../models/update-operator-role-request';
 
-export interface ImpersonateUser$Params {
+export interface UpdateOperatorRole$Params {
   pid: number;
+      body: UpdateOperatorRoleRequest
 }
 
-export function impersonateUser(http: HttpClient, rootUrl: string, params: ImpersonateUser$Params, context?: HttpContext): Observable<StrictHttpResponse<ImpersonationTokenResponse>> {
-  const rb = new RequestBuilder(rootUrl, impersonateUser.PATH, 'post');
+export function updateOperatorRole(http: HttpClient, rootUrl: string, params: UpdateOperatorRole$Params, context?: HttpContext): Observable<StrictHttpResponse<OperatorResponse>> {
+  const rb = new RequestBuilder(rootUrl, updateOperatorRole.PATH, 'put');
   if (params) {
     rb.path('pid', params.pid, {});
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(
@@ -24,9 +27,9 @@ export function impersonateUser(http: HttpClient, rootUrl: string, params: Imper
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<ImpersonationTokenResponse>;
+      return r as StrictHttpResponse<OperatorResponse>;
     })
   );
 }
 
-impersonateUser.PATH = '/api/admin/impersonate/{pid}';
+updateOperatorRole.PATH = '/api/operations/operators/{pid}';

@@ -5,11 +5,11 @@
 
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { AdminService } from './admin.service';
+import { OperationsService } from './operations.service';
 import { Api } from '../api/generated/api';
 import { ImpersonationService } from './impersonation.service';
 
-describe('AdminService', () => {
+describe('OperationsService', () => {
   function setup() {
     const mockApi = {
       invoke: vi.fn(),
@@ -20,14 +20,14 @@ describe('AdminService', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        AdminService,
+        OperationsService,
         { provide: Api, useValue: mockApi },
         { provide: ImpersonationService, useValue: mockImpersonation },
       ],
     });
 
     return {
-      service: TestBed.inject(AdminService),
+      service: TestBed.inject(OperationsService),
       mockApi,
       mockImpersonation,
     };
@@ -73,5 +73,14 @@ describe('AdminService', () => {
     mockApi.invoke.mockResolvedValue({ token: 'imp-jwt' });
     await service.impersonate(999);
     expect(mockImpersonation.startImpersonation).toHaveBeenCalledWith('imp-jwt');
+  });
+
+  it('searchUsers calls api.invoke with query', async () => {
+    const { service, mockApi } = setup();
+    const results = [{ pid: 1, name: 'Alice', email: 'alice@unc.edu' }];
+    mockApi.invoke.mockResolvedValue(results);
+    const result = await service.searchUsers('alice');
+    expect(result).toEqual(results);
+    expect(mockApi.invoke).toHaveBeenCalledWith(expect.any(Function), { q: 'alice' });
   });
 });

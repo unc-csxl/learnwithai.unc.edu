@@ -45,6 +45,6 @@ export class ImpersonationService {
     }
     this._isImpersonating.set(false);
     await this.auth.fetchProfile();
-    await this.router.navigate(['/admin']);
+    await this.router.navigate(['/operations']);
   }
 }

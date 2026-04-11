@@ -5,17 +5,23 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Api } from '../api/generated/api';
-import { listOperators } from '../api/generated/fn/admin/list-operators';
-import { grantOperator } from '../api/generated/fn/admin/grant-operator';
-import { updateOperatorRole } from '../api/generated/fn/admin/update-operator-role';
-import { revokeOperator } from '../api/generated/fn/admin/revoke-operator';
-import { impersonateUser } from '../api/generated/fn/admin/impersonate-user';
-import { Operator, OperatorRole, ImpersonationTokenResponse } from '../api/models';
+import { listOperators } from '../api/generated/fn/operations/list-operators';
+import { grantOperator } from '../api/generated/fn/operations/grant-operator';
+import { updateOperatorRole } from '../api/generated/fn/operations/update-operator-role';
+import { revokeOperator } from '../api/generated/fn/operations/revoke-operator';
+import { impersonateUser } from '../api/generated/fn/operations/impersonate-user';
+import { searchUsers } from '../api/generated/fn/operations/search-users';
+import {
+  Operator,
+  OperatorRole,
+  ImpersonationTokenResponse,
+  UserSearchResult,
+} from '../api/models';
 import { ImpersonationService } from './impersonation.service';
 
-/** Wraps admin API calls for operator management and impersonation. */
+/** Wraps operations API calls for operator management and impersonation. */
 @Injectable({ providedIn: 'root' })
-export class AdminService {
+export class OperationsService {
   private api = inject(Api);
   private impersonation = inject(ImpersonationService);
 
@@ -48,5 +54,10 @@ export class AdminService {
   async impersonate(pid: number): Promise<void> {
     const response: ImpersonationTokenResponse = await this.api.invoke(impersonateUser, { pid });
     await this.impersonation.startImpersonation(response.token);
+  }
+
+  /** Searches users by name, PID, or email. */
+  async searchUsers(query: string): Promise<UserSearchResult[]> {
+    return this.api.invoke(searchUsers, { q: query });
   }
 }

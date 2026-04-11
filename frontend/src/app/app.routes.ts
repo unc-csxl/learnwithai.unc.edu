@@ -5,7 +5,7 @@
 
 import { Routes } from '@angular/router';
 import { authGuard, landingGuard } from './auth.guard';
-import { adminGuard } from './admin.guard';
+import { operationsGuard } from './operations.guard';
 
 /** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
@@ -131,31 +131,40 @@ export const routes: Routes = [
         ],
       },
       {
-        path: 'admin',
-        canActivate: [adminGuard],
+        path: 'operations',
+        canActivate: [operationsGuard],
         loadComponent: () =>
-          import('./admin/admin-shell/admin-shell.component').then((m) => m.AdminShell),
+          import('./operations/operations-shell/operations-shell.component').then(
+            (m) => m.OperationsShell,
+          ),
         children: [
           {
-            path: 'operators',
+            path: 'metrics',
             loadComponent: () =>
-              import('./admin/operators/operators.component').then((m) => m.Operators),
+              import('./operations/usage-metrics/usage-metrics.component').then(
+                (m) => m.UsageMetricsComponent,
+              ),
+          },
+          {
+            path: 'impersonate',
+            loadComponent: () =>
+              import('./operations/impersonate/impersonate.component').then(
+                (m) => m.ImpersonateComponent,
+              ),
           },
           {
             path: 'jobs',
             loadComponent: () =>
-              import('./admin/job-control/job-control.component').then(
+              import('./operations/job-control/job-control.component').then(
                 (m) => m.JobControlComponent,
               ),
           },
           {
-            path: 'metrics',
+            path: 'operators',
             loadComponent: () =>
-              import('./admin/usage-metrics/usage-metrics.component').then(
-                (m) => m.UsageMetricsComponent,
-              ),
+              import('./operations/operators/operators.component').then((m) => m.Operators),
           },
-          { path: '', redirectTo: 'operators', pathMatch: 'full' },
+          { path: '', redirectTo: 'metrics', pathMatch: 'full' },
         ],
       },
       {

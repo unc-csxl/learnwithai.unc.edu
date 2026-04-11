@@ -19,8 +19,8 @@ import { AuthService } from '../auth.service';
 import { ThemeService, ThemeMode } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
 import { LayoutNavigationService } from './layout-navigation.service';
-import { ImpersonationService } from '../admin/impersonation.service';
-import { ImpersonationBanner } from '../admin/impersonation-banner/impersonation-banner.component';
+import { ImpersonationService } from '../operations/impersonation.service';
+import { ImpersonationBanner } from '../operations/impersonation-banner/impersonation-banner.component';
 
 /** App shell with a responsive toolbar and sidenav. */
 @Component({

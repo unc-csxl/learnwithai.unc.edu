@@ -59,11 +59,9 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     # Verify operators
     operators = added[1]
-    assert len(operators) == 2
+    assert len(operators) == 1
     assert all(isinstance(op, Operator) for op in operators)
-    roles = {op.role for op in operators}
-    assert OperatorRole.SUPERADMIN in roles
-    assert OperatorRole.ADMIN in roles
+    assert operators[0].role == OperatorRole.SUPERADMIN
 
     # Verify course
     course = added_single[0]

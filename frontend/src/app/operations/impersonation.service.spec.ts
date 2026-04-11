@@ -77,7 +77,7 @@ describe('ImpersonationService', () => {
     expect(localStorage.getItem('impersonation_original_token')).toBeNull();
     expect(mockTokenService.setToken).toHaveBeenCalledWith('original-jwt');
     expect(service.isImpersonating()).toBe(false);
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/operations']);
   });
 
   it('startImpersonation should skip saving when no current token', async () => {
@@ -97,6 +97,6 @@ describe('ImpersonationService', () => {
 
     expect(mockTokenService.setToken).not.toHaveBeenCalled();
     expect(service.isImpersonating()).toBe(false);
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/operations']);
   });
 });
