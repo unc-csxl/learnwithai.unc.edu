@@ -18,7 +18,7 @@ The repository is designed to work especially well in VS Code with the multi-roo
 
 1. Open `learnwithai.code-workspace` in VS Code.
 2. Reopen the repository in the dev container when VS Code prompts you.
-3. Wait for the post-create setup to finish. It installs Python dependencies with `uv`, frontend dependencies with `pnpm`, and Chromium support for Playwright UI testing.
+3. Wait for the post-create setup to finish. It installs Python dependencies with `uv`, frontend dependencies with `pnpm`, Chromium support for Playwright UI testing, and the GitHub CLI (`gh`) for repository workflows.
 4. Create your local environment file:
    - Run `cp .env.example .env`
    - Set `OPENAI_API_KEY` to a real Azure OpenAI-compatible subscription key

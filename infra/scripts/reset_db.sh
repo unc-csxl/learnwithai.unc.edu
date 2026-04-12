@@ -79,7 +79,7 @@ restore_replicas() {
 cleanup() {
     local exit_code=$?
 
-    if [ $exit_code -ne 0 ]; then
+    if [ $exit_code -ne 0 ] && [ "$RESTORE_REPLICAS" = true ]; then
         warn "Database reset failed. Restoring app and worker replica counts."
     fi
 
@@ -110,11 +110,52 @@ confirm() {
     esac
 }
 
+require_permission() {
+    local verb="$1"
+    local resource="$2"
+    local reason="$3"
+    local allowed=""
+
+    allowed="$(oc auth can-i "$verb" "$resource" -n "$NAMESPACE" 2>/dev/null || true)"
+    if [ "$allowed" != "yes" ]; then
+        fail "Missing OKD permission to $verb $resource in namespace $NAMESPACE. $reason"
+    fi
+}
+
+preflight_permissions() {
+    require_permission create pods/exec "The reset workflow execs into learnwithai-postgres to drop and recreate the database."
+    require_permission create jobs.batch "The reset workflow creates a bootstrap Job to rebuild the SQLModel schema."
+}
+
 secret_value() {
     local secret_name="$1"
     local key="$2"
 
     oc get secret "$secret_name" -n "$NAMESPACE" -o "go-template={{index .data \"$key\"}}" | base64 -d
+}
+
+deployment_env_value() {
+    local deployment_name="$1"
+    local key="$2"
+
+    oc exec "deployment/$deployment_name" -n "$NAMESPACE" -- sh -lc "printenv \"$key\""
+}
+
+postgres_setting() {
+    local key="$1"
+    local value=""
+
+    if value="$(deployment_env_value learnwithai-postgres "$key" 2>/dev/null)" && [ -n "$value" ]; then
+        echo "$value"
+        return
+    fi
+
+    if value="$(secret_value learnwithai-postgres-credentials "$key" 2>/dev/null)" && [ -n "$value" ]; then
+        echo "$value"
+        return
+    fi
+
+    fail "Could not resolve $key from the running PostgreSQL deployment or learnwithai-postgres-credentials secret."
 }
 
 wait_for_scaledown() {
@@ -128,6 +169,7 @@ get_replicas() {
     oc get deployment "$deployment_name" -n "$NAMESPACE" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0"
 }
 
+preflight_permissions
 confirm
 
 info "Target namespace: $NAMESPACE"
@@ -135,8 +177,8 @@ info "Target namespace: $NAMESPACE"
 APP_REPLICAS="$(get_replicas learnwithai-app)"
 WORKER_REPLICAS="$(get_replicas learnwithai-worker)"
 
-POSTGRESQL_USER="$(secret_value learnwithai-postgres-credentials POSTGRESQL_USER)"
-POSTGRESQL_DATABASE="$(secret_value learnwithai-postgres-credentials POSTGRESQL_DATABASE)"
+POSTGRESQL_USER="$(postgres_setting POSTGRESQL_USER)"
+POSTGRESQL_DATABASE="$(postgres_setting POSTGRESQL_DATABASE)"
 
 BOOTSTRAP_JOB="learnwithai-db-bootstrap-$(date +%s)"
 BOOTSTRAP_IMAGE="image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest"

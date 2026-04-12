@@ -95,6 +95,8 @@ Use this after editing `infra/manifests/secrets.yaml`:
 
 This reapplies the three OKD Secret objects defined in the manifest and restarts the dependent deployments so the new environment values are loaded.
 
+The job-control endpoints use the RabbitMQ Management API. You can set `RABBITMQ_MANAGEMENT_URL`, `RABBITMQ_MANAGEMENT_USER`, and `RABBITMQ_MANAGEMENT_PASSWORD` explicitly in `learnwithai-secrets`, but the backend now derives them from `RABBITMQ_URL` when those overrides are omitted.
+
 ### Reset deployed data
 
 Use this when you need a clean deployment database for testing:

@@ -274,8 +274,8 @@ def test_job_control_service_factory_returns_service() -> None:
     operator_svc = MagicMock()
     settings = MagicMock()
     settings.effective_rabbitmq_management_url = "http://rabbitmq:15672"
-    settings.rabbitmq_management_user = "guest"
-    settings.rabbitmq_management_password = "guest"
+    settings.effective_rabbitmq_management_user = "guest"
+    settings.effective_rabbitmq_management_password = "guest"
 
     result = job_control_service_factory(session, operator_svc, settings)
 

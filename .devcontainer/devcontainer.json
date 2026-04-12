@@ -5,7 +5,8 @@
   "workspaceFolder": "/workspaces/learnwithai",
   "shutdownAction": "stopCompose",
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.9.0": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.9.0": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "forwardPorts": [8000, 4200, 5432, 5672, 15672],
   "portsAttributes": {
