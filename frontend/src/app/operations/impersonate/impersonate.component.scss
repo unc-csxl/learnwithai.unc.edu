@@ -4,17 +4,24 @@
  */
 
 .impersonate-page {
-  padding: 24px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .search-field {
-  width: 100%;
   max-width: 480px;
+  width: 100%;
+}
+
+.table-scroll {
+  margin-top: 16px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .results-table {
+  min-width: 40rem;
   width: 100%;
-  margin-top: 16px;
 }
 
 .no-results {

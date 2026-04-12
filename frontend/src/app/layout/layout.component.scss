@@ -5,12 +5,20 @@
 
 :host {
   display: block;
-  height: 100vh;
+  block-size: 100dvh;
   --sidenav-nav-item-radius: 12px;
+  overflow: hidden;
 }
 
 .sidenav-container {
-  height: 100%;
+  block-size: 100%;
+}
+
+mat-sidenav-content {
+  block-size: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .app-toolbar {
@@ -47,7 +55,7 @@
 }
 
 .sidenav-mobile {
-  width: 100vw;
+  width: min(100%, 100dvw);
   border-radius: 0 !important;
 }
 
@@ -201,6 +209,11 @@
 }
 
 .content {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overflow-x: hidden;
   padding: 24px;
 }
 
@@ -241,4 +254,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 959px) {
+  .app-toolbar {
+    padding-inline: 16px;
+  }
+
+  .content {
+    padding: 16px;
+  }
 }

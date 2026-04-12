@@ -4,8 +4,8 @@
  */
 
 :host {
+  box-sizing: border-box;
   display: block;
-  padding: 16px;
 }
 
 .operators-actions {
@@ -13,7 +13,13 @@
 }
 
 .operators-table {
+  min-width: 36rem;
   width: 100%;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .role-select {

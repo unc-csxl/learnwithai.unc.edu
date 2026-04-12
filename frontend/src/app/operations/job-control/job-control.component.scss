@@ -1,7 +1,12 @@
 .job-control-container {
-  padding: 1rem;
-  max-width: 1200px;
+  box-sizing: border-box;
   margin: 0 auto;
+  max-width: min(100%, 1200px);
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .loading-container {
@@ -35,6 +40,7 @@
 }
 
 .queue-table {
+  min-width: 44rem;
   width: 100%;
 }
 
@@ -317,6 +323,10 @@
 }
 
 @media (max-width: 959px) {
+  .queue-table {
+    min-width: 40rem;
+  }
+
   .detail-queue-title-row,
   .preview-header,
   .preview-toolbar,

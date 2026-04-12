@@ -1,5 +1,6 @@
 .metrics-container {
-  padding: 1rem;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .metrics-loading {
