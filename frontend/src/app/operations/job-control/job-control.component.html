@@ -116,13 +116,11 @@
       </div>
     </section>
 
-    <section class="pane" aria-label="Failed Jobs">
-      <h2 class="pane-title">Failed Jobs</h2>
-      @if (deadLetterQueues().length === 0) {
-        <p class="empty-state">No dead-letter queues are configured right now.</p>
-      } @else {
+    @if (visibleDeadLetterQueues().length > 0) {
+      <section class="pane" aria-label="Failed Jobs">
+        <h2 class="pane-title">Failed Jobs</h2>
         <div class="queue-detail-list">
-          @for (queue of deadLetterQueues(); track queue.name) {
+          @for (queue of visibleDeadLetterQueues(); track queue.name) {
             <mat-card
               appearance="outlined"
               class="detail-queue-card"
@@ -213,8 +211,8 @@
             </mat-card>
           }
         </div>
-      }
-    </section>
+      </section>
+    }
 
     <section class="pane" aria-label="Workers">
       <h2 class="pane-title">Workers</h2>

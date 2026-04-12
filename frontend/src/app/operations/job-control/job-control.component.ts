@@ -82,6 +82,9 @@ export class JobControlComponent implements OnInit, OnDestroy {
   protected readonly deadLetterQueues = computed(() =>
     this.queues().filter((queue) => queue.is_dlq),
   );
+  protected readonly visibleDeadLetterQueues = computed(() =>
+    this.deadLetterQueues().filter((queue) => queue.ready > 0),
+  );
   protected readonly workerGroups = computed(() => this.buildWorkerGroups(this.workers()));
 
   protected readonly queueColumns = [

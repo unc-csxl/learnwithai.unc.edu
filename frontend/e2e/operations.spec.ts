@@ -225,14 +225,19 @@ test.describe('operations e2e flows', () => {
     await openJobControl(page);
 
     const jobControlRegion = page.getByRole('region', { name: 'Job Queue Control' });
+    const failedJobsRegion = jobControlRegion.getByRole('region', {
+      name: 'Failed Jobs',
+      exact: true,
+    });
+    const failedQueueRow = jobControlRegion
+      .locator('tr.mat-mdc-row')
+      .filter({ has: jobControlRegion.locator('.queue-table .badge-dlq') })
+      .first();
     await expect(jobControlRegion.getByRole('heading', { name: 'Now', exact: true })).toHaveCount(
       0,
     );
     await expect(
       jobControlRegion.getByRole('region', { name: 'Queues', exact: true }),
-    ).toBeVisible();
-    await expect(
-      jobControlRegion.getByRole('region', { name: 'Failed Jobs', exact: true }),
     ).toBeVisible();
     await expect(
       jobControlRegion.getByRole('region', { name: 'Workers', exact: true }),
@@ -247,5 +252,24 @@ test.describe('operations e2e flows', () => {
       'Failed Jobs',
       'Notifications',
     ]);
+
+    if ((await failedQueueRow.count()) > 0) {
+      const readyText = await failedQueueRow.locator('td.mat-mdc-cell').nth(1).innerText();
+      const readyCount = Number.parseInt(readyText.trim(), 10);
+
+      if (readyCount > 0) {
+        await expect(failedJobsRegion).toBeVisible();
+      } else {
+        await expect(failedJobsRegion).toHaveCount(0);
+      }
+    } else {
+      await expect(failedJobsRegion).toHaveCount(0);
+    }
+
+    await page.setViewportSize({ width: 540, height: 800 });
+    await expect(
+      jobControlRegion.locator('.queue-table .queue-display-name').first(),
+    ).not.toBeVisible();
+    await expect(jobControlRegion.locator('.queue-table .badge').first()).toBeVisible();
   });
 });

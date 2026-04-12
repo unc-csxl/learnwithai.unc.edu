@@ -545,6 +545,7 @@ describe('JobControlComponent', () => {
       },
     });
 
+    expect(fixture.nativeElement.querySelector('section[aria-label="Failed Jobs"]')).toBeNull();
     expect(
       fixture.nativeElement.querySelector(
         'button[aria-label="Clear all retained messages from Failed (default.XQ)"]',
@@ -824,7 +825,7 @@ describe('JobControlComponent', () => {
     );
 
     expect(emptyStates).toContain('No queues found.');
-    expect(emptyStates).toContain('No dead-letter queues are configured right now.');
+    expect(fixture.nativeElement.querySelector('section[aria-label="Failed Jobs"]')).toBeNull();
     expect(emptyStates).toContain('No active workers.');
   });
 });
