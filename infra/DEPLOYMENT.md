@@ -107,7 +107,7 @@ This script:
 
 - scales the app and worker down
 - drops and recreates the deployed database
-- runs the bootstrap script from `packages/learnwithai-core/scripts/bootstrap_deployment_db.py`
+- runs an inline bootstrap command to create SQLModel tables
 - restores the previous replica counts
 
 Demo user seeded by the bootstrap flow:

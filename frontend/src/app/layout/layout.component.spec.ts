@@ -16,6 +16,7 @@ import { ThemeService } from '../theme.service';
 import { PageTitleService } from '../page-title.service';
 import { User } from '../api/models';
 import { LayoutNavigationSection, LayoutNavigationService } from './layout-navigation.service';
+import { ImpersonationService } from '../operations/impersonation.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -35,9 +36,12 @@ describe('Layout', () => {
       authenticated: boolean;
       handset?: boolean;
       section?: LayoutNavigationSection | null;
+      operator?: { role: string; permissions: string[] } | null;
+      impersonating?: boolean;
     } = { authenticated: false },
   ) {
-    const userSignal = signal<User | null>(options.authenticated ? fakeUser : null);
+    const user = options.authenticated ? { ...fakeUser, operator: options.operator ?? null } : null;
+    const userSignal = signal<User | null>(user as User | null);
     const mockAuth = {
       user: userSignal.asReadonly(),
       isAuthenticated: signal(options.authenticated).asReadonly(),
@@ -62,6 +66,11 @@ describe('Layout', () => {
       clear: vi.fn(),
     };
 
+    const mockImpersonation = {
+      isImpersonating: signal(options.impersonating ?? false).asReadonly(),
+      stopImpersonation: vi.fn(),
+    };
+
     const breakpoint$ = new Subject<BreakpointState>();
     const mockBreakpointObserver = {
       observe: () => breakpoint$,
@@ -78,6 +87,7 @@ describe('Layout', () => {
         { provide: ThemeService, useValue: mockTheme },
         { provide: PageTitleService, useValue: mockPageTitle },
         { provide: LayoutNavigationService, useValue: mockLayoutNavigation },
+        { provide: ImpersonationService, useValue: mockImpersonation },
         { provide: BreakpointObserver, useValue: mockBreakpointObserver },
       ],
     });
@@ -89,7 +99,15 @@ describe('Layout', () => {
       breakpoints: {},
     });
     fixture.detectChanges();
-    return { fixture, mockAuth, mockTheme, mockPageTitle, mockLayoutNavigation, breakpoint$ };
+    return {
+      fixture,
+      mockAuth,
+      mockTheme,
+      mockPageTitle,
+      mockLayoutNavigation,
+      mockImpersonation,
+      breakpoint$,
+    };
   }
 
   it('should create', () => {
@@ -321,5 +339,56 @@ describe('Layout', () => {
     expect(profileLink).toBeTruthy();
     profileLink.click();
     fixture.detectChanges();
+  });
+
+  it('should show Operations link when user is operator', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      operator: { role: 'admin', permissions: ['manage_operators'] },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    const operationsLink = el.querySelector('a[href="/operations"]');
+    expect(operationsLink).toBeTruthy();
+    expect(operationsLink?.textContent).toContain('Operations');
+  });
+
+  it('should close sidenav on admin link click in handset mode', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      handset: true,
+      operator: { role: 'admin', permissions: ['manage_operators'] },
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    const operationsLink = el.querySelector('a[href="/operations"]') as HTMLElement;
+    expect(operationsLink).toBeTruthy();
+    operationsLink.click();
+    fixture.detectChanges();
+  });
+
+  it('should not show Operations link for non-operators', () => {
+    const { fixture } = setup({ authenticated: true });
+    const el: HTMLElement = fixture.nativeElement;
+    const operationsLink = el.querySelector('a[href="/operations"]');
+    expect(operationsLink).toBeFalsy();
+  });
+
+  it('should show impersonation banner when impersonating', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      impersonating: true,
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    const banner = el.querySelector('app-impersonation-banner');
+    expect(banner).toBeTruthy();
+  });
+
+  it('should not show impersonation banner when not impersonating', () => {
+    const { fixture } = setup({
+      authenticated: true,
+      impersonating: false,
+    });
+    const el: HTMLElement = fixture.nativeElement;
+    const banner = el.querySelector('app-impersonation-banner');
+    expect(banner).toBeFalsy();
   });
 });

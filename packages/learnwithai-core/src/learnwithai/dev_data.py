@@ -16,6 +16,7 @@ from .tables.activity import Activity, ActivityType
 from .tables.async_job import AsyncJob, AsyncJobStatus
 from .tables.course import Course, Term
 from .tables.membership import Membership, MembershipState, MembershipType
+from .tables.operator import Operator, OperatorRole
 from .tables.submission import Submission
 from .tables.user import User
 from .tools.jokes.tables import Joke
@@ -54,7 +55,22 @@ def seed(session: Session) -> None:
         family_name="TA",
         email="ta@unc.edu",
     )
-    session.add_all([instructor, student, ta])
+    admin = User(
+        pid=444444444,
+        name="Amy Administrator",
+        onyen="admin",
+        given_name="Amy",
+        family_name="Administrator",
+        email="admin@unc.edu",
+    )
+    session.add_all([instructor, student, ta, admin])
+    session.flush()
+
+    # --- Operator records ---
+    operators = [
+        Operator(user_pid=admin.pid, role=OperatorRole.SUPERADMIN),
+    ]
+    session.add_all(operators)
     session.flush()
 
     course = Course(

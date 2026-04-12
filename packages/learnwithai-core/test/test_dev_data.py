@@ -12,6 +12,7 @@ from learnwithai.dev_data import seed
 from learnwithai.tables.activity import Activity
 from learnwithai.tables.async_job import AsyncJob, AsyncJobStatus
 from learnwithai.tables.membership import MembershipState, MembershipType
+from learnwithai.tables.operator import Operator, OperatorRole
 from learnwithai.tables.submission import Submission
 from learnwithai.tools.jokes.tables import Joke
 
@@ -40,21 +41,27 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
 
     seed(session)
 
-    # add_all called twice: once for users, once for memberships
-    assert session.add_all.call_count == 2
+    # add_all called three times: users, operators, memberships
+    assert session.add_all.call_count == 3
     # add called: course, joke_job, joke_request, iyow_activity, iyow_detail,
     #             iyow_feedback_job, iyow_submission, iyow_submission_detail
     assert session.add.call_count == 8
-    # flush called: users, course, memberships, joke_job, joke_request,
+    # flush called: users, operators, course, memberships, joke_job, joke_request,
     #               iyow_activity, iyow_detail, iyow_feedback_job, iyow_submission,
     #               iyow_submission_detail
-    assert session.flush.call_count == 10
+    assert session.flush.call_count == 11
 
     # Verify users
     users = added[0]
-    assert len(users) == 3
+    assert len(users) == 4
     pids = {u.pid for u in users}
-    assert pids == {111111111, 222222222, 333333333}
+    assert pids == {111111111, 222222222, 333333333, 444444444}
+
+    # Verify operators
+    operators = added[1]
+    assert len(operators) == 1
+    assert all(isinstance(op, Operator) for op in operators)
+    assert operators[0].role == OperatorRole.SUPERADMIN
 
     # Verify course
     course = added_single[0]
@@ -62,7 +69,7 @@ def test_seed_creates_three_users_one_course_and_three_memberships() -> None:
     assert course.name == "Foundations of Software Engineering"
 
     # Verify memberships
-    memberships = added[1]
+    memberships = added[2]
     assert len(memberships) == 3
     types = {m.type for m in memberships}
     assert types == {

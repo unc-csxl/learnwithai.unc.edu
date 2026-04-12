@@ -16,10 +16,12 @@ from learnwithai.config import Settings, get_settings
 from learnwithai.db import get_session
 from learnwithai.interfaces import JobQueue
 from learnwithai.pagination import PaginationParams
+from learnwithai.rabbitmq_management import RabbitMQManagementClient
 from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.course_repository import CourseRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
+from learnwithai.repositories.operator_repository import OperatorRepository
 from learnwithai.repositories.submission_repository import SubmissionRepository
 from learnwithai.repositories.user_repository import UserRepository
 from learnwithai.services.activity_service import ActivityService
@@ -28,6 +30,9 @@ from learnwithai.services.csxl_auth_service import (
     AuthenticationException,
     CSXLAuthService,
 )
+from learnwithai.services.job_control_service import JobControlService
+from learnwithai.services.metrics_service import MetricsService
+from learnwithai.services.operator_service import OperatorService
 from learnwithai.services.roster_upload_service import RosterUploadService
 from learnwithai.tables.activity import Activity
 from learnwithai.tables.course import Course
@@ -53,8 +58,12 @@ __all__ = [
     "IyowSubmissionServiceDI",
     "JokeGenerationServiceDI",
     "JokeRepositoryDI",
+    "JobControlServiceDI",
     "JobQueueDI",
     "MembershipRepositoryDI",
+    "MetricsServiceDI",
+    "OperatorRepositoryDI",
+    "OperatorServiceDI",
     "PaginationParamsDI",
     "SessionDI",
     "SettingsDI",
@@ -77,10 +86,14 @@ __all__ = [
     "iyow_activity_service_factory",
     "iyow_submission_repository_factory",
     "iyow_submission_service_factory",
+    "job_control_service_factory",
     "joke_generation_service_factory",
     "joke_repository_factory",
     "job_queue_factory",
     "membership_repository_factory",
+    "metrics_service_factory",
+    "operator_repository_factory",
+    "operator_service_factory",
     "roster_upload_service_factory",
     "settings_factory",
     "submission_repository_factory",
@@ -295,6 +308,56 @@ def roster_upload_service_factory(
 
 
 RosterUploadServiceDI: TypeAlias = Annotated[RosterUploadService, Depends(roster_upload_service_factory)]
+
+
+# ---- Operator DI ----
+
+
+def operator_repository_factory(session: SessionDI) -> OperatorRepository:
+    """Constructs an operator repository bound to the current request session."""
+    return OperatorRepository(session)
+
+
+OperatorRepositoryDI: TypeAlias = Annotated[OperatorRepository, Depends(operator_repository_factory)]
+
+
+def operator_service_factory(
+    operator_repo: OperatorRepositoryDI,
+    user_repo: UserRepositoryDI,
+) -> OperatorService:
+    """Creates the operator service for the current request."""
+    return OperatorService(operator_repo, user_repo)
+
+
+OperatorServiceDI: TypeAlias = Annotated[OperatorService, Depends(operator_service_factory)]
+
+
+def metrics_service_factory(
+    session: SessionDI,
+    operator_svc: OperatorServiceDI,
+) -> MetricsService:
+    """Creates the metrics service for the current request."""
+    return MetricsService(session, operator_svc)
+
+
+MetricsServiceDI: TypeAlias = Annotated[MetricsService, Depends(metrics_service_factory)]
+
+
+def job_control_service_factory(
+    session: SessionDI,
+    operator_svc: OperatorServiceDI,
+    settings: SettingsDI,
+) -> JobControlService:
+    """Creates the job control service for the current request."""
+    client = RabbitMQManagementClient(
+        base_url=settings.effective_rabbitmq_management_url,
+        username=settings.rabbitmq_management_user,
+        password=settings.rabbitmq_management_password,
+    )
+    return JobControlService(session, operator_svc, client)
+
+
+JobControlServiceDI: TypeAlias = Annotated[JobControlService, Depends(job_control_service_factory)]
 
 
 def joke_generation_service_factory(

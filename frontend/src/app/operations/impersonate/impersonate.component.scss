@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
+.impersonate-page {
+  padding: 24px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 480px;
+}
+
+.results-table {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.no-results {
+  margin-top: 16px;
+  color: var(--mat-sys-on-surface-variant);
+}

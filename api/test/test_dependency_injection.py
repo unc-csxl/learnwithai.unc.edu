@@ -20,8 +20,12 @@ from api.di import (
     iyow_activity_service_factory,
     iyow_submission_repository_factory,
     iyow_submission_service_factory,
+    job_control_service_factory,
     joke_generation_service_factory,
     joke_repository_factory,
+    metrics_service_factory,
+    operator_repository_factory,
+    operator_service_factory,
     roster_upload_service_factory,
     submission_repository_factory,
 )
@@ -229,3 +233,50 @@ def test_get_activity_by_path_id_raises_for_missing_activity() -> None:
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Activity not found."
+
+
+def test_operator_repository_factory_returns_repository() -> None:
+    from learnwithai.repositories.operator_repository import OperatorRepository
+
+    session = MagicMock()
+
+    result = operator_repository_factory(session)
+
+    assert isinstance(result, OperatorRepository)
+
+
+def test_operator_service_factory_returns_service() -> None:
+    from learnwithai.services.operator_service import OperatorService
+
+    operator_repo = MagicMock()
+    user_repo = MagicMock()
+
+    result = operator_service_factory(operator_repo, user_repo)
+
+    assert isinstance(result, OperatorService)
+
+
+def test_metrics_service_factory_returns_service() -> None:
+    from learnwithai.services.metrics_service import MetricsService
+
+    session = MagicMock()
+    operator_svc = MagicMock()
+
+    result = metrics_service_factory(session, operator_svc)
+
+    assert isinstance(result, MetricsService)
+
+
+def test_job_control_service_factory_returns_service() -> None:
+    from learnwithai.services.job_control_service import JobControlService
+
+    session = MagicMock()
+    operator_svc = MagicMock()
+    settings = MagicMock()
+    settings.effective_rabbitmq_management_url = "http://rabbitmq:15672"
+    settings.rabbitmq_management_user = "guest"
+    settings.rabbitmq_management_password = "guest"
+
+    result = job_control_service_factory(session, operator_svc, settings)
+
+    assert isinstance(result, JobControlService)

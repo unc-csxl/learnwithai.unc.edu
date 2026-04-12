@@ -1,0 +1,44 @@
+<div class="metrics-container" role="region" aria-label="Usage Metrics">
+  @if (loading()) {
+    <div class="metrics-loading">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  } @else if (errorMessage()) {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  } @else if (metrics(); as m) {
+    <h2 class="metrics-period">{{ m.month_label }}</h2>
+    <div class="metrics-grid">
+      <mat-card appearance="outlined" class="metric-card">
+        <mat-card-content>
+          <mat-icon class="metric-icon" aria-hidden="true">people</mat-icon>
+          <span class="metric-value">{{ m.active_users }}</span>
+          <span class="metric-label">Active Users</span>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="metric-card">
+        <mat-card-content>
+          <mat-icon class="metric-icon" aria-hidden="true">school</mat-icon>
+          <span class="metric-value">{{ m.active_courses }}</span>
+          <span class="metric-label">Active Courses</span>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="metric-card">
+        <mat-card-content>
+          <mat-icon class="metric-icon" aria-hidden="true">assignment_turned_in</mat-icon>
+          <span class="metric-value">{{ m.submissions }}</span>
+          <span class="metric-label">Submissions</span>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="metric-card">
+        <mat-card-content>
+          <mat-icon class="metric-icon" aria-hidden="true">work</mat-icon>
+          <span class="metric-value">{{ m.jobs_run }}</span>
+          <span class="metric-label">Jobs Run</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

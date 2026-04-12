@@ -1,0 +1,10 @@
+<!--
+  Copyright (c) 2026 Kris Jordan
+  SPDX-License-Identifier: MIT
+-->
+
+@if (errorMessage()) {
+  <p class="error">{{ errorMessage() }}</p>
+} @else {
+  <router-outlet />
+}

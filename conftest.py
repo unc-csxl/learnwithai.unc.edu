@@ -26,6 +26,8 @@ def reset_postgres_test_database() -> Iterator[None]:
     get_settings.cache_clear()
     get_engine.cache_clear()
     reset_db_and_tables()
+    engine = get_engine()
     yield
+    engine.dispose()
     get_engine.cache_clear()
     get_settings.cache_clear()

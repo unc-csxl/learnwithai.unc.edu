@@ -5,6 +5,7 @@
 
 import { Routes } from '@angular/router';
 import { authGuard, landingGuard } from './auth.guard';
+import { operationsGuard } from './operations.guard';
 
 /** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
@@ -127,6 +128,43 @@ export const routes: Routes = [
               ),
           },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+        ],
+      },
+      {
+        path: 'operations',
+        canActivate: [operationsGuard],
+        loadComponent: () =>
+          import('./operations/operations-shell/operations-shell.component').then(
+            (m) => m.OperationsShell,
+          ),
+        children: [
+          {
+            path: 'metrics',
+            loadComponent: () =>
+              import('./operations/usage-metrics/usage-metrics.component').then(
+                (m) => m.UsageMetricsComponent,
+              ),
+          },
+          {
+            path: 'impersonate',
+            loadComponent: () =>
+              import('./operations/impersonate/impersonate.component').then(
+                (m) => m.ImpersonateComponent,
+              ),
+          },
+          {
+            path: 'jobs',
+            loadComponent: () =>
+              import('./operations/job-control/job-control.component').then(
+                (m) => m.JobControlComponent,
+              ),
+          },
+          {
+            path: 'operators',
+            loadComponent: () =>
+              import('./operations/operators/operators.component').then((m) => m.Operators),
+          },
+          { path: '', redirectTo: 'metrics', pathMatch: 'full' },
         ],
       },
       {

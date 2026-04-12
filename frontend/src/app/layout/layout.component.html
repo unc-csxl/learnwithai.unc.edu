@@ -36,6 +36,19 @@
         }
       </div>
       <mat-nav-list>
+        @if (auth.user()?.operator) {
+          <a
+            mat-list-item
+            class="sidenav-nav-link"
+            routerLink="/operations"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="exactLinkActiveOptions"
+            (click)="closeMobileSidenav()"
+          >
+            <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
+            <span matListItemTitle>Operations</span>
+          </a>
+        }
         <a
           mat-list-item
           class="sidenav-nav-link"
@@ -114,6 +127,9 @@
   </mat-sidenav>
 
   <mat-sidenav-content>
+    @if (impersonation.isImpersonating()) {
+      <app-impersonation-banner />
+    }
     <mat-toolbar class="app-toolbar">
       @if (isHandset()) {
         <button mat-icon-button aria-label="Toggle navigation" (click)="toggleDrawer()">

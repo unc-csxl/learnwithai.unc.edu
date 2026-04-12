@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026 Kris Jordan
+ * SPDX-License-Identifier: MIT
+ */
+
+:host {
+  display: block;
+}
+
+.impersonation-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--mat-sys-error-container, #fce4ec);
+  color: var(--mat-sys-on-error-container, #b71c1c);
+  font-weight: 500;
+}
+
+.impersonation-message {
+  flex: 1;
+}

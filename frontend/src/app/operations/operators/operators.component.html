@@ -1,0 +1,62 @@
+<!--
+  Copyright (c) 2026 Kris Jordan
+  SPDX-License-Identifier: MIT
+-->
+
+<div class="operators-page">
+  @if (loading()) {
+    <p>Loading operators…</p>
+  } @else if (errorMessage()) {
+    <p class="error-message">{{ errorMessage() }}</p>
+  } @else {
+    <div class="operators-actions">
+      <button mat-raised-button (click)="openGrantDialog()">
+        <mat-icon>person_add</mat-icon>
+        Add Operator
+      </button>
+    </div>
+
+    <table mat-table [dataSource]="operators()" class="operators-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let op">{{ op.user_name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="pid">
+        <th mat-header-cell *matHeaderCellDef>PID</th>
+        <td mat-cell *matCellDef="let op">{{ op.user_pid }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let op">
+          <mat-form-field appearance="outline" class="role-select">
+            <mat-select
+              [value]="op.role"
+              (selectionChange)="onRoleChange(op, $event.value)"
+              [disabled]="op.user_pid === currentUserPid()"
+            >
+              @for (role of availableRoles; track role) {
+                <mat-option [value]="role">{{ role }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let op">
+          @if (op.user_pid !== currentUserPid()) {
+            <button mat-icon-button matTooltip="Remove operator" (click)="onRevoke(op)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  }
+</div>

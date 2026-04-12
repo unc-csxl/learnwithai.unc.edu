@@ -44,12 +44,17 @@ The repository-level quality gate is `scripts/qa.sh`.
 - Local autofix + validation: `./scripts/qa.sh`
 - CI-equivalent non-mutating check: `./scripts/qa.sh --check`
 
+Recommended final workflow:
+
+1. Run `./scripts/qa.sh` first so the mutating autofix pass applies `ruff format`, `ruff check --fix`, frontend Prettier writes, and frontend lint fixes before verification.
+2. Run `./scripts/qa.sh --check` only after the autofix pass is clean enough to verify.
+
 What it runs:
 
 - Ruff formatting and linting for Python
 - Pyright type checking
 - Pytest with coverage across the Python workspaces, forced onto the dedicated PostgreSQL test database
-- Prettier, ESLint, and Angular tests in the frontend workspace
+- Prettier, ESLint, and Angular tests in the frontend workspace, with Angular CI coverage thresholds enforced at 100%
 
 ## Azure OpenAI Configuration
 
@@ -202,7 +207,9 @@ Good first searches when you are exploring:
 
 - Start in `frontend/src/app/`
 - Run the frontend dev server
-- Validate with `cd frontend && pnpm lint && pnpm test:ci`
+- Run `./scripts/qa.sh` before final verification so Ruff and Prettier fixes are applied first.
+- Validate with `cd frontend && pnpm format:check && pnpm lint && pnpm test:ci`
+- Do not finish frontend work unless the Angular coverage thresholds remain at 100% and the final `./scripts/qa.sh --check` run passes.
 
 ### API or backend work
 

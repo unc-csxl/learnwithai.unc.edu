@@ -7,8 +7,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body
 
-from ..di import AuthenticatedUserDI, UserRepositoryDI
-from ..models import UpdateProfileRequest, UserProfile
+from ..di import AuthenticatedUserDI, OperatorRepositoryDI, UserRepositoryDI
+from ..models import OperatorProfile, UpdateProfileRequest, UserProfile
 
 router = APIRouter(prefix="", tags=["Authentication"])
 
@@ -20,16 +20,29 @@ router = APIRouter(prefix="", tags=["Authentication"])
     response_description="Profile details for the authenticated user.",
     responses={401: {"description": "Bearer token is missing, invalid, or expired."}},
 )
-def get_current_subject_profile(subject: AuthenticatedUserDI) -> UserProfile:
+def get_current_subject_profile(
+    subject: AuthenticatedUserDI,
+    operator_repo: OperatorRepositoryDI,
+) -> UserProfile:
     """Returns the authenticated subject's profile payload.
 
     Args:
         subject: Authenticated subject resolved from the bearer token.
+        operator_repo: Repository used to check operator status.
 
     Returns:
         A UserProfile model for the API.
     """
-    return UserProfile.model_validate(subject.model_dump(mode="json"))
+    from learnwithai.tables.operator import effective_permissions
+
+    profile = UserProfile.model_validate(subject.model_dump(mode="json"))
+    operator = operator_repo.get_by_id(subject.pid)
+    if operator is not None:
+        profile.operator = OperatorProfile(
+            role=operator.role,
+            permissions=sorted(effective_permissions(operator), key=lambda p: p.value),
+        )
+    return profile
 
 
 @router.put(
