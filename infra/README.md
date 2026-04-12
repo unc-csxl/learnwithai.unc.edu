@@ -61,6 +61,8 @@ Provide these values in `infra/manifests/secrets.yaml` before running `deploy.sh
 - `OPENAI_MODEL`: Azure deployment name used by AI-backed jobs
 - `OPENAI_ENDPOINT`: Azure endpoint host, for example `https://azureaiapi.cloud.unc.edu`
 - `OPENAI_API_VERSION`: Azure API version, for example `2025-04-01-preview`
+- `RABBITMQ_URL`: AMQP connection string for the internal RabbitMQ service
+- `RABBITMQ_MANAGEMENT_URL`, `RABBITMQ_MANAGEMENT_USER`, `RABBITMQ_MANAGEMENT_PASSWORD`: optional explicit overrides for the job-control page; if omitted, the backend derives them from `RABBITMQ_URL`
 
 The backend also accepts `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_API_VERSION`, but the checked-in manifest templates use the `OPENAI_*` names for consistency with the rest of the repository.
 

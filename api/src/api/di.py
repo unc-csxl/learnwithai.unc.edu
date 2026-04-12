@@ -351,8 +351,8 @@ def job_control_service_factory(
     """Creates the job control service for the current request."""
     client = RabbitMQManagementClient(
         base_url=settings.effective_rabbitmq_management_url,
-        username=settings.rabbitmq_management_user,
-        password=settings.rabbitmq_management_password,
+        username=settings.effective_rabbitmq_management_user,
+        password=settings.effective_rabbitmq_management_password,
     )
     return JobControlService(session, operator_svc, client)
 

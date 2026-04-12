@@ -18,8 +18,8 @@ def build_settings(**overrides: Any) -> Settings:
         "db_echo": False,
         "rabbitmq_url": None,
         "rabbitmq_management_url": None,
-        "rabbitmq_management_user": "guest",
-        "rabbitmq_management_password": "guest",
+        "rabbitmq_management_user": None,
+        "rabbitmq_management_password": None,
         "api_host": "0.0.0.0",
         "api_port": 8000,
         "log_level": "INFO",
@@ -115,6 +115,62 @@ def test_effective_rabbitmq_management_url_uses_default_value(
 
     # Assert
     assert url == "http://rabbitmq:15672"
+
+
+def test_effective_rabbitmq_management_url_uses_rabbitmq_host() -> None:
+    # Arrange
+    settings = build_settings(rabbitmq_url="amqp://queue-user:queue-pass@learnwithai-rabbitmq:5672/")
+
+    # Act
+    url = settings.effective_rabbitmq_management_url
+
+    # Assert
+    assert url == "http://learnwithai-rabbitmq:15672"
+
+
+def test_effective_rabbitmq_management_credentials_use_explicit_values() -> None:
+    # Arrange
+    settings = build_settings(
+        rabbitmq_url="amqp://queue-user:queue-pass@learnwithai-rabbitmq:5672/",
+        rabbitmq_management_user="mgmt-user",
+        rabbitmq_management_password="mgmt-pass",
+    )
+
+    # Act
+    management_user = settings.effective_rabbitmq_management_user
+    management_password = settings.effective_rabbitmq_management_password
+
+    # Assert
+    assert management_user == "mgmt-user"
+    assert management_password == "mgmt-pass"
+
+
+def test_effective_rabbitmq_management_credentials_use_rabbitmq_url_defaults() -> None:
+    # Arrange
+    settings = build_settings(rabbitmq_url="amqp://queue-user:queue-pass@learnwithai-rabbitmq:5672/")
+
+    # Act
+    management_user = settings.effective_rabbitmq_management_user
+    management_password = settings.effective_rabbitmq_management_password
+
+    # Assert
+    assert management_user == "queue-user"
+    assert management_password == "queue-pass"
+
+
+def test_effective_rabbitmq_management_defaults_when_rabbitmq_url_has_no_host_or_credentials() -> None:
+    # Arrange
+    settings = build_settings(rabbitmq_url="amqp:///")
+
+    # Act
+    management_url = settings.effective_rabbitmq_management_url
+    management_user = settings.effective_rabbitmq_management_user
+    management_password = settings.effective_rabbitmq_management_password
+
+    # Assert
+    assert management_url == "http://rabbitmq:15672"
+    assert management_user == "guest"
+    assert management_password == "guest"
 
 
 def test_environment_flags_reflect_current_environment() -> None:

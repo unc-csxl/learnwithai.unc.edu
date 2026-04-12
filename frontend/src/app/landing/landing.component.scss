@@ -5,15 +5,20 @@
 
 :host {
   display: block;
-  height: 100vh;
+  block-size: 100dvh;
+  inline-size: 100%;
+  overflow: hidden;
 }
 
 .landing-container {
   align-items: center;
+  block-size: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  inline-size: 100%;
   justify-content: center;
+  padding: 16px;
 }
 
 .brand-lockup {
