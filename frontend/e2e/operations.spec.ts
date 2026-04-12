@@ -238,12 +238,13 @@ test.describe('operations e2e flows', () => {
       jobControlRegion.getByRole('region', { name: 'Workers', exact: true }),
     ).toBeVisible();
     await expect(page.getByRole('switch', { name: 'Toggle auto-refresh' })).toBeVisible();
+    await expect(jobControlRegion.getByText('Auto-refresh (10s)', { exact: true })).toBeVisible();
     await expect(jobControlRegion.locator('.queue-table')).toBeVisible();
     await expect(page).toHaveTitle(/Job Queue Control/);
     await expect(jobControlRegion.locator('.queue-table .queue-display-name')).toHaveText([
       'Jobs',
       'Retry Queue',
-      'Failed',
+      'Failed Jobs',
       'Notifications',
     ]);
   });

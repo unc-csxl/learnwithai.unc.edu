@@ -20,7 +20,7 @@
 .toolbar-row {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 .pane {
@@ -106,15 +106,15 @@
 }
 
 .metric-attention {
-  color: var(--mat-sys-error);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
   font-weight: 700;
-}
-
-.sub-heading {
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 1rem 0 0.25rem;
-  opacity: 0.85;
 }
 
 .queue-detail-list,
@@ -126,6 +126,10 @@
 
 .detail-queue-card {
   border-radius: 14px;
+}
+
+.detail-queue-card mat-card-content {
+  padding-top: 1rem;
 }
 
 .detail-queue-card-attention {
@@ -162,13 +166,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 .preview-summary {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font-size: 0.8125rem;
+}
+
+.auto-refresh-countdown {
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-actions {

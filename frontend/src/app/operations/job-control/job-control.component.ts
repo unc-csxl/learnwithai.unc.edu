@@ -64,6 +64,7 @@ export class JobControlComponent implements OnInit, OnDestroy {
   private readonly pageTitle = inject(PageTitleService);
   private readonly dialog = inject(MatDialog);
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
+  private destroyed = false;
 
   protected readonly queues = signal<QueueInfo[]>([]);
   protected readonly workers = signal<WorkerInfo[]>([]);
@@ -72,6 +73,7 @@ export class JobControlComponent implements OnInit, OnDestroy {
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal('');
   protected readonly autoRefresh = signal(true);
+  protected readonly autoRefreshCountdown = signal(10);
   protected readonly deadLetterPreviewPageSize = 5;
 
   protected readonly sortedQueues = computed(() =>
@@ -97,10 +99,13 @@ export class JobControlComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.loadAll();
-    this.startAutoRefresh();
+    if (this.autoRefresh()) {
+      this.startAutoRefresh();
+    }
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.stopAutoRefresh();
   }
 
@@ -152,6 +157,14 @@ export class JobControlComponent implements OnInit, OnDestroy {
 
   protected queueDisplayName(queue: Pick<QueueInfo, 'name'>): string {
     return this.queueDisplayNameFromName(queue.name);
+  }
+
+  protected queueTableDisplayName(queue: Pick<QueueInfo, 'name' | 'is_dlq'>): string {
+    const displayName = this.queueDisplayName(queue);
+    if (!queue.is_dlq || displayName.endsWith('Jobs')) {
+      return displayName;
+    }
+    return `${displayName} Jobs`;
   }
 
   protected queueDisplayNameFromName(queueName: string): string {
@@ -275,6 +288,10 @@ export class JobControlComponent implements OnInit, OnDestroy {
 
   protected queueReadyClass(queue: Pick<QueueInfo, 'is_dlq' | 'ready'>): string {
     return queue.is_dlq && queue.ready > 0 ? 'metric-attention' : '';
+  }
+
+  protected queueNeedsReadyAttention(queue: Pick<QueueInfo, 'is_dlq' | 'ready'>): boolean {
+    return queue.is_dlq && queue.ready > 0;
   }
 
   protected canPurgeQueueFromTable(queue: Pick<QueueInfo, 'ready' | 'is_dlq'>): boolean {
@@ -541,16 +558,36 @@ export class JobControlComponent implements OnInit, OnDestroy {
   }
 
   private startAutoRefresh(): void {
+    if (this.destroyed) {
+      return;
+    }
     this.stopAutoRefresh();
+    this.autoRefreshCountdown.set(10);
     this.refreshInterval = setInterval(() => {
-      this.loadAll();
-    }, 10_000);
+      const remaining = this.autoRefreshCountdown();
+
+      if (remaining <= 1) {
+        this.autoRefreshCountdown.set(0);
+        this.stopAutoRefresh(false);
+        void this.loadAll().finally(() => {
+          if (this.autoRefresh() && !this.destroyed) {
+            this.startAutoRefresh();
+          }
+        });
+        return;
+      }
+
+      this.autoRefreshCountdown.set(remaining - 1);
+    }, 1_000);
   }
 
-  private stopAutoRefresh(): void {
+  private stopAutoRefresh(resetCountdown = true): void {
     if (this.refreshInterval !== null) {
       clearInterval(this.refreshInterval);
       this.refreshInterval = null;
+    }
+    if (resetCountdown) {
+      this.autoRefreshCountdown.set(10);
     }
   }
 }

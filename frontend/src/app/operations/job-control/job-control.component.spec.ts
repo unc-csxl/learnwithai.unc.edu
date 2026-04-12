@@ -258,6 +258,21 @@ describe('JobControlComponent', () => {
     expect(component.deadLetterPreviewPage('missing')).toBe(1);
   });
 
+  it('adds jobs copy only to dead-letter queue table labels', () => {
+    const { fixture } = setup();
+    const component = fixture.componentInstance as unknown as {
+      queueTableDisplayName: (queue: { name: string; is_dlq: boolean }) => string;
+    };
+
+    expect(component.queueTableDisplayName({ name: 'default.XQ', is_dlq: true })).toBe(
+      'Failed Jobs',
+    );
+    expect(component.queueTableDisplayName({ name: 'reports.XQ', is_dlq: true })).toBe(
+      'Reports Failed Jobs',
+    );
+    expect(component.queueTableDisplayName({ name: 'default', is_dlq: false })).toBe('Jobs');
+  });
+
   it('derives worker group labels for fallback worker combinations', () => {
     const { fixture } = setup();
     const component = fixture.componentInstance as unknown as {
@@ -415,22 +430,22 @@ describe('JobControlComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Notifications');
     expect(fixture.nativeElement.textContent).toContain('Jobs');
     expect(fixture.nativeElement.textContent).toContain('Retry Queue');
-    expect(fixture.nativeElement.textContent).toContain('Failed');
     expect(fixture.nativeElement.textContent).toContain('Failed Jobs');
-    expect(queueOrder).toEqual(['Jobs', 'Retry Queue', 'Failed', 'Notifications']);
+    expect(queueOrder).toEqual(['Jobs', 'Retry Queue', 'Failed Jobs', 'Notifications']);
     expect(fixture.nativeElement.querySelector('section[aria-label="Overview"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('section[aria-label="Failures"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('section[aria-label="Delayed Queues"]')).toBeNull();
     expect(failedJobsSection).toBeTruthy();
     expect(failedJobsSection.querySelector('.detail-queue-insight')).toBeNull();
     expect(failedJobsSection.querySelector('.detail-queue-facts')).toBeNull();
+    expect(failedJobsSection.textContent).not.toContain('Retained Messages');
   });
 
   it('hides DLQ purge actions in the queue table, highlights ready, and blanks non-applicable metrics', async () => {
     const { fixture } = await setupAndLoad();
     const queueRows = fixture.nativeElement.querySelectorAll('tr.mat-mdc-row');
     const deadLetterRow = (Array.from(queueRows) as HTMLElement[]).find((row) =>
-      row.textContent?.includes('Failed'),
+      row.textContent?.includes('Failed Jobs'),
     ) as HTMLElement;
 
     expect(
@@ -707,25 +722,60 @@ describe('JobControlComponent', () => {
 
     try {
       const { fixture, mockService } = setup();
+      const component = fixture.componentInstance as unknown as {
+        loadAll: () => Promise<void>;
+      };
       await vi.advanceTimersByTimeAsync(0);
       await Promise.resolve();
       fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (10s)');
+
+      vi.advanceTimersByTime(3_000);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (7s)');
 
       const toggle = fixture.nativeElement.querySelector('mat-slide-toggle') as HTMLElement;
       toggle.dispatchEvent(new Event('change'));
       fixture.detectChanges();
 
+      expect(fixture.nativeElement.textContent).not.toContain('Auto-refresh (');
+
       toggle.dispatchEvent(new Event('change'));
       fixture.detectChanges();
 
-      await vi.advanceTimersByTimeAsync(10_000);
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (10s)');
+
+      let resolveRefresh: (() => void) | undefined;
+      const refreshPromise = new Promise<void>((resolve) => {
+        resolveRefresh = resolve;
+      });
+      const loadAllSpy = vi.spyOn(component, 'loadAll').mockReturnValue(refreshPromise);
+
+      vi.advanceTimersByTime(9_000);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (1s)');
+
+      vi.advanceTimersByTime(1_000);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (0s)');
+      expect(loadAllSpy).toHaveBeenCalledTimes(1);
+
+      resolveRefresh?.();
+      await Promise.resolve();
       await Promise.resolve();
       fixture.detectChanges();
 
-      expect(mockService.getJobsQueues).toHaveBeenCalledTimes(2);
+      expect(mockService.getJobsQueues).toHaveBeenCalledTimes(1);
+      expect(fixture.nativeElement.textContent).toContain('Auto-refresh (10s)');
 
       fixture.destroy();
       expect(clearIntervalSpy).toHaveBeenCalled();
+
+      loadAllSpy.mockRestore();
     } finally {
       clearIntervalSpy.mockRestore();
       vi.useRealTimers();
