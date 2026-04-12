@@ -16,6 +16,7 @@ import { getJobsOverview } from '../api/generated/fn/operations/get-jobs-overvie
 import { getJobsQueues } from '../api/generated/fn/operations/get-jobs-queues';
 import { getJobsWorkers } from '../api/generated/fn/operations/get-jobs-workers';
 import { getJobsFailures } from '../api/generated/fn/operations/get-jobs-failures';
+import { getJobQueuePreview } from '../api/generated/fn/operations/get-job-queue-preview';
 import { purgeQueue } from '../api/generated/fn/operations/purge-queue';
 import {
   Operator,
@@ -25,6 +26,7 @@ import {
   UserSearchResult,
   JobControlOverview,
   QueueInfo,
+  QueueMessagePreview,
   WorkerInfo,
   JobFailures,
 } from '../api/models';
@@ -95,6 +97,11 @@ export class OperationsService {
   /** Fetches failure summary. */
   async getJobsFailures(): Promise<JobFailures> {
     return this.api.invoke(getJobsFailures);
+  }
+
+  /** Fetches a read-only preview of messages waiting in a queue. */
+  async getJobQueuePreview(queueName: string, limit = 5, page = 1): Promise<QueueMessagePreview[]> {
+    return this.api.invoke(getJobQueuePreview, { queue_name: queueName, limit, page });
   }
 
   /** Purges all messages from a queue. */

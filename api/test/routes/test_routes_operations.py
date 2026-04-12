@@ -28,11 +28,13 @@ from api.models import (
     JobFailuresResponse,
     OperatorResponse,
     QueueInfoResponse,
+    QueueMessagePreviewResponse,
     UpdateOperatorRoleRequest,
     UsageMetricsResponse,
     WorkerInfoResponse,
 )
 from api.routes.operations import (
+    get_job_queue_preview,
     get_jobs_failures,
     get_jobs_overview,
     get_jobs_queues,
@@ -682,6 +684,75 @@ def test_get_jobs_workers_endpoint(client: TestClient) -> None:
     body = response.json()
     assert len(body) == 1
     assert body[0]["consumer_tag"] == "w.1"
+
+
+# ---- get_job_queue_preview (unit) ----
+
+
+def test_get_job_queue_preview_returns_response() -> None:
+    from learnwithai.services.job_control_service import QueueMessagePreview
+
+    subject = _stub_user()
+    mock_svc = MagicMock()
+    mock_svc.peek_queue_messages.return_value = [
+        QueueMessagePreview(
+            queue_name="default",
+            routing_key="default.XQ",
+            actor_name="job_queue",
+            message_id="abc",
+            job_id=3,
+            job_type="iyow_feedback",
+            retries=3,
+            enqueued_at=datetime(2026, 4, 10, tzinfo=timezone.utc),
+            death_reason="rejected",
+            source_queue="default",
+            payload_preview='{"args": [{"job_id": 3, "type": "iyow_feedback"}], "kwargs": {}}',
+            error_summary="ValueError: AsyncJob 3 not found",
+        )
+    ]
+
+    result = get_job_queue_preview(subject, "default.XQ", mock_svc, 1, 2)
+
+    assert len(result) == 1
+    assert isinstance(result[0], QueueMessagePreviewResponse)
+    assert result[0].job_type == "iyow_feedback"
+    mock_svc.peek_queue_messages.assert_called_once_with(subject, "default.XQ", limit=1, page=2)
+
+
+@pytest.mark.integration
+def test_get_job_queue_preview_endpoint(client: TestClient) -> None:
+    from learnwithai.services.job_control_service import QueueMessagePreview
+
+    user = _stub_user()
+    app.dependency_overrides[get_authenticated_user] = lambda: user
+    mock_svc = MagicMock()
+    mock_svc.peek_queue_messages.return_value = [
+        QueueMessagePreview(
+            queue_name="default",
+            routing_key="default.XQ",
+            actor_name="job_queue",
+            message_id="abc",
+            job_id=3,
+            job_type="iyow_feedback",
+            retries=3,
+            enqueued_at=datetime(2026, 4, 10, tzinfo=timezone.utc),
+            death_reason="rejected",
+            source_queue="default",
+            payload_preview='{"args": [{"job_id": 3, "type": "iyow_feedback"}], "kwargs": {}}',
+            error_summary="ValueError: AsyncJob 3 not found",
+        )
+    ]
+    app.dependency_overrides[job_control_service_factory] = lambda: mock_svc
+
+    response = client.get("/api/operations/jobs/queues/default.XQ/preview?limit=1&page=2")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["queue_name"] == "default"
+    assert body[0]["job_id"] == 3
+    assert body[0]["error_summary"] == "ValueError: AsyncJob 3 not found"
+    mock_svc.peek_queue_messages.assert_called_once_with(user, "default.XQ", limit=1, page=2)
 
 
 # ---- get_jobs_failures (unit) ----

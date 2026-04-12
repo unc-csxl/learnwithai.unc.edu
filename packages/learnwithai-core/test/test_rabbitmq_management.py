@@ -100,6 +100,45 @@ class TestGetConsumers:
         mock_http.get.assert_called_once_with(f"http://rabbitmq:15672/api/consumers/{DEFAULT_VHOST}")
 
 
+class TestPeekQueueMessages:
+    def test_posts_preview_request(self, client: RabbitMQManagementClient) -> None:
+        messages = [{"routing_key": "default.XQ", "payload": "{}"}]
+        with patch("learnwithai.rabbitmq_management.httpx.Client") as mock_cls:
+            mock_http = MagicMock()
+            mock_cls.return_value.__enter__ = MagicMock(return_value=mock_http)
+            mock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            mock_http.post.return_value = _mock_response(messages)
+
+            result = client.peek_queue_messages("default.XQ", count=3, truncate=1000)
+
+        assert result == messages
+        mock_http.post.assert_called_once_with(
+            f"http://rabbitmq:15672/api/queues/{DEFAULT_VHOST}/default.XQ/get",
+            json={
+                "count": 3,
+                "ackmode": "ack_requeue_true",
+                "encoding": "auto",
+                "truncate": 1000,
+            },
+        )
+
+    def test_raises_on_preview_failure(self, client: RabbitMQManagementClient) -> None:
+        with patch("learnwithai.rabbitmq_management.httpx.Client") as mock_cls:
+            mock_http = MagicMock()
+            mock_cls.return_value.__enter__ = MagicMock(return_value=mock_http)
+            mock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            bad_response = _mock_response(None, status_code=404)
+            bad_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Not Found",
+                request=MagicMock(),
+                response=bad_response,
+            )
+            mock_http.post.return_value = bad_response
+
+            with pytest.raises(httpx.HTTPStatusError):
+                client.peek_queue_messages("missing")
+
+
 class TestPurgeQueue:
     def test_sends_delete_request(self, client: RabbitMQManagementClient) -> None:
         with patch("learnwithai.rabbitmq_management.httpx.Client") as mock_cls:

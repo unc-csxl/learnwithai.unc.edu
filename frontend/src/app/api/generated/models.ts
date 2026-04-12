@@ -28,6 +28,7 @@ export type { OperatorResponse } from './models/operator-response';
 export type { OperatorRole } from './models/operator-role';
 export type { PaginatedRosterResponse } from './models/paginated-roster-response';
 export type { QueueInfoResponse } from './models/queue-info-response';
+export type { QueueMessagePreviewResponse } from './models/queue-message-preview-response';
 export type { RecentFailedJobResponse } from './models/recent-failed-job-response';
 export type { RosterMemberResponse } from './models/roster-member-response';
 export type { RosterUploadResponse } from './models/roster-upload-response';

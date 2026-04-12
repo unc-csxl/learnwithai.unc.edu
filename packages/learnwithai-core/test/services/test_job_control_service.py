@@ -15,6 +15,7 @@ from learnwithai.services.job_control_service import (
     JobControlService,
     JobFailures,
     QueueInfo,
+    QueueMessagePreview,
     RecentFailedJob,
     WorkerInfo,
 )
@@ -62,8 +63,8 @@ class TestGetOverview:
         assert isinstance(result, JobControlOverview)
         assert result.total_queued == 8
         assert result.total_unacked == 2
-        assert result.dlq_depth == 1
-        assert result.retry_depth == 2
+        assert result.dlq_depth == 2
+        assert result.retry_depth == 1
         assert result.consumers_online == 3
         assert result.broker_alarms == ["disk"]
 
@@ -111,13 +112,13 @@ class TestGetQueues:
         assert result[0].name == "default"
         assert result[0].ack_rate == 1.5
         assert result[0].is_dlq is False
-        assert result[1].is_dlq is True
+        assert result[1].is_retry is True
 
     def test_parses_retry_queue_arguments(self) -> None:
         svc, _, _, _ = _build_service(
             queues=[
                 {
-                    "name": "default.XQ",
+                    "name": "default.DQ",
                     "messages_ready": 2,
                     "messages_unacknowledged": 0,
                     "consumers": 0,
@@ -141,7 +142,7 @@ class TestGetQueues:
         svc, _, _, _ = _build_service(
             queues=[
                 {
-                    "name": "default.XQ",
+                    "name": "default.DQ",
                     "messages_ready": 1,
                     "messages_unacknowledged": 0,
                     "consumers": 0,
@@ -164,7 +165,7 @@ class TestGetQueues:
         svc, _, _, _ = _build_service(
             queues=[
                 {
-                    "name": "default.XQ",
+                    "name": "default.DQ",
                     "messages_ready": 1,
                     "messages_unacknowledged": 0,
                     "consumers": 0,
@@ -183,7 +184,7 @@ class TestGetQueues:
         svc, _, _, _ = _build_service(
             queues=[
                 {
-                    "name": "default.XQ",
+                    "name": "default.DQ",
                     "messages_ready": 1,
                     "messages_unacknowledged": 0,
                     "consumers": 0,
@@ -194,7 +195,7 @@ class TestGetQueues:
                     },
                 },
                 {
-                    "name": "fallback.XQ",
+                    "name": "fallback.DQ",
                     "messages_ready": 1,
                     "messages_unacknowledged": 0,
                     "consumers": 0,
@@ -212,9 +213,11 @@ class TestGetQueues:
         assert result[0].message_ttl_ms == 30000
         assert result[0].dead_letter_exchange == ""
         assert result[0].dead_letter_routing_key is None
+        assert result[0].is_retry is True
         assert result[1].message_ttl_ms is None
         assert result[1].dead_letter_exchange == "retry-exchange"
         assert result[1].dead_letter_routing_key == "retry-key"
+        assert result[1].is_retry is True
 
     def test_enforces_view_jobs_permission(self) -> None:
         svc, _, operator_svc, _ = _build_service()
@@ -266,7 +269,7 @@ class TestGetWorkers:
 class TestGetFailures:
     def test_returns_failure_summary(self) -> None:
         svc, session, _, _ = _build_service(
-            queues=[{"name": "default.DQ", "messages_ready": 3}],
+            queues=[{"name": "default.XQ", "messages_ready": 3}],
         )
 
         # Mock DB queries for failed jobs and error buckets
@@ -312,3 +315,118 @@ class TestPurgeQueue:
 
         with pytest.raises(AuthorizationError):
             svc.purge_queue(_stub_user(), "default")
+
+
+class TestPeekQueueMessages:
+    def test_returns_parsed_queue_preview(self) -> None:
+        svc, _, _, rabbitmq = _build_service()
+        rabbitmq.peek_queue_messages.return_value = [
+            {
+                "routing_key": "default.XQ",
+                "payload": (
+                    '{"queue_name":"default","actor_name":"job_queue","args":[{"job_id":3,'
+                    '"type":"iyow_feedback"}],"kwargs":{},"options":{"retries":3,'
+                    '"traceback":"Traceback\\nValueError: AsyncJob 3 not found"},'
+                    '"message_id":"abc","message_timestamp":1775943548943}'
+                ),
+                "properties": {
+                    "headers": {
+                        "x-first-death-queue": "default",
+                        "x-first-death-reason": "rejected",
+                    }
+                },
+            }
+        ]
+
+        result = svc.peek_queue_messages(_stub_user(), "default.XQ", limit=1)
+
+        rabbitmq.peek_queue_messages.assert_called_once_with("default.XQ", count=1)
+        assert len(result) == 1
+        assert isinstance(result[0], QueueMessagePreview)
+        assert result[0].queue_name == "default"
+        assert result[0].routing_key == "default.XQ"
+        assert result[0].actor_name == "job_queue"
+        assert result[0].job_id == 3
+        assert result[0].job_type == "iyow_feedback"
+        assert result[0].retries == 3
+        assert result[0].source_queue == "default"
+        assert result[0].death_reason == "rejected"
+        assert result[0].error_summary == "ValueError: AsyncJob 3 not found"
+        assert result[0].payload_preview == '{"args": [{"job_id": 3, "type": "iyow_feedback"}], "kwargs": {}}'
+        assert result[0].enqueued_at == datetime.fromtimestamp(1775943548943 / 1000, tz=timezone.utc)
+
+    def test_returns_requested_preview_page(self) -> None:
+        svc, _, _, rabbitmq = _build_service()
+        rabbitmq.peek_queue_messages.return_value = [
+            {
+                "routing_key": "default.XQ",
+                "payload": '{"message_id":"one"}',
+                "properties": {},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": '{"message_id":"two"}',
+                "properties": {},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": '{"message_id":"three"}',
+                "properties": {},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": '{"message_id":"four"}',
+                "properties": {},
+            },
+        ]
+
+        result = svc.peek_queue_messages(_stub_user(), "default.XQ", limit=2, page=2)
+
+        rabbitmq.peek_queue_messages.assert_called_once_with("default.XQ", count=4)
+        assert [preview.message_id for preview in result] == ["three", "four"]
+
+    def test_enforces_view_jobs_permission(self) -> None:
+        svc, _, operator_svc, _ = _build_service()
+        operator_svc.require_permission.side_effect = AuthorizationError("denied")
+
+        with pytest.raises(AuthorizationError):
+            svc.peek_queue_messages(_stub_user(), "default.XQ")
+
+    def test_handles_unstructured_preview_payloads(self) -> None:
+        svc, _, _, rabbitmq = _build_service()
+        rabbitmq.peek_queue_messages.return_value = [
+            {
+                "routing_key": "default.XQ",
+                "payload": {"unexpected": "object"},
+                "properties": {"headers": []},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": "not-json",
+                "properties": {"headers": {"x-first-death-reason": 9}},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": '["not", "a", "dict"]',
+                "properties": {"headers": {"x-first-death-reason": 9}},
+            },
+            {
+                "routing_key": "default.XQ",
+                "payload": ('{"queue_name":"default","args":["plain"],"kwargs":[],"options":{"traceback":"  \\n"}}'),
+                "properties": "not-a-dict",
+            },
+        ]
+
+        result = svc.peek_queue_messages(_stub_user(), "default.XQ", limit=4)
+
+        assert [preview.queue_name for preview in result[:3]] == ["default.XQ", "default.XQ", "default.XQ"]
+        assert result[0].payload_preview == '{"args": [], "kwargs": {}}'
+        assert result[0].actor_name is None
+        assert result[0].enqueued_at is None
+        assert result[1].death_reason is None
+        assert result[1].job_id is None
+        assert result[2].payload_preview == '{"args": [], "kwargs": {}}'
+        assert result[3].queue_name == "default"
+        assert result[3].job_type is None
+        assert result[3].payload_preview == '{"args": ["plain"], "kwargs": {}}'
+        assert result[3].error_summary is None

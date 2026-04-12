@@ -1,5 +1,5 @@
-<div class="job-control-container" role="region" aria-label="Job Control">
-  @if (loading() && !overview()) {
+<div class="job-control-container" role="region" aria-label="Job Queue Control">
+  @if (loading() && queues().length === 0 && workers().length === 0) {
     <div class="loading-container">
       <mat-spinner diameter="48"></mat-spinner>
     </div>
@@ -16,84 +16,80 @@
       </mat-slide-toggle>
     </div>
 
-    <!-- Pane 1: Now -->
-    @if (overview(); as o) {
-      <section class="pane" aria-label="Overview">
-        <h2 class="pane-title">Now</h2>
-        @if (o.broker_alarms.length > 0) {
-          <div class="alarm-banner" role="alert">
-            <mat-icon>warning</mat-icon>
-            <span>Broker alarms: {{ o.broker_alarms.join(', ') }}</span>
-          </div>
-        }
-        <div class="stat-bar">
-          <div class="stat-item">
-            <span class="stat-value">{{ o.total_queued }}</span>
-            <span class="stat-label">Queued</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ o.total_unacked }}</span>
-            <span class="stat-label">Unacked</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ o.dlq_depth }}</span>
-            <span class="stat-label">DLQ</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ o.retry_depth }}</span>
-            <span class="stat-label">Retry</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ o.consumers_online }}</span>
-            <span class="stat-label">Consumers</span>
-          </div>
-        </div>
-      </section>
-    }
-
-    <!-- Pane 2: Queues -->
     <section class="pane" aria-label="Queues">
-      <h2 class="pane-title">Queues</h2>
       @if (queues().length === 0) {
         <p class="empty-state">No queues found.</p>
       } @else {
-        <table mat-table [dataSource]="queues()" class="queue-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
+        <table mat-table [dataSource]="sortedQueues()" class="queue-table">
+          <ng-container matColumnDef="queue">
+            <th mat-header-cell *matHeaderCellDef>Queue</th>
             <td mat-cell *matCellDef="let q">
-              <div class="queue-name-block">
-                <span class="queue-display-name">{{ queueDisplayName(q) }}</span>
-                <span class="queue-actual-name">RabbitMQ name: {{ q.name }}</span>
-                <span class="queue-purpose">{{ queueRoleSummary(q) }}</span>
+              <div class="table-primary table-primary-leading">
+                <div class="table-primary-main">
+                  <div class="table-primary-heading">
+                    <span
+                      class="badge"
+                      [class]="'badge ' + queueBadgeClass(q)"
+                      [matTooltip]="queueTooltip(q)"
+                      [attr.aria-label]="queueDetailsLabel(q)"
+                    >
+                      {{ queueBadgeLabel(q) }}
+                    </span>
+                    <span class="queue-display-name">{{ queueDisplayName(q) }}</span>
+                  </div>
+                </div>
               </div>
-              @if (q.is_dlq) {
-                <span class="badge badge-dlq">DLQ</span>
-              }
-              @if (q.is_retry) {
-                <span class="badge badge-retry">Retry Delay</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="ready">
+            <th mat-header-cell *matHeaderCellDef>Ready</th>
+            <td mat-cell *matCellDef="let q" [class]="queueReadyClass(q)">{{ q.ready }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="unacked">
+            <th mat-header-cell *matHeaderCellDef>Unacked</th>
+            <td
+              mat-cell
+              *matCellDef="let q"
+              [attr.aria-label]="queueShowsUnacked(q) ? null : 'Not applicable'"
+            >
+              @if (queueShowsUnacked(q)) {
+                {{ q.unacked }}
               }
             </td>
           </ng-container>
-          <ng-container matColumnDef="ready">
-            <th mat-header-cell *matHeaderCellDef>Ready</th>
-            <td mat-cell *matCellDef="let q">{{ q.ready }}</td>
-          </ng-container>
-          <ng-container matColumnDef="unacked">
-            <th mat-header-cell *matHeaderCellDef>Unacked</th>
-            <td mat-cell *matCellDef="let q">{{ q.unacked }}</td>
-          </ng-container>
+
           <ng-container matColumnDef="consumers">
             <th mat-header-cell *matHeaderCellDef>Consumers</th>
-            <td mat-cell *matCellDef="let q">{{ q.consumers }}</td>
+            <td
+              mat-cell
+              *matCellDef="let q"
+              [attr.aria-label]="queueShowsConsumers(q) ? null : 'Not applicable'"
+            >
+              @if (queueShowsConsumers(q)) {
+                {{ q.consumers }}
+              }
+            </td>
           </ng-container>
+
           <ng-container matColumnDef="ack_rate">
             <th mat-header-cell *matHeaderCellDef>Ack Rate</th>
-            <td mat-cell *matCellDef="let q">{{ q.ack_rate | number: '1.1-1' }}/s</td>
+            <td
+              mat-cell
+              *matCellDef="let q"
+              [attr.aria-label]="queueShowsAckRate(q) ? null : 'Not applicable'"
+            >
+              @if (queueShowsAckRate(q)) {
+                {{ q.ack_rate | number: '1.1-1' }}/s
+              }
+            </td>
           </ng-container>
+
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let q">
-              @if (q.ready > 0) {
+              @if (canPurgeQueueFromTable(q)) {
                 <button
                   mat-icon-button
                   (click)="confirmPurge(q)"
@@ -104,97 +100,109 @@
               }
             </td>
           </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="queueColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: queueColumns"></tr>
         </table>
       }
     </section>
 
-    <!-- Pane 3: Failures -->
-    @if (failures(); as f) {
-      <section class="pane" aria-label="Failures">
-        <h2 class="pane-title">Failures</h2>
-        <div class="stat-bar compact">
-          <div class="stat-item">
-            <span class="stat-value">{{ f.dlq_messages }}</span>
-            <span class="stat-label">DLQ Messages</span>
-          </div>
-          @for (entry of f.error_buckets | keyvalue; track entry.key) {
-            <div class="stat-item">
-              <span class="stat-value">{{ entry.value }}</span>
-              <span class="stat-label">{{ entry.key }}</span>
-            </div>
-          }
-        </div>
-        @if (f.recent_failed_jobs.length > 0) {
-          <h3 class="sub-heading">Recent Failed Jobs</h3>
-          <div class="failed-jobs-list">
-            @for (job of f.recent_failed_jobs; track job.id) {
-              <mat-card appearance="outlined" class="failed-job-card">
-                <mat-card-content>
-                  <div class="failed-job-header">
-                    <span class="failed-job-kind">{{ job.kind }}</span>
-                    <span class="failed-job-id">#{{ job.id }}</span>
-                    <span class="failed-job-time">{{ job.created_at | date: 'short' }}</span>
-                  </div>
-                  @if (job.error_message) {
-                    <p class="failed-job-error">{{ job.error_message }}</p>
-                  }
-                </mat-card-content>
-              </mat-card>
-            }
-          </div>
-        } @else {
-          <p class="empty-state">No recent failures.</p>
-        }
-      </section>
-    }
-
-    <section class="pane" aria-label="Retry Queues">
-      <h2 class="pane-title">Retry Queues</h2>
-      <p class="pane-caption">
-        Retry queues intentionally hold messages for a short delay before RabbitMQ returns them to
-        the main work queue. This view helps explain when a queue is merely waiting versus when it
-        needs intervention.
-      </p>
-
-      @if (retryQueues().length === 0) {
-        <p class="empty-state">No retry queues are configured right now.</p>
+    <section class="pane" aria-label="Failed Jobs">
+      <h2 class="pane-title">Failed Jobs</h2>
+      @if (deadLetterQueues().length === 0) {
+        <p class="empty-state">No dead-letter queues are configured right now.</p>
       } @else {
-        <div class="retry-queue-list">
-          @for (queue of retryQueues(); track queue.name) {
+        <div class="queue-detail-list">
+          @for (queue of deadLetterQueues(); track queue.name) {
             <mat-card
               appearance="outlined"
-              class="retry-queue-card"
-              [class.retry-queue-card-attention]="retryQueueNeedsAttention(queue)"
+              class="detail-queue-card"
+              [class.detail-queue-card-attention]="deadLetterQueueNeedsAttention(queue)"
             >
               <mat-card-content>
-                <div class="retry-queue-header">
+                <div class="preview-toolbar">
                   <div>
-                    <div class="retry-queue-title">{{ queueDisplayName(queue) }}</div>
-                    <div class="queue-actual-name">RabbitMQ name: {{ queue.name }}</div>
+                    <h3 class="sub-heading">Retained Messages</h3>
+                    <p class="preview-summary">{{ deadLetterPreviewSummary(queue) }}</p>
                   </div>
-                  <span class="retry-queue-status">{{ queueStatusLabel(queue) }}</span>
+                  <div class="preview-actions">
+                    @if (queue.ready > 0) {
+                      <button
+                        mat-stroked-button
+                        (click)="confirmPurge(queue)"
+                        [attr.aria-label]="clearAllDeadLettersLabel(queue)"
+                      >
+                        Clear all
+                      </button>
+                    }
+                    @if (deadLetterPreviewPageCount(queue) > 1) {
+                      <button
+                        mat-icon-button
+                        (click)="goToPreviousDeadLetterPage(queue)"
+                        [disabled]="!canGoToPreviousDeadLetterPage(queue)"
+                        [attr.aria-label]="previousDeadLetterPageLabel(queue)"
+                      >
+                        <mat-icon>chevron_left</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        (click)="goToNextDeadLetterPage(queue)"
+                        [disabled]="!canGoToNextDeadLetterPage(queue)"
+                        [attr.aria-label]="nextDeadLetterPageLabel(queue)"
+                      >
+                        <mat-icon>chevron_right</mat-icon>
+                      </button>
+                    }
+                  </div>
                 </div>
 
-                <p class="retry-queue-insight">{{ retryQueueInsight(queue) }}</p>
-
-                <div class="retry-queue-facts">
-                  <div class="retry-fact">
-                    <span class="retry-fact-label">Waiting now</span>
-                    <span class="retry-fact-value">{{ queue.ready }}</span>
+                @if (deadLetterPreviewFor(queue.name).length === 0) {
+                  <p class="empty-state compact">No preview messages available right now.</p>
+                } @else {
+                  <div class="preview-list">
+                    @for (
+                      preview of deadLetterPreviewFor(queue.name);
+                      track preview.message_id ?? preview.payload_preview
+                    ) {
+                      <mat-card appearance="outlined" class="preview-card">
+                        <mat-card-content>
+                          <div class="preview-header">
+                            <div>
+                              <div class="preview-title">{{ deadLetterPreviewTitle(preview) }}</div>
+                              <div class="preview-meta">
+                                @if (preview.actor_name) {
+                                  <span>{{ preview.actor_name }}</span>
+                                }
+                                @if (preview.source_queue) {
+                                  <span>From {{ preview.source_queue }}</span>
+                                }
+                                @if (preview.enqueued_at) {
+                                  <span>{{ preview.enqueued_at | date: 'short' }}</span>
+                                }
+                              </div>
+                            </div>
+                            @if (preview.error_summary) {
+                              <span class="preview-error">{{ preview.error_summary }}</span>
+                            }
+                          </div>
+                          <div class="preview-facts">
+                            <span>Routing key: {{ preview.routing_key }}</span>
+                            @if (preview.retries !== null) {
+                              <span>Retries: {{ preview.retries }}</span>
+                            }
+                            @if (preview.death_reason) {
+                              <span>Death reason: {{ preview.death_reason }}</span>
+                            }
+                          </div>
+                          <pre
+                            class="preview-payload"
+                            [attr.aria-label]="deadLetterPreviewLabel(preview)"
+                          ><code>{{ preview.payload_preview }}</code></pre>
+                        </mat-card-content>
+                      </mat-card>
+                    }
                   </div>
-                  <div class="retry-fact">
-                    <span class="retry-fact-label">Retry delay</span>
-                    <span class="retry-fact-value">{{
-                      formatRetryDelay(queue.message_ttl_ms)
-                    }}</span>
-                  </div>
-                  <div class="retry-fact">
-                    <span class="retry-fact-label">Returns to</span>
-                    <span class="retry-fact-value">{{ retryReturnDestination(queue) }}</span>
-                  </div>
-                </div>
+                }
               </mat-card-content>
             </mat-card>
           }
@@ -202,37 +210,59 @@
       }
     </section>
 
-    <!-- Pane 4: Workers -->
     <section class="pane" aria-label="Workers">
       <h2 class="pane-title">Workers</h2>
-      @if (workers().length === 0) {
+      @if (workerGroups().length === 0) {
         <p class="empty-state">No active workers.</p>
       } @else {
-        <table mat-table [dataSource]="workers()" class="worker-table">
-          <ng-container matColumnDef="consumer_tag">
-            <th mat-header-cell *matHeaderCellDef>Consumer Tag</th>
-            <td mat-cell *matCellDef="let w">{{ w.consumer_tag }}</td>
-          </ng-container>
-          <ng-container matColumnDef="queue">
-            <th mat-header-cell *matHeaderCellDef>Queue</th>
-            <td mat-cell *matCellDef="let w">
-              <div class="queue-name-block compact">
-                <span class="queue-display-name">{{ queueDisplayNameFromName(w.queue) }}</span>
-                <span class="queue-actual-name">RabbitMQ name: {{ w.queue }}</span>
+        <div class="worker-group-list">
+          @for (group of workerGroups(); track group.id) {
+            <details class="worker-group">
+              <summary
+                class="worker-group-summary"
+                [attr.aria-label]="workerGroupToggleLabel(group)"
+              >
+                <div class="worker-summary-main">
+                  <div class="worker-name-row">
+                    <span class="worker-name">{{ group.displayName }}</span>
+                    <span class="queue-status">{{ group.roleLabel }}</span>
+                  </div>
+                  @if (group.subscriptionSummary) {
+                    <div class="worker-meta">
+                      <span>{{ group.subscriptionSummary }}</span>
+                    </div>
+                  }
+                </div>
+                <mat-icon class="worker-group-icon">expand_more</mat-icon>
+              </summary>
+
+              <div class="worker-subscription-list">
+                @for (subscription of group.subscriptions; track subscription.consumerTag) {
+                  <div class="worker-subscription">
+                    <div>
+                      <div class="worker-subscription-heading">
+                        <div class="worker-subscription-title">
+                          {{ subscription.queueDisplayName }}
+                        </div>
+                        <div class="worker-subscription-prefetch">
+                          Prefetch {{ subscription.prefetchCount }}
+                        </div>
+                      </div>
+                      <div class="worker-subscription-meta-list">
+                        <div class="worker-subscription-meta">
+                          Queue: {{ subscription.queueName }}
+                        </div>
+                        <div class="worker-subscription-meta">
+                          Consumer: {{ subscription.consumerTag }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
               </div>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="channel_details">
-            <th mat-header-cell *matHeaderCellDef>Channel</th>
-            <td mat-cell *matCellDef="let w">{{ w.channel_details }}</td>
-          </ng-container>
-          <ng-container matColumnDef="prefetch_count">
-            <th mat-header-cell *matHeaderCellDef>Prefetch</th>
-            <td mat-cell *matCellDef="let w">{{ w.prefetch_count }}</td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="workerColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: workerColumns"></tr>
-        </table>
+            </details>
+          }
+        </div>
       }
     </section>
   }

@@ -26,6 +26,7 @@ from .job_control import (
     JobControlOverviewResponse,
     JobFailuresResponse,
     QueueInfoResponse,
+    QueueMessagePreviewResponse,
     WorkerInfoResponse,
 )
 from .joke_generation import CreateJokeRequest, JokeResponse
@@ -61,6 +62,7 @@ __all__ = [
     "OperatorProfile",
     "OperatorResponse",
     "PaginatedRosterResponse",
+    "QueueMessagePreviewResponse",
     "QueueInfoResponse",
     "RosterMemberResponse",
     "RosterUploadResponse",

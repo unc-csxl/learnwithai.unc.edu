@@ -135,6 +135,19 @@ describe('OperationsService', () => {
     expect(mockApi.invoke).toHaveBeenCalled();
   });
 
+  it('getJobQueuePreview calls api.invoke with queue name, limit, and page', async () => {
+    const { service, mockApi } = setup();
+    const previews = [{ queue_name: 'default', routing_key: 'default.XQ' }];
+    mockApi.invoke.mockResolvedValue(previews);
+    const result = await service.getJobQueuePreview('default.XQ', 3, 2);
+    expect(result).toEqual(previews);
+    expect(mockApi.invoke).toHaveBeenCalledWith(expect.any(Function), {
+      queue_name: 'default.XQ',
+      limit: 3,
+      page: 2,
+    });
+  });
+
   it('purgeQueue calls api.invoke with queue name', async () => {
     const { service, mockApi } = setup();
     mockApi.invoke.mockResolvedValue(undefined);

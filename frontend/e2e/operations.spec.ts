@@ -35,8 +35,8 @@ async function openOperations(page: Page): Promise<void> {
 async function openJobControl(page: Page): Promise<void> {
   await page.getByRole('link', { name: 'Job Control' }).click();
   await page.waitForURL('**/operations/jobs');
-  await expect(page.getByRole('region', { name: 'Job Control' })).toBeVisible();
-  await expect(page).toHaveTitle(/Job Control/);
+  await expect(page.getByRole('region', { name: 'Job Queue Control' })).toBeVisible();
+  await expect(page).toHaveTitle(/Job Queue Control/);
 }
 
 async function goToOperators(page: Page): Promise<void> {
@@ -224,21 +224,27 @@ test.describe('operations e2e flows', () => {
     await openOperations(page);
     await openJobControl(page);
 
-    const jobControlRegion = page.getByRole('region', { name: 'Job Control' });
-    await expect(jobControlRegion.getByRole('heading', { name: 'Now', exact: true })).toBeVisible();
+    const jobControlRegion = page.getByRole('region', { name: 'Job Queue Control' });
+    await expect(jobControlRegion.getByRole('heading', { name: 'Now', exact: true })).toHaveCount(
+      0,
+    );
     await expect(
-      jobControlRegion.getByRole('heading', { name: 'Queues', exact: true }),
+      jobControlRegion.getByRole('region', { name: 'Queues', exact: true }),
     ).toBeVisible();
     await expect(
-      jobControlRegion.getByRole('heading', { name: 'Failures', exact: true }),
+      jobControlRegion.getByRole('region', { name: 'Failed Jobs', exact: true }),
     ).toBeVisible();
     await expect(
-      jobControlRegion.getByRole('heading', { name: 'Retry Queues', exact: true }),
-    ).toBeVisible();
-    await expect(
-      jobControlRegion.getByRole('heading', { name: 'Workers', exact: true }),
+      jobControlRegion.getByRole('region', { name: 'Workers', exact: true }),
     ).toBeVisible();
     await expect(page.getByRole('switch', { name: 'Toggle auto-refresh' })).toBeVisible();
     await expect(jobControlRegion.locator('.queue-table')).toBeVisible();
+    await expect(page).toHaveTitle(/Job Queue Control/);
+    await expect(jobControlRegion.locator('.queue-table .queue-display-name')).toHaveText([
+      'Jobs',
+      'Retry Queue',
+      'Failed',
+      'Notifications',
+    ]);
   });
 });

@@ -56,6 +56,7 @@ export type { UsageMetricsResponse as UsageMetrics } from './generated/models/us
 // Job Control
 export type { JobControlOverviewResponse as JobControlOverview } from './generated/models/job-control-overview-response';
 export type { QueueInfoResponse as QueueInfo } from './generated/models/queue-info-response';
+export type { QueueMessagePreviewResponse as QueueMessagePreview } from './generated/models/queue-message-preview-response';
 export type { WorkerInfoResponse as WorkerInfo } from './generated/models/worker-info-response';
 export type { JobFailuresResponse as JobFailures } from './generated/models/job-failures-response';
 export type { RecentFailedJobResponse as RecentFailedJob } from './generated/models/recent-failed-job-response';

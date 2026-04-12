@@ -2189,6 +2189,88 @@
         ]
       }
     },
+    "/api/operations/jobs/queues/{queue_name}/preview": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Preview queue messages",
+        "description": "Returns a non-destructive preview of messages waiting in a queue.\n\nRequires ``VIEW_JOBS`` permission.\n\nArgs:\n    subject: Authenticated operator.\n    queue_name: Name of the queue to inspect.\n    limit: Maximum number of messages to preview.\n    page: One-based page number to return.\n    job_control_svc: Service for job control operations.\n\nReturns:\n    Parsed previews of queued messages.",
+        "operationId": "get_job_queue_preview",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "queue_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Queue Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A non-destructive preview of queued messages.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QueueMessagePreviewResponse"
+                  },
+                  "title": "Response Get Job Queue Preview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Requires VIEW_JOBS permission."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/operations/jobs/failures": {
       "get": {
         "tags": [
@@ -3230,6 +3312,139 @@
         ],
         "title": "QueueInfoResponse",
         "description": "Per-queue statistics from the RabbitMQ Management API."
+      },
+      "QueueMessagePreviewResponse": {
+        "properties": {
+          "queue_name": {
+            "type": "string",
+            "title": "Queue Name"
+          },
+          "routing_key": {
+            "type": "string",
+            "title": "Routing Key"
+          },
+          "actor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Name"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "job_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Type"
+          },
+          "retries": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retries"
+          },
+          "enqueued_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enqueued At"
+          },
+          "death_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Death Reason"
+          },
+          "source_queue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Queue"
+          },
+          "payload_preview": {
+            "type": "string",
+            "title": "Payload Preview"
+          },
+          "error_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queue_name",
+          "routing_key",
+          "actor_name",
+          "message_id",
+          "job_id",
+          "job_type",
+          "retries",
+          "enqueued_at",
+          "death_reason",
+          "source_queue",
+          "payload_preview",
+          "error_summary"
+        ],
+        "title": "QueueMessagePreviewResponse",
+        "description": "A readable preview of a queued message from RabbitMQ."
       },
       "RecentFailedJobResponse": {
         "properties": {

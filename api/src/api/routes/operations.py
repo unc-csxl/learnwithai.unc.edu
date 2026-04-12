@@ -23,6 +23,7 @@ from ..models import (
     JobFailuresResponse,
     OperatorResponse,
     QueueInfoResponse,
+    QueueMessagePreviewResponse,
     UpdateOperatorRoleRequest,
     UsageMetricsResponse,
     UserSearchResult,
@@ -412,6 +413,41 @@ def get_jobs_workers(
     """
     workers = job_control_svc.get_workers(subject)
     return [WorkerInfoResponse.model_validate(w, from_attributes=True) for w in workers]
+
+
+@router.get(
+    "/jobs/queues/{queue_name}/preview",
+    response_model=list[QueueMessagePreviewResponse],
+    summary="Preview queue messages",
+    response_description="A non-destructive preview of queued messages.",
+    responses={
+        401: {"description": "Not authenticated."},
+        403: {"description": "Requires VIEW_JOBS permission."},
+    },
+)
+def get_job_queue_preview(
+    subject: AuthenticatedUserDI,
+    queue_name: str,
+    job_control_svc: JobControlServiceDI,
+    limit: Annotated[int, Query(ge=1, le=20)] = 5,
+    page: Annotated[int, Query(ge=1, le=100)] = 1,
+) -> list[QueueMessagePreviewResponse]:
+    """Returns a non-destructive preview of messages waiting in a queue.
+
+    Requires ``VIEW_JOBS`` permission.
+
+    Args:
+        subject: Authenticated operator.
+        queue_name: Name of the queue to inspect.
+        limit: Maximum number of messages to preview.
+        page: One-based page number to return.
+        job_control_svc: Service for job control operations.
+
+    Returns:
+        Parsed previews of queued messages.
+    """
+    previews = job_control_svc.peek_queue_messages(subject, queue_name, limit=limit, page=page)
+    return [QueueMessagePreviewResponse.model_validate(item, from_attributes=True) for item in previews]
 
 
 @router.get(

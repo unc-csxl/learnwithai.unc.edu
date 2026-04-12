@@ -49,7 +49,7 @@ def _make_operator(
 
 def _make_settings() -> MagicMock:
     m = MagicMock()
-    m.jwt_secret = "test-secret-key"
+    m.jwt_secret = "test-secret-key-with-at-least-32-bytes"
     m.jwt_algorithm = "HS256"
     return m
 
@@ -382,7 +382,7 @@ def test_issue_impersonation_token_returns_valid_jwt() -> None:
     target = _make_user(pid=222222222)
     token = svc.issue_impersonation_token(subject, target, settings)
 
-    decoded = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+    decoded = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     assert decoded["sub"] == "222222222"
     assert decoded["impersonator"] == "111111111"
     assert "exp" in decoded

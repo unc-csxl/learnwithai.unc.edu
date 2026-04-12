@@ -25,6 +25,8 @@ export type { GetJobsQueues$Params as GetJobsQueues$Params } from './fn/operatio
 export { getJobsQueues as getJobsQueues } from './fn/operations/get-jobs-queues';
 export type { GetJobsWorkers$Params as GetJobsWorkers$Params } from './fn/operations/get-jobs-workers';
 export { getJobsWorkers as getJobsWorkers } from './fn/operations/get-jobs-workers';
+export type { GetJobQueuePreview$Params as GetJobQueuePreview$Params } from './fn/operations/get-job-queue-preview';
+export { getJobQueuePreview as getJobQueuePreview } from './fn/operations/get-job-queue-preview';
 export type { GetJobsFailures$Params as GetJobsFailures$Params } from './fn/operations/get-jobs-failures';
 export { getJobsFailures as getJobsFailures } from './fn/operations/get-jobs-failures';
 export type { PurgeQueue$Params as PurgeQueue$Params } from './fn/operations/purge-queue';

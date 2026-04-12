@@ -3,7 +3,8 @@
 
 """Business logic for job control and RabbitMQ monitoring."""
 
-from datetime import datetime
+import json
+from datetime import datetime, timezone
 
 from pydantic import BaseModel
 from sqlmodel import Session, col, func, select
@@ -47,6 +48,23 @@ class WorkerInfo(BaseModel):
     queue: str
     channel_details: str
     prefetch_count: int
+
+
+class QueueMessagePreview(BaseModel):
+    """A readable preview of a queued message from RabbitMQ."""
+
+    queue_name: str
+    routing_key: str
+    actor_name: str | None
+    message_id: str | None
+    job_id: int | None
+    job_type: str | None
+    retries: int | None
+    enqueued_at: datetime | None
+    death_reason: str | None
+    source_queue: str | None
+    payload_preview: str
+    error_summary: str | None
 
 
 class RecentFailedJob(BaseModel):
@@ -124,9 +142,9 @@ class JobControlService:
             total_unacked += unacked
             consumers_online += q.get("consumers", 0)
 
-            if name.endswith(".DQ"):
+            if name.endswith(".XQ"):
                 dlq_depth += ready
-            elif name.endswith(".XQ"):
+            elif name.endswith(".DQ"):
                 retry_depth += ready
 
         alarms: list[str] = []
@@ -176,8 +194,8 @@ class JobControlService:
                     unacked=q.get("messages_unacknowledged", 0),
                     consumers=q.get("consumers", 0),
                     ack_rate=ack_rate,
-                    is_dlq=name.endswith(".DQ"),
-                    is_retry=name.endswith(".XQ"),
+                    is_dlq=name.endswith(".XQ"),
+                    is_retry=name.endswith(".DQ"),
                     message_ttl_ms=self._coerce_optional_int(arguments.get("x-message-ttl")),
                     dead_letter_exchange=self._coerce_optional_str(arguments.get("x-dead-letter-exchange")),
                     dead_letter_routing_key=self._coerce_optional_str(arguments.get("x-dead-letter-routing-key")),
@@ -229,11 +247,9 @@ class JobControlService:
         """
         self._require_view_jobs(subject)
 
-        # DLQ depth from RabbitMQ
         queues = self._rabbitmq_client.get_queues()
-        dlq_messages = sum(q.get("messages_ready", 0) for q in queues if q.get("name", "").endswith(".DQ"))
+        dlq_messages = sum(q.get("messages_ready", 0) for q in queues if q.get("name", "").endswith(".XQ"))
 
-        # Recent failed jobs from DB
         stmt = (
             select(AsyncJob)
             .where(col(AsyncJob.status) == AsyncJobStatus.FAILED)
@@ -254,7 +270,6 @@ class JobControlService:
             for job in failed_jobs
         ]
 
-        # Error buckets by kind
         bucket_stmt = (
             select(AsyncJob.kind, func.count())
             .where(col(AsyncJob.status) == AsyncJobStatus.FAILED)
@@ -269,6 +284,34 @@ class JobControlService:
             recent_failed_jobs=recent,
             error_buckets=error_buckets,
         )
+
+    def peek_queue_messages(
+        self,
+        subject: User,
+        queue_name: str,
+        *,
+        limit: int = 5,
+        page: int = 1,
+    ) -> list[QueueMessagePreview]:
+        """Returns a readable preview of messages waiting in a queue.
+
+        Requires ``VIEW_JOBS`` permission.
+
+        Args:
+            subject: Authenticated operator.
+            queue_name: Queue name to inspect.
+            limit: Maximum number of messages to preview.
+            page: One-based page number of preview messages to return.
+
+        Returns:
+            A list of parsed queue message previews.
+        """
+        self._require_view_jobs(subject)
+        fetch_count = limit * page
+        start_index = (page - 1) * limit
+        end_index = start_index + limit
+        messages = self._rabbitmq_client.peek_queue_messages(queue_name, count=fetch_count)
+        return [self._build_queue_message_preview(queue_name, message) for message in messages[start_index:end_index]]
 
     def purge_queue(self, subject: User, queue_name: str) -> None:
         """Purges all messages from the specified queue.
@@ -308,3 +351,95 @@ class JobControlService:
     def _coerce_optional_str(self, value: object) -> str | None:
         """Returns a string when the management API argument is textual."""
         return value if isinstance(value, str) else None
+
+    def _coerce_optional_dict(self, value: object) -> dict[str, object] | None:
+        """Returns a dict when the management API payload is object-shaped."""
+        return value if isinstance(value, dict) else None
+
+    def _coerce_optional_list(self, value: object) -> list[object] | None:
+        """Returns a list when the management API payload is array-shaped."""
+        return value if isinstance(value, list) else None
+
+    def _coerce_optional_json_dict(self, value: object) -> dict[str, object] | None:
+        """Parses a JSON string into a dict when possible."""
+        if not isinstance(value, str):
+            return None
+
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            return None
+
+        return parsed if isinstance(parsed, dict) else None
+
+    def _coerce_optional_datetime(self, value: object) -> datetime | None:
+        """Converts a millisecond epoch value into a UTC datetime."""
+        millis = self._coerce_optional_int(value)
+        if millis is None:
+            return None
+        return datetime.fromtimestamp(millis / 1000, tz=timezone.utc)
+
+    def _extract_job_metadata(self, args: list[object] | None) -> tuple[int | None, str | None]:
+        """Extracts common job metadata from Dramatiq actor args."""
+        if not args:
+            return None, None
+
+        first_arg = args[0]
+        if not isinstance(first_arg, dict):
+            return None, None
+
+        return (
+            self._coerce_optional_int(first_arg.get("job_id")),
+            self._coerce_optional_str(first_arg.get("type")),
+        )
+
+    def _format_payload_preview(self, args: list[object] | None, kwargs: dict[str, object] | None) -> str:
+        """Formats message arguments as readable JSON for operators."""
+        return json.dumps(
+            {
+                "args": args or [],
+                "kwargs": kwargs or {},
+            },
+            default=str,
+            sort_keys=True,
+        )
+
+    def _summarize_traceback(self, value: object) -> str | None:
+        """Returns the final exception line from a traceback string."""
+        traceback = self._coerce_optional_str(value)
+        if traceback is None:
+            return None
+
+        lines = [line.strip() for line in traceback.splitlines() if line.strip()]
+        if not lines:
+            return None
+        return lines[-1]
+
+    def _build_queue_message_preview(
+        self,
+        fallback_queue_name: str,
+        message: dict[str, object],
+    ) -> QueueMessagePreview:
+        """Builds a readable queue preview from the RabbitMQ management payload."""
+        payload = self._coerce_optional_json_dict(message.get("payload"))
+        properties = self._coerce_optional_dict(message.get("properties")) or {}
+        headers = self._coerce_optional_dict(properties.get("headers")) or {}
+        options = self._coerce_optional_dict(payload.get("options") if payload else None) or {}
+        args = self._coerce_optional_list(payload.get("args") if payload else None)
+        kwargs = self._coerce_optional_dict(payload.get("kwargs") if payload else None)
+        job_id, job_type = self._extract_job_metadata(args)
+
+        return QueueMessagePreview(
+            queue_name=self._coerce_optional_str(payload.get("queue_name") if payload else None) or fallback_queue_name,
+            routing_key=self._coerce_optional_str(message.get("routing_key")) or fallback_queue_name,
+            actor_name=self._coerce_optional_str(payload.get("actor_name") if payload else None),
+            message_id=self._coerce_optional_str(payload.get("message_id") if payload else None),
+            job_id=job_id,
+            job_type=job_type,
+            retries=self._coerce_optional_int(options.get("retries")),
+            enqueued_at=self._coerce_optional_datetime(payload.get("message_timestamp") if payload else None),
+            death_reason=self._coerce_optional_str(headers.get("x-first-death-reason")),
+            source_queue=self._coerce_optional_str(headers.get("x-first-death-queue")),
+            payload_preview=self._format_payload_preview(args, kwargs),
+            error_summary=self._summarize_traceback(options.get("traceback")),
+        )

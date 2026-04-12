@@ -43,6 +43,23 @@ class WorkerInfoResponse(BaseModel):
     prefetch_count: int
 
 
+class QueueMessagePreviewResponse(BaseModel):
+    """A readable preview of a queued message from RabbitMQ."""
+
+    queue_name: str
+    routing_key: str
+    actor_name: str | None
+    message_id: str | None
+    job_id: int | None
+    job_type: str | None
+    retries: int | None
+    enqueued_at: datetime | None
+    death_reason: str | None
+    source_queue: str | None
+    payload_preview: str
+    error_summary: str | None
+
+
 class RecentFailedJobResponse(BaseModel):
     """A recently failed job from the database."""
 

@@ -26,6 +26,9 @@ def session():
     """Provide a transactional session that rolls back after each test."""
     engine = create_engine(TEST_DB_URL)
     SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-        session.rollback()
+    try:
+        with Session(engine) as session:
+            yield session
+            session.rollback()
+    finally:
+        engine.dispose()
