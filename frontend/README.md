@@ -154,23 +154,35 @@ After regenerating, update any frontend services or components that reference ch
 From the `frontend/` directory:
 
 ```bash
+pnpm format
+pnpm lint:fix
 pnpm format:check
 pnpm lint
 pnpm test:ci
 pnpm test:e2e
 ```
 
-If you want local autofixes first:
+Use the mutating commands first so Prettier writes and lint fixes happen before the non-mutating verification pass. The Angular CI test run enforces 100% coverage for statements, branches, functions, and lines.
+
+If you want the repository-level autofix flow instead:
+
+```bash
+cd ..
+./scripts/qa.sh
+```
+
+The final repository-level verification is still:
+
+```bash
+cd ..
+./scripts/qa.sh --check
+```
+
+If you want only the local frontend autofixes first:
 
 ```bash
 pnpm format
 pnpm lint:fix
-```
-
-The repository-level final check is still run from the root:
-
-```bash
-./scripts/qa.sh --check
 ```
 
 ## How To Navigate This App
@@ -188,7 +200,8 @@ If you are adding a new screen:
 2. Add a route in `app.routes.ts` (inside the `Layout` children for authenticated pages).
 3. Call `PageTitleService.setTitle()` from the new component to set the toolbar and tab title.
 4. Add or update tests near the changed code.
-5. Validate with linting and frontend tests.
+5. Run `pnpm format` before verification, then validate with `pnpm format:check`, `pnpm lint`, and `pnpm test:ci`.
+6. Do not finish unless the frontend coverage gate stays at 100% and the final repository `./scripts/qa.sh --check` run passes.
 
 ## VS Code Support In This Workspace
 

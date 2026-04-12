@@ -130,15 +130,13 @@
                 <div class="preview-toolbar">
                   <p class="preview-summary">{{ deadLetterPreviewSummary(queue) }}</p>
                   <div class="preview-actions">
-                    @if (queue.ready > 0) {
-                      <button
-                        mat-stroked-button
-                        (click)="confirmPurge(queue)"
-                        [attr.aria-label]="clearAllDeadLettersLabel(queue)"
-                      >
-                        Clear all
-                      </button>
-                    }
+                    <button
+                      mat-stroked-button
+                      (click)="confirmPurge(queue)"
+                      [attr.aria-label]="clearAllDeadLettersLabel(queue)"
+                    >
+                      Clear all
+                    </button>
                     @if (deadLetterPreviewPageCount(queue) > 1) {
                       <button
                         mat-icon-button

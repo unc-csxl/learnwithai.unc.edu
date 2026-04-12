@@ -9,7 +9,9 @@ Keep reusable business rules out of this layer when they belong in the backend p
 ## Validation
 
 - Add or update Angular tests for new or changed behavior.
+- Before final verification, run the mutating autofix pass first: `./scripts/qa.sh` from the repository root or, when you are staying in `frontend/`, at minimum `pnpm format` before the non-mutating checks.
 - Run `pnpm format:check`, `pnpm lint`, and `pnpm test:ci` from `frontend/`.
+- Treat frontend work as incomplete unless `pnpm test:ci` preserves the Angular coverage thresholds at 100% for statements, branches, functions, and lines.
 - Finish with `./scripts/qa.sh --check` from the repository root.
 
 ## App Shell And Titles

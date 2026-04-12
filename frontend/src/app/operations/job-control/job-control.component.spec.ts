@@ -209,6 +209,51 @@ describe('JobControlComponent', () => {
     expect(mockTitle.setTitle).toHaveBeenCalledWith('Job Queue Control');
   });
 
+  it('does not start auto-refresh when disabled before init completes', async () => {
+    const mockService = {
+      getJobsOverview: vi.fn().mockResolvedValue(STUB_OVERVIEW),
+      getJobsQueues: vi.fn().mockResolvedValue(STUB_QUEUES),
+      getJobsWorkers: vi.fn().mockResolvedValue(STUB_WORKERS),
+      getJobQueuePreview: vi.fn().mockResolvedValue(PAGE_ONE_PREVIEWS),
+      purgeQueue: vi.fn().mockResolvedValue(undefined),
+    };
+    const mockDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => ({ toPromise: () => Promise.resolve(false) }),
+      }),
+    };
+    const mockTitle = {
+      setTitle: vi.fn(),
+      title: vi.fn(),
+    };
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [NoopAnimationsModule],
+      providers: [
+        { provide: OperationsService, useValue: mockService },
+        { provide: MatDialog, useValue: mockDialog },
+        { provide: PageTitleService, useValue: mockTitle },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(JobControlComponent);
+    const component = fixture.componentInstance as unknown as {
+      autoRefresh: { set: (value: boolean) => void };
+      startAutoRefresh: () => void;
+      refreshInterval: ReturnType<typeof setInterval> | null;
+    };
+    const startAutoRefreshSpy = vi.spyOn(component, 'startAutoRefresh');
+
+    component.autoRefresh.set(false);
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+
+    expect(startAutoRefreshSpy).not.toHaveBeenCalled();
+    expect(component.refreshInterval).toBeNull();
+  });
+
   it('formats queue labels and insights with the requested copy', () => {
     const { fixture } = setup();
     const component = fixture.componentInstance as unknown as {
@@ -219,8 +264,10 @@ describe('JobControlComponent', () => {
       queueShowsUnacked: (queue: { name: string; is_dlq: boolean }) => boolean;
       queueShowsConsumers: (queue: { is_dlq: boolean }) => boolean;
       queueShowsAckRate: (queue: { name: string; is_dlq: boolean; is_retry: boolean }) => boolean;
+      queueReadyClass: (queue: { is_dlq: boolean; ready: number }) => string;
       deadLetterPreviewFor: (queueName: string) => QueueMessagePreview[];
       deadLetterPreviewPage: (queueName: string) => number;
+      deadLetterPreviewSummary: (queue: { name: string; ready: number }) => string;
     };
 
     expect(component.queueDisplayNameFromName('default')).toBe('Jobs');
@@ -254,8 +301,12 @@ describe('JobControlComponent', () => {
     expect(component.queueShowsAckRate({ name: 'default.DQ', is_dlq: false, is_retry: true })).toBe(
       false,
     );
+    expect(component.queueReadyClass({ is_dlq: false, ready: 0 })).toBe('');
     expect(component.deadLetterPreviewFor('missing')).toEqual([]);
     expect(component.deadLetterPreviewPage('missing')).toBe(1);
+    expect(component.deadLetterPreviewSummary({ name: 'default.XQ', ready: 0 })).toBe(
+      'Page 1 of 1',
+    );
   });
 
   it('adds jobs copy only to dead-letter queue table labels', () => {
@@ -531,6 +582,37 @@ describe('JobControlComponent', () => {
     const { fixture } = await setupAndLoad({ previewErrors: ['default.XQ'] });
 
     expect(fixture.nativeElement.textContent).toContain('No preview messages available right now.');
+  });
+
+  it('shows a single failed-jobs page without pagination controls', async () => {
+    const { fixture } = await setupAndLoad({
+      queues: STUB_QUEUES.map((queue) =>
+        queue.name === 'default.XQ' ? { ...queue, ready: 1 } : queue,
+      ),
+      previewPages: {
+        'default.XQ': {
+          1: [],
+        },
+      },
+    });
+
+    expect(fixture.nativeElement.querySelector('section[aria-label="Failed Jobs"]')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Page 1 of 1');
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[aria-label="Clear all retained messages from Failed (default.XQ)"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[aria-label="Show the previous dead-letter page for Failed"]',
+      ),
+    ).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[aria-label="Show the next dead-letter page for Failed"]',
+      ),
+    ).toBeNull();
   });
 
   it('hides failed-job actions when there are no retained messages', async () => {
@@ -812,8 +894,58 @@ describe('JobControlComponent', () => {
     });
 
     const fixture = TestBed.createComponent(JobControlComponent);
+    const component = fixture.componentInstance as unknown as {
+      startAutoRefresh: () => void;
+      refreshInterval: ReturnType<typeof setInterval> | null;
+    };
 
     expect(() => fixture.componentInstance.ngOnDestroy()).not.toThrow();
+
+    component.startAutoRefresh();
+
+    expect(component.refreshInterval).toBeNull();
+  });
+
+  it('does not restart auto-refresh after the component is destroyed mid-refresh', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const { fixture } = setup();
+      const component = fixture.componentInstance as unknown as {
+        loadAll: () => Promise<void>;
+        startAutoRefresh: () => void;
+        refreshInterval: ReturnType<typeof setInterval> | null;
+      };
+
+      await vi.advanceTimersByTimeAsync(0);
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      let resolveRefresh: (() => void) | undefined;
+      const refreshPromise = new Promise<void>((resolve) => {
+        resolveRefresh = resolve;
+      });
+      const loadAllSpy = vi.spyOn(component, 'loadAll').mockReturnValue(refreshPromise);
+      const restartSpy = vi.spyOn(component, 'startAutoRefresh');
+
+      vi.advanceTimersByTime(10_000);
+      fixture.detectChanges();
+
+      expect(loadAllSpy).toHaveBeenCalledTimes(1);
+
+      fixture.destroy();
+      resolveRefresh?.();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(restartSpy).not.toHaveBeenCalled();
+      expect(component.refreshInterval).toBeNull();
+
+      loadAllSpy.mockRestore();
+      restartSpy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows empty states when there are no queues or workers', async () => {

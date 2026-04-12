@@ -66,7 +66,7 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 - New and changed behavior must be covered by automated tests.
 - The repository target is full confidence, not minimal smoke coverage.
 - Python changes should maintain the repository's 100% coverage expectation.
-- Frontend changes should include or update Angular tests when behavior changes.
+- Frontend changes should include or update Angular tests when behavior changes and must keep the frontend CI coverage thresholds at 100% for statements, branches, functions, and lines.
 - Prefer targeted tests while developing, then run the full repository QA check before you complete a task.
 - Keep shared test fixtures (like DB session fixtures) in the nearest common `conftest.py`. Do not duplicate fixtures across subdirectory conftest files.
 
@@ -75,8 +75,9 @@ This applies uniformly to service methods in `learnwithai-core` and to FastAPI r
 Use this order unless the task specifically requires something else:
 
 1. Run targeted tests for the files or workspace you changed.
-2. Run any local formatters or linters that apply.
-3. Run `./scripts/qa.sh --check` before considering the task complete.
+2. Run the mutating autofix pass before final verification. At repository scope that means `./scripts/qa.sh` or the equivalent explicit commands: `uv run ruff format .`, `uv run ruff check --fix .`, and `cd frontend && pnpm format && pnpm lint:fix` when the frontend workspace is involved.
+3. Run any local non-mutating format, lint, and test commands that apply.
+4. Run `./scripts/qa.sh --check` before considering the task complete.
 
 When you want local autofixes first, run:
 
@@ -89,6 +90,8 @@ The final check before finishing a task is still:
 ```bash
 ./scripts/qa.sh --check
 ```
+
+Do not finish a frontend task unless that final QA run passes and the frontend coverage gate remains at 100%.
 
 ## Documentation Expectations
 
