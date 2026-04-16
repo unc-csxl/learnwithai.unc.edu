@@ -1,0 +1,17 @@
+<!--
+  Copyright (c) 2026 Chandon Jarrett
+  SPDX-License-Identifier: MIT
+-->
+
+<p class="mb-4">Select the kind of activity you want to create.</p>
+
+<ul class="space-y-3" aria-label="Activity type options">
+  @for (activityType of activityTypes; track activityType.id) {
+    <li>
+      <a mat-stroked-button [routerLink]="[activityType.id]" class="w-full justify-start">
+        Create {{ activityType.label }}
+      </a>
+      <p class="mt-1 text-sm">{{ activityType.description }}</p>
+    </li>
+  }
+</ul>

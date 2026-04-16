@@ -45,8 +45,10 @@ test.describe('activities — instructor creates an IYOW activity', () => {
     const courseId = await goToActivities(page, INSTRUCTOR_PID);
 
     // Click the create button
-    await page.getByRole('link', { name: /Create IYOW Activity/i }).click();
-    await page.waitForURL(`**/courses/${courseId}/activities/create-iyow`);
+    await page.getByRole('link', { name: /Create Activity/i }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/create`);
+    await page.getByRole('link', { name: /Create In Your Own Words/i }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/create/iyow`);
 
     // Fill out the form
     await page.getByLabel('Title').fill('Explain Recursion');
@@ -79,7 +81,7 @@ test.describe('activities — student submits to an activity', () => {
     await expect(page.getByText(SEEDED_ACTIVITY_TITLE)).toBeVisible();
 
     // Student should NOT see the Create button
-    await expect(page.getByRole('link', { name: /Create IYOW Activity/i })).not.toBeVisible();
+    await expect(page.getByRole('link', { name: /Create Activity/i })).not.toBeVisible();
   });
 
   test('student can view activity and see their existing submission', async ({ page }) => {
@@ -258,8 +260,10 @@ test.describe('activities — full instructor-to-student flow', () => {
     // Step 1: Instructor creates a new activity
     const courseId = await goToActivities(page, INSTRUCTOR_PID);
 
-    await page.getByRole('link', { name: /Create IYOW Activity/i }).click();
-    await page.waitForURL(`**/courses/${courseId}/activities/create-iyow`);
+    await page.getByRole('link', { name: /Create Activity/i }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/create`);
+    await page.getByRole('link', { name: /Create In Your Own Words/i }).click();
+    await page.waitForURL(`**/courses/${courseId}/activities/create/iyow`);
 
     await page.getByLabel('Title').fill('Explain Testing');
     await page.getByLabel('Prompt').fill('Explain why automated testing is important.');

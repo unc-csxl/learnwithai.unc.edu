@@ -66,7 +66,7 @@ describe('Activities', () => {
     expect(mockLayoutNavigation.clearContext).toHaveBeenCalled();
     expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Student Activities');
     expect(fixture.nativeElement.textContent).toContain('Test Activity');
-    expect(fixture.nativeElement.textContent).toContain('Create IYOW Activity');
+    expect(fixture.nativeElement.textContent).toContain('Create Activity');
   });
 
   it('should show empty state when no activities', async () => {
@@ -88,7 +88,7 @@ describe('Activities', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).not.toContain('Create IYOW Activity');
+    expect(fixture.nativeElement.textContent).not.toContain('Create Activity');
   });
 
   it('should show error on load failure', async () => {

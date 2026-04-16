@@ -45,7 +45,7 @@ describe('CreateIyow', () => {
 
   it('should set the page title', () => {
     const { mockPageTitle, mockLayoutNavigation } = setup();
-    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Create IYOW Activity');
+    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Create In Your Own Words');
     expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
       expect.objectContaining({
         visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],

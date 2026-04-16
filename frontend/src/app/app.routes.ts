@@ -62,11 +62,23 @@ export const routes: Routes = [
                   ),
               },
               {
-                path: 'create-iyow',
+                path: 'create',
+                loadComponent: () =>
+                  import('./courses/course-detail/activities/create-activity/create-activity.component').then(
+                    (m) => m.CreateActivity,
+                  ),
+              },
+              {
+                path: 'create/iyow',
                 loadComponent: () =>
                   import('./courses/course-detail/activities/create-iyow/create-iyow.component').then(
                     (m) => m.CreateIyow,
                   ),
+              },
+              {
+                path: 'create-iyow',
+                redirectTo: 'create/iyow',
+                pathMatch: 'full',
               },
               {
                 path: ':activityId',
