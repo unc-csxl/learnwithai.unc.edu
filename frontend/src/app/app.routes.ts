@@ -76,11 +76,6 @@ export const routes: Routes = [
                   ),
               },
               {
-                path: 'create-iyow',
-                redirectTo: 'create/iyow',
-                pathMatch: 'full',
-              },
-              {
                 path: ':activityId',
                 loadComponent: () =>
                   import('./courses/course-detail/activities/activity-detail/activity-detail.component').then(
