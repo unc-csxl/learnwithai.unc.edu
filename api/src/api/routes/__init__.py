@@ -4,6 +4,7 @@
 """Route exports for the FastAPI application."""
 
 from api.routes.activities import router as activities_router
+from api.routes.activities_iyow import router as activities_iyow_router
 from api.routes.auth import router as auth_router
 from api.routes.courses import router as courses_router
 from api.routes.health import router as health_router
@@ -18,6 +19,7 @@ API_ROUTERS = (
     me_router,
     courses_router,
     activities_router,
+    activities_iyow_router,
     roster_uploads_router,
     joke_generation_router,
     operations_router,

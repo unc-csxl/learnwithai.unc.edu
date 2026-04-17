@@ -18,16 +18,15 @@ from api.models import (
     IyowActivityResponse,
     IyowSubmissionResponse,
 )
-from api.routes.activities import (
+from api.routes.activities import delete_activity, list_activities
+from api.routes.activities_iyow import (
     _build_submission_response,
     create_iyow_activity,
-    delete_activity,
-    get_active_submission,
-    get_activity,
-    get_student_submission_history,
-    list_activities,
-    list_submissions,
-    list_submissions_roster,
+    get_iyow_active_submission,
+    get_iyow_activity,
+    get_iyow_student_submission_history,
+    list_iyow_submissions,
+    list_iyow_submissions_roster,
     submit_iyow_response,
     update_iyow_activity,
 )
@@ -179,10 +178,10 @@ def test_create_iyow_activity_returns_created_response() -> None:
     assert result.rubric == "Rubric"
 
 
-# ---- get_activity ----
+# ---- get_iyow_activity ----
 
 
-def test_get_activity_staff_sees_rubric() -> None:
+def test_get_iyow_activity_staff_sees_rubric() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -194,13 +193,13 @@ def test_get_activity_staff_sees_rubric() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.INSTRUCTOR)
 
-    result = get_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
+    result = get_iyow_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
 
     assert isinstance(result, IyowActivityResponse)
     assert result.rubric == "Rubric"
 
 
-def test_get_activity_student_sees_no_rubric() -> None:
+def test_get_iyow_activity_student_sees_no_rubric() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -212,13 +211,13 @@ def test_get_activity_student_sees_no_rubric() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.STUDENT)
 
-    result = get_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
+    result = get_iyow_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
 
     assert isinstance(result, IyowActivityResponse)
     assert result.rubric is None
 
 
-def test_get_activity_none_membership_keeps_rubric() -> None:
+def test_get_iyow_activity_none_membership_keeps_rubric() -> None:
     """When membership lookup returns None, rubric is not hidden."""
     subject = _stub_user()
     course = _stub_course()
@@ -231,7 +230,7 @@ def test_get_activity_none_membership_keeps_rubric() -> None:
     membership_repo = MagicMock()
     membership_repo.get_by_user_and_course.return_value = None
 
-    result = get_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
+    result = get_iyow_activity(subject, course, activity, activity_svc, iyow_svc, membership_repo)
 
     assert result.rubric == "Rubric"
 
@@ -315,10 +314,10 @@ def test_submit_iyow_response_raises_422_on_value_error() -> None:
     assert exc_info.value.status_code == 422
 
 
-# ---- list_submissions ----
+# ---- list_iyow_submissions ----
 
 
-def test_list_submissions_staff_gets_all() -> None:
+def test_list_iyow_submissions_staff_gets_all() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -328,14 +327,14 @@ def test_list_submissions_staff_gets_all() -> None:
     pairs = [(_stub_submission(), _stub_iyow_submission(feedback="Good"))]
     iyow_sub_svc.list_submissions_for_activity.return_value = pairs
 
-    result = list_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
+    result = list_iyow_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
 
     assert len(result) == 1
     assert result[0].feedback == "Good"
     iyow_sub_svc.list_submissions_for_activity.assert_called_once()
 
 
-def test_list_submissions_ta_gets_all() -> None:
+def test_list_iyow_submissions_ta_gets_all() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -344,12 +343,12 @@ def test_list_submissions_ta_gets_all() -> None:
     membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.TA)
     iyow_sub_svc.list_submissions_for_activity.return_value = []
 
-    list_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
+    list_iyow_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
 
     iyow_sub_svc.list_submissions_for_activity.assert_called_once()
 
 
-def test_list_submissions_student_gets_own() -> None:
+def test_list_iyow_submissions_student_gets_own() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -358,12 +357,12 @@ def test_list_submissions_student_gets_own() -> None:
     membership_repo.get_by_user_and_course.return_value = _stub_membership(MembershipType.STUDENT)
     iyow_sub_svc.get_student_submissions.return_value = []
 
-    list_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
+    list_iyow_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
 
     iyow_sub_svc.get_student_submissions.assert_called_once()
 
 
-def test_list_submissions_raises_403_for_non_member() -> None:
+def test_list_iyow_submissions_raises_403_for_non_member() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -372,15 +371,15 @@ def test_list_submissions_raises_403_for_non_member() -> None:
     membership_repo.get_by_user_and_course.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
-        list_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
+        list_iyow_submissions(subject, course, activity, iyow_sub_svc, membership_repo)
 
     assert exc_info.value.status_code == 403
 
 
-# ---- get_active_submission ----
+# ---- get_iyow_active_submission ----
 
 
-def test_get_active_submission_returns_response() -> None:
+def test_get_iyow_active_submission_returns_response() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -389,20 +388,20 @@ def test_get_active_submission_returns_response() -> None:
     iyow_detail = _stub_iyow_submission(feedback="Nice work")
     iyow_sub_svc.get_active_submission.return_value = (submission, iyow_detail)
 
-    result = get_active_submission(subject, course, activity, iyow_sub_svc)
+    result = get_iyow_active_submission(subject, course, activity, iyow_sub_svc)
 
     assert isinstance(result, IyowSubmissionResponse)
     assert result.feedback == "Nice work"
 
 
-def test_get_active_submission_returns_none() -> None:
+def test_get_iyow_active_submission_returns_none() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
     iyow_sub_svc = MagicMock()
     iyow_sub_svc.get_active_submission.return_value = None
 
-    result = get_active_submission(subject, course, activity, iyow_sub_svc)
+    result = get_iyow_active_submission(subject, course, activity, iyow_sub_svc)
 
     assert result is None
 
@@ -424,10 +423,10 @@ def test_build_submission_response_includes_job_info() -> None:
     assert result.job.status == AsyncJobStatus.COMPLETED
 
 
-# ---- get_student_submission_history ----
+# ---- get_iyow_student_submission_history ----
 
 
-def test_get_student_submission_history_returns_list() -> None:
+def test_get_iyow_student_submission_history_returns_list() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -438,7 +437,7 @@ def test_get_student_submission_history_returns_list() -> None:
     ]
     iyow_sub_svc.get_student_submission_history.return_value = pairs
 
-    result = get_student_submission_history(subject, course, activity, 111111111, iyow_sub_svc)
+    result = get_iyow_student_submission_history(subject, course, activity, 111111111, iyow_sub_svc)
 
     assert len(result) == 2
     assert result[0].feedback == "V2 feedback"
@@ -446,10 +445,10 @@ def test_get_student_submission_history_returns_list() -> None:
     iyow_sub_svc.get_student_submission_history.assert_called_once()
 
 
-# ---- list_submissions_roster ----
+# ---- list_iyow_submissions_roster ----
 
 
-def test_list_submissions_roster_includes_non_submitters() -> None:
+def test_list_iyow_submissions_roster_includes_non_submitters() -> None:
     subject = _stub_user()
     course = _stub_course()
     activity = _stub_activity()
@@ -475,7 +474,7 @@ def test_list_submissions_roster_includes_non_submitters() -> None:
         (user_b, None, None),
     ]
 
-    result = list_submissions_roster(subject, course, activity, iyow_sub_svc)
+    result = list_iyow_submissions_roster(subject, course, activity, iyow_sub_svc)
 
     assert len(result) == 2
     assert result[0].student_pid == 111

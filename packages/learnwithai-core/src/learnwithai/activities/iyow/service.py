@@ -5,12 +5,9 @@
 
 from datetime import datetime
 
-from ...errors import AuthorizationError
-from ...repositories.activity_repository import ActivityRepository
-from ...repositories.membership_repository import MembershipRepository
+from ...services.activity_service import ActivityService
 from ...tables.activity import Activity, ActivityType
 from ...tables.course import Course
-from ...tables.membership import MembershipType
 from ...tables.user import User
 from .repository import IyowActivityRepository
 from .tables import IyowActivity
@@ -21,20 +18,17 @@ class IyowActivityService:
 
     def __init__(
         self,
-        activity_repo: ActivityRepository,
+        activity_svc: ActivityService,
         iyow_activity_repo: IyowActivityRepository,
-        membership_repo: MembershipRepository,
     ):
         """Initializes the service with its dependencies.
 
         Args:
-            activity_repo: Repository for base activity records.
+            activity_svc: Service for shared activity behavior.
             iyow_activity_repo: Repository for IYOW-specific detail records.
-            membership_repo: Repository for course membership lookups.
         """
-        self._activity_repo = activity_repo
+        self._activity_svc = activity_svc
         self._iyow_activity_repo = iyow_activity_repo
-        self._membership_repo = membership_repo
 
     def create_iyow_activity(
         self,
@@ -64,22 +58,15 @@ class IyowActivityService:
         Returns:
             A tuple of the base activity and its IYOW detail.
 
-        Raises:
-            AuthorizationError: If the subject is not an instructor or TA.
         """
-        self._authorize_staff(subject, course)
-        assert course.id is not None
-
-        activity = self._activity_repo.create(
-            Activity(
-                course_id=course.id,
-                created_by_pid=subject.pid,
-                type=ActivityType.IYOW,
-                title=title,
-                release_date=release_date,
-                due_date=due_date,
-                late_date=late_date,
-            )
+        activity = self._activity_svc.create_activity(
+            subject=subject,
+            course=course,
+            activity_type=ActivityType.IYOW,
+            title=title,
+            release_date=release_date,
+            due_date=due_date,
+            late_date=late_date,
         )
         assert activity.id is not None
 
@@ -139,17 +126,17 @@ class IyowActivityService:
         Returns:
             A tuple of the updated base activity and IYOW detail.
 
-        Raises:
-            AuthorizationError: If the subject is not an instructor or TA.
             ValueError: If the IYOW detail does not exist.
         """
-        self._authorize_staff(subject, course)
-
-        activity.title = title
-        activity.release_date = release_date
-        activity.due_date = due_date
-        activity.late_date = late_date
-        updated_activity = self._activity_repo.update(activity)
+        updated_activity = self._activity_svc.update_activity(
+            subject=subject,
+            course=course,
+            activity=activity,
+            title=title,
+            release_date=release_date,
+            due_date=due_date,
+            late_date=late_date,
+        )
 
         detail = self.get_iyow_detail(activity.id)  # type: ignore[arg-type]
         detail.prompt = prompt
@@ -157,19 +144,3 @@ class IyowActivityService:
         updated_detail = self._iyow_activity_repo.update(detail)
 
         return updated_activity, updated_detail
-
-    def _authorize_staff(self, subject: User, course: Course) -> None:
-        """Verifies the subject is an instructor or TA of the course.
-
-        Args:
-            subject: User to authorize.
-            course: Course to check membership for.
-
-        Raises:
-            AuthorizationError: If the subject is not staff.
-        """
-        membership = self._membership_repo.get_by_user_and_course(subject, course)
-        if membership is None:
-            raise AuthorizationError("Not a member of this course")
-        if membership.type not in {MembershipType.INSTRUCTOR, MembershipType.TA}:
-            raise AuthorizationError("Insufficient permissions")

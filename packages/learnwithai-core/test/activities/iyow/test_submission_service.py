@@ -10,14 +10,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from learnwithai.activities.iyow.repository import (
-    IyowActivityRepository,
     IyowSubmissionRepository,
 )
 from learnwithai.activities.iyow.submission_service import IyowSubmissionService
 from learnwithai.activities.iyow.tables import IyowSubmission
 from learnwithai.errors import AuthorizationError
 from learnwithai.interfaces import JobQueue
-from learnwithai.repositories.activity_repository import ActivityRepository
 from learnwithai.repositories.async_job_repository import AsyncJobRepository
 from learnwithai.repositories.membership_repository import MembershipRepository
 from learnwithai.repositories.submission_repository import SubmissionRepository
@@ -30,8 +28,6 @@ from learnwithai.tables.user import User
 
 
 def _make_service(
-    activity_repo: MagicMock | None = None,
-    iyow_activity_repo: MagicMock | None = None,
     submission_repo: MagicMock | None = None,
     iyow_submission_repo: MagicMock | None = None,
     async_job_repo: MagicMock | None = None,
@@ -39,8 +35,6 @@ def _make_service(
     job_queue: MagicMock | None = None,
 ) -> IyowSubmissionService:
     return IyowSubmissionService(
-        activity_repo=activity_repo or MagicMock(spec=ActivityRepository),
-        iyow_activity_repo=iyow_activity_repo or MagicMock(spec=IyowActivityRepository),
         submission_repo=submission_repo or MagicMock(spec=SubmissionRepository),
         iyow_submission_repo=iyow_submission_repo or MagicMock(spec=IyowSubmissionRepository),
         async_job_repo=async_job_repo or MagicMock(spec=AsyncJobRepository),
