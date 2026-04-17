@@ -9,7 +9,7 @@ import { IyowSubmissionResponse } from '../models/iyow-submission-response';
  * Includes every enrolled student. Students who have not submitted
  * have ``None`` for the submission fields.
  */
-export interface StudentSubmissionRow {
+export interface IyowStudentSubmissionRow {
   email: (string | null);
   family_name: (string | null);
   given_name: (string | null);

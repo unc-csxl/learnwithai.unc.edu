@@ -14,7 +14,7 @@ import { PageTitleService } from '../../../../page-title.service';
 import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
-import { StudentSubmissionRow } from '../../../../api/models';
+import { IyowStudentSubmissionRow } from '../../../../api/models';
 import { AsyncJobStatus } from '../../../../api/generated/models/async-job-status';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
@@ -68,7 +68,7 @@ const otherStudentHistory = [
   },
 ];
 
-const rosterRows: StudentSubmissionRow[] = [
+const rosterRows: IyowStudentSubmissionRow[] = [
   {
     student_pid: 111,
     given_name: 'Sally',
@@ -112,9 +112,9 @@ describe('SubmissionDetail', () => {
       }),
     };
     const mockActivityService = overrides.activityService ?? {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
-      getStudentHistory: vi.fn((_: number, __: number, studentPid: number) =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
+      getIyowStudentHistory: vi.fn((_: number, __: number, studentPid: number) =>
         Promise.resolve(studentPid === 222 ? [...otherStudentHistory] : [...historySubmissions]),
       ),
     };
@@ -185,9 +185,9 @@ describe('SubmissionDetail', () => {
 
   it('should show error on load failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.reject(new Error('fail'))),
-      listSubmissionsRoster: vi.fn(() => Promise.reject(new Error('fail'))),
-      getStudentHistory: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyow: vi.fn(() => Promise.reject(new Error('fail'))),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyowStudentHistory: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -218,8 +218,8 @@ describe('SubmissionDetail', () => {
 
   it('should show empty state when no submissions', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() =>
         Promise.resolve([
           {
             ...rosterRows[0],
@@ -227,7 +227,7 @@ describe('SubmissionDetail', () => {
           },
         ]),
       ),
-      getStudentHistory: vi.fn(() => Promise.resolve([])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([])),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -265,17 +265,17 @@ describe('SubmissionDetail', () => {
       job: { id: 77, status: 'completed' },
     };
 
-    const getStudentHistory = vi
+    const getIyowStudentHistory = vi
       .fn()
       .mockResolvedValueOnce([pendingSub])
       .mockResolvedValueOnce([completedSub]);
 
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() =>
         Promise.resolve([{ ...rosterRows[0], submission: pendingSub }]),
       ),
-      getStudentHistory,
+      getIyowStudentHistory,
     };
     const { fixture } = setup({ activityService: mockActivityService, jobSignals });
     await flush();
@@ -289,7 +289,7 @@ describe('SubmissionDetail', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(getStudentHistory).toHaveBeenCalledTimes(2);
+    expect(getIyowStudentHistory).toHaveBeenCalledTimes(2);
   });
 
   it('should return correct status icons', () => {
@@ -360,9 +360,9 @@ describe('SubmissionDetail', () => {
   it('should keep the activity information card limited to release and due dates', async () => {
     const noRubricActivity = { ...baseActivity, rubric: null };
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve(noRubricActivity)),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
-      getStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
+      getIyow: vi.fn(() => Promise.resolve(noRubricActivity)),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -384,9 +384,9 @@ describe('SubmissionDetail', () => {
     expect(text).toContain('Submitted student 2 of 2');
 
     const comp = fixture.componentInstance as unknown as {
-      jumpOptionLabel: (row: StudentSubmissionRow) => string;
-      previousSubmissionRow: { (): StudentSubmissionRow | null };
-      nextSubmissionRow: { (): StudentSubmissionRow | null };
+      jumpOptionLabel: (row: IyowStudentSubmissionRow) => string;
+      previousSubmissionRow: { (): IyowStudentSubmissionRow | null };
+      nextSubmissionRow: { (): IyowStudentSubmissionRow | null };
     };
 
     expect(comp.jumpOptionLabel(rosterRows[1])).toBe('Parker Peer - Submission 202');
@@ -437,8 +437,8 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      onJumpSelection: (event: { option: { value: StudentSubmissionRow } }) => Promise<void>;
-      jumpControl: FormControl<string | StudentSubmissionRow>;
+      onJumpSelection: (event: { option: { value: IyowStudentSubmissionRow } }) => Promise<void>;
+      jumpControl: FormControl<string | IyowStudentSubmissionRow>;
     };
 
     comp.jumpControl.setValue('peer');
@@ -461,8 +461,8 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      jumpControl: FormControl<string | StudentSubmissionRow>;
-      jumpOptions: { (): StudentSubmissionRow[] };
+      jumpControl: FormControl<string | IyowStudentSubmissionRow>;
+      jumpOptions: { (): IyowStudentSubmissionRow[] };
     };
 
     comp.jumpControl.setValue('202');
@@ -473,17 +473,17 @@ describe('SubmissionDetail', () => {
 
   it('should ignore invalid student route params', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
-      getStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
     };
 
     setup({ activityService: mockActivityService, initialStudentPid: 'not-a-number' });
     await flush();
 
-    expect(mockActivityService.get).not.toHaveBeenCalled();
-    expect(mockActivityService.listSubmissionsRoster).not.toHaveBeenCalled();
-    expect(mockActivityService.getStudentHistory).not.toHaveBeenCalled();
+    expect(mockActivityService.getIyow).not.toHaveBeenCalled();
+    expect(mockActivityService.listIyowSubmissionsRoster).not.toHaveBeenCalled();
+    expect(mockActivityService.getIyowStudentHistory).not.toHaveBeenCalled();
   });
 
   it('should reload submission data when the student route param changes', async () => {
@@ -496,7 +496,8 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     expect(
-      (mockActivityService as { getStudentHistory: ReturnType<typeof vi.fn> }).getStudentHistory,
+      (mockActivityService as { getIyowStudentHistory: ReturnType<typeof vi.fn> })
+        .getIyowStudentHistory,
     ).toHaveBeenLastCalledWith(1, 10, 222);
     expect(mockPageTitle.setTitle).toHaveBeenLastCalledWith('Test IYOW — Submission 202');
     expect(fixture.nativeElement.textContent).toContain('Submission 202');
@@ -505,7 +506,7 @@ describe('SubmissionDetail', () => {
 
   it('should clear stale state before loading another student route', async () => {
     let resolveSecondHistory!: (value: typeof otherStudentHistory) => void;
-    const getStudentHistory = vi
+    const getIyowStudentHistory = vi
       .fn()
       .mockResolvedValueOnce([...historySubmissions])
       .mockImplementationOnce(
@@ -516,9 +517,9 @@ describe('SubmissionDetail', () => {
       );
 
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
-      getStudentHistory,
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
+      getIyowStudentHistory,
     };
     const { fixture, paramMap$ } = setup({ activityService: mockActivityService });
     await flush();
@@ -527,7 +528,7 @@ describe('SubmissionDetail', () => {
     const comp = fixture.componentInstance as unknown as {
       selectPriorSubmission: (sub: (typeof historySubmissions)[0]) => void;
       activity: { (): typeof baseActivity | null };
-      rosterRows: { (): StudentSubmissionRow[] };
+      rosterRows: { (): IyowStudentSubmissionRow[] };
       submissions: { (): typeof historySubmissions };
       loaded: { (): boolean };
       selectedPriorSub: { (): (typeof historySubmissions)[0] | null };
@@ -549,11 +550,11 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     expect(comp.loaded()).toBe(true);
-    expect(getStudentHistory).toHaveBeenLastCalledWith(1, 10, 222);
+    expect(getIyowStudentHistory).toHaveBeenLastCalledWith(1, 10, 222);
   });
 
   it('should fall back to student metadata when no current submission or name is available', async () => {
-    const namelessRow: StudentSubmissionRow = {
+    const namelessRow: IyowStudentSubmissionRow = {
       student_pid: 111,
       given_name: null as unknown as string,
       family_name: null as unknown as string,
@@ -561,9 +562,9 @@ describe('SubmissionDetail', () => {
       submission: null,
     };
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([namelessRow])),
-      getStudentHistory: vi.fn(() => Promise.resolve([])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([namelessRow])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([])),
     };
     const { fixture, mockPageTitle, mockLayoutNavigation } = setup({
       activityService: mockActivityService,
@@ -594,9 +595,9 @@ describe('SubmissionDetail', () => {
 
   it('should fall back to history when the current student is missing from the roster', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([rosterRows[1]])),
-      getStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([rosterRows[1]])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
     };
     const { fixture, mockPageTitle, mockLayoutNavigation } = setup({
       activityService: mockActivityService,
@@ -606,12 +607,12 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      currentStudentRow: { (): StudentSubmissionRow | null };
+      currentStudentRow: { (): IyowStudentSubmissionRow | null };
       currentSubmissionLabel: { (): string };
       currentStudentDescription: { (): string };
       currentSubmittedPosition: { (): string };
-      previousSubmissionRow: { (): StudentSubmissionRow | null };
-      nextSubmissionRow: { (): StudentSubmissionRow | null };
+      previousSubmissionRow: { (): IyowStudentSubmissionRow | null };
+      nextSubmissionRow: { (): IyowStudentSubmissionRow | null };
     };
 
     expect(comp.currentStudentRow()).toBeNull();
@@ -647,21 +648,21 @@ describe('SubmissionDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      jumpDisplay: (value: string | StudentSubmissionRow | null) => string;
-      jumpOptionLabel: (row: StudentSubmissionRow) => string;
-      formatStudentName: (row: StudentSubmissionRow | null) => string;
-      studentSortValue: (row: StudentSubmissionRow) => string;
-      matchesJumpQuery: (row: StudentSubmissionRow, query: string) => boolean;
+      jumpDisplay: (value: string | IyowStudentSubmissionRow | null) => string;
+      jumpOptionLabel: (row: IyowStudentSubmissionRow) => string;
+      formatStudentName: (row: IyowStudentSubmissionRow | null) => string;
+      studentSortValue: (row: IyowStudentSubmissionRow) => string;
+      matchesJumpQuery: (row: IyowStudentSubmissionRow, query: string) => boolean;
       watchJob: (jobId: number) => void;
     };
-    const emailOnlyRow: StudentSubmissionRow = {
+    const emailOnlyRow: IyowStudentSubmissionRow = {
       student_pid: 444,
       given_name: null as unknown as string,
       family_name: null as unknown as string,
       email: 'mystery@example.com',
       submission: null,
     };
-    const unnamedRow: StudentSubmissionRow = {
+    const unnamedRow: IyowStudentSubmissionRow = {
       student_pid: 555,
       given_name: null as unknown as string,
       family_name: null as unknown as string,
@@ -691,21 +692,21 @@ describe('SubmissionDetail', () => {
     const { fixture } = setup({ detectChanges: false });
 
     const comp = fixture.componentInstance as unknown as {
-      previousSubmissionRow: { (): StudentSubmissionRow | null };
-      nextSubmissionRow: { (): StudentSubmissionRow | null };
+      previousSubmissionRow: { (): IyowStudentSubmissionRow | null };
+      nextSubmissionRow: { (): IyowStudentSubmissionRow | null };
       currentSubmittedIndex: { (): number };
-      submittedRows: { (): StudentSubmissionRow[] };
+      submittedRows: { (): IyowStudentSubmissionRow[] };
     };
 
     Object.assign(comp, {
       currentSubmittedIndex: () => 1,
-      submittedRows: () => [undefined, rosterRows[1]] as unknown as StudentSubmissionRow[],
+      submittedRows: () => [undefined, rosterRows[1]] as unknown as IyowStudentSubmissionRow[],
     });
     expect(comp.previousSubmissionRow()).toBeNull();
 
     Object.assign(comp, {
       currentSubmittedIndex: () => 0,
-      submittedRows: () => [rosterRows[0], undefined] as unknown as StudentSubmissionRow[],
+      submittedRows: () => [rosterRows[0], undefined] as unknown as IyowStudentSubmissionRow[],
     });
     expect(comp.nextSubmissionRow()).toBeNull();
   });
@@ -795,9 +796,9 @@ describe('SubmissionDetail', () => {
 
   it('should show the no-other-submissions autocomplete state and disable both navigator buttons', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([rosterRows[0]])),
-      getStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([rosterRows[0]])),
+      getIyowStudentHistory: vi.fn(() => Promise.resolve([...historySubmissions])),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();

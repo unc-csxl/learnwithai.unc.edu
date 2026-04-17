@@ -34,4 +34,4 @@ export function updateIyowActivity(http: HttpClient, rootUrl: string, params: Up
   );
 }
 
-updateIyowActivity.PATH = '/api/courses/{course_id}/activities/{activity_id}';
+updateIyowActivity.PATH = '/api/courses/{course_id}/activities/iyow/{activity_id}';

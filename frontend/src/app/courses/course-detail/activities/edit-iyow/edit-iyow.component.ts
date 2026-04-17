@@ -87,7 +87,7 @@ export class EditIyow {
 
   private async loadActivity(): Promise<void> {
     try {
-      const activity = await this.activityService.get(this.courseId, this.activityId);
+      const activity = await this.activityService.getIyow(this.courseId, this.activityId);
       this.populateForm(activity);
       this.titleService.setTitle(`Edit: ${activity.title}`);
       this.layoutNavigation.setContextSection(

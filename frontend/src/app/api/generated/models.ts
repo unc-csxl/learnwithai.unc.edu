@@ -15,6 +15,7 @@ export type { GrantOperatorRequest } from './models/grant-operator-request';
 export type { HttpValidationError } from './models/http-validation-error';
 export type { ImpersonationTokenResponse } from './models/impersonation-token-response';
 export type { IyowActivityResponse } from './models/iyow-activity-response';
+export type { IyowStudentSubmissionRow } from './models/iyow-student-submission-row';
 export type { IyowSubmissionResponse } from './models/iyow-submission-response';
 export type { JobControlOverviewResponse } from './models/job-control-overview-response';
 export type { JobFailuresResponse } from './models/job-failures-response';
@@ -33,7 +34,6 @@ export type { RecentFailedJobResponse } from './models/recent-failed-job-respons
 export type { RosterMemberResponse } from './models/roster-member-response';
 export type { RosterUploadResponse } from './models/roster-upload-response';
 export type { RosterUploadStatusResponse } from './models/roster-upload-status-response';
-export type { StudentSubmissionRow } from './models/student-submission-row';
 export type { SubmitIyowRequest } from './models/submit-iyow-request';
 export type { Term } from './models/term';
 export type { UpdateCourseRequest } from './models/update-course-request';

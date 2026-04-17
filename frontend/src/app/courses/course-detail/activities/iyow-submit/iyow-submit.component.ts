@@ -155,8 +155,8 @@ export class IyowSubmit implements OnDestroy {
   private async loadData(): Promise<void> {
     try {
       const [activity, active, courses] = await Promise.all([
-        this.activityService.get(this.courseId, this.activityId),
-        this.activityService.getActiveSubmission(this.courseId, this.activityId),
+        this.activityService.getIyow(this.courseId, this.activityId),
+        this.activityService.getIyowActiveSubmission(this.courseId, this.activityId),
         this.courseService.getMyCourses(),
       ]);
       const course = courses.find((candidate) => candidate.id === this.courseId);
@@ -196,7 +196,10 @@ export class IyowSubmit implements OnDestroy {
 
   private async refreshActiveSubmission(): Promise<void> {
     try {
-      const active = await this.activityService.getActiveSubmission(this.courseId, this.activityId);
+      const active = await this.activityService.getIyowActiveSubmission(
+        this.courseId,
+        this.activityId,
+      );
       this.setActiveSubmission(active);
     } catch {
       /* swallow */

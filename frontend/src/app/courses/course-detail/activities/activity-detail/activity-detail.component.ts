@@ -25,7 +25,7 @@ import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
 import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity, StudentSubmissionRow } from '../../../../api/models';
+import { IyowActivity, IyowStudentSubmissionRow } from '../../../../api/models';
 
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 3;
@@ -59,7 +59,7 @@ export class ActivityDetail implements OnDestroy {
   protected readonly activityId: number;
   protected readonly dateTimeFormat = 'MMM d, y, h:mm a';
   protected readonly activity = signal<IyowActivity | null>(null);
-  protected readonly allRows = signal<StudentSubmissionRow[]>([]);
+  protected readonly allRows = signal<IyowStudentSubmissionRow[]>([]);
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly searchQuery = signal('');
@@ -117,7 +117,7 @@ export class ActivityDetail implements OnDestroy {
     this.sortDirection.set(sort.direction);
   }
 
-  protected statusLabel(row: StudentSubmissionRow): string {
+  protected statusLabel(row: IyowStudentSubmissionRow): string {
     if (!row.submission) return 'Not submitted';
     const status = row.submission.job?.status;
     if (status === 'pending' || status === 'processing') return 'Processing';
@@ -128,8 +128,8 @@ export class ActivityDetail implements OnDestroy {
   private async loadData(): Promise<void> {
     try {
       const [activity, roster] = await Promise.all([
-        this.activityService.get(this.courseId, this.activityId),
-        this.activityService.listSubmissionsRoster(this.courseId, this.activityId),
+        this.activityService.getIyow(this.courseId, this.activityId),
+        this.activityService.listIyowSubmissionsRoster(this.courseId, this.activityId),
       ]);
       this.activity.set(activity);
       this.titleService.setTitle(activity.title);
@@ -150,10 +150,10 @@ export class ActivityDetail implements OnDestroy {
   }
 
   private sortRows(
-    rows: StudentSubmissionRow[],
+    rows: IyowStudentSubmissionRow[],
     active: string,
     direction: 'asc' | 'desc' | '',
-  ): StudentSubmissionRow[] {
+  ): IyowStudentSubmissionRow[] {
     if (!direction) return rows;
     const sorted = [...rows];
     const dir = direction === 'asc' ? 1 : -1;

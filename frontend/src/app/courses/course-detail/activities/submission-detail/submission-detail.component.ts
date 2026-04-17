@@ -32,7 +32,7 @@ import { JobUpdateService } from '../../../../job-update.service';
 import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
 import { ActivityService } from '../activity.service';
 import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity, IyowSubmission, StudentSubmissionRow } from '../../../../api/models';
+import { IyowActivity, IyowStudentSubmissionRow, IyowSubmission } from '../../../../api/models';
 import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
 
 /** Instructor view showing a single student's submission detail. */
@@ -71,12 +71,12 @@ export class SubmissionDetail implements OnDestroy {
   protected readonly dateTimeFormat = 'MMM d, y, h:mm a';
   protected readonly studentPid = computed(() => Number(this.routeParamMap().get('studentPid')));
   protected readonly activity = signal<IyowActivity | null>(null);
-  protected readonly rosterRows = signal<StudentSubmissionRow[]>([]);
+  protected readonly rosterRows = signal<IyowStudentSubmissionRow[]>([]);
   protected readonly submissions = signal<IyowSubmission[]>([]);
   protected readonly loaded = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly selectedPriorSub = signal<IyowSubmission | null>(null);
-  protected readonly jumpControl = new FormControl<string | StudentSubmissionRow>('', {
+  protected readonly jumpControl = new FormControl<string | IyowStudentSubmissionRow>('', {
     nonNullable: true,
   });
   private readonly jumpValue = toSignal(this.jumpControl.valueChanges, {
@@ -190,7 +190,7 @@ export class SubmissionDetail implements OnDestroy {
     this.selectedPriorSub.set(null);
   }
 
-  protected jumpDisplay(value: string | StudentSubmissionRow | null): string {
+  protected jumpDisplay(value: string | IyowStudentSubmissionRow | null): string {
     if (value === null || value === '') {
       return '';
     }
@@ -203,7 +203,7 @@ export class SubmissionDetail implements OnDestroy {
   }
 
   protected async onJumpSelection(event: MatAutocompleteSelectedEvent): Promise<void> {
-    const targetRow = event.option.value as StudentSubmissionRow;
+    const targetRow = event.option.value as IyowStudentSubmissionRow;
     this.jumpControl.setValue('', { emitEvent: false });
     await this.navigateToStudentSubmission(targetRow.student_pid);
   }
@@ -216,7 +216,7 @@ export class SubmissionDetail implements OnDestroy {
     await this.navigateToSubmissionRow(this.nextSubmissionRow());
   }
 
-  protected jumpOptionLabel(row: StudentSubmissionRow): string {
+  protected jumpOptionLabel(row: IyowStudentSubmissionRow): string {
     const studentName = this.formatStudentName(row);
     const submissionId = row.submission?.id;
     const baseLabel = studentName || `Student ${row.student_pid}`;
@@ -235,9 +235,9 @@ export class SubmissionDetail implements OnDestroy {
 
     try {
       const [activity, roster, history] = await Promise.all([
-        this.activityService.get(this.courseId, this.activityId),
-        this.activityService.listSubmissionsRoster(this.courseId, this.activityId),
-        this.activityService.getStudentHistory(this.courseId, this.activityId, studentPid),
+        this.activityService.getIyow(this.courseId, this.activityId),
+        this.activityService.listIyowSubmissionsRoster(this.courseId, this.activityId),
+        this.activityService.getIyowStudentHistory(this.courseId, this.activityId, studentPid),
       ]);
       this.activity.set(activity);
       this.rosterRows.set(roster);
@@ -316,7 +316,7 @@ export class SubmissionDetail implements OnDestroy {
 
   private async refreshSubmissions(): Promise<void> {
     try {
-      const history = await this.activityService.getStudentHistory(
+      const history = await this.activityService.getIyowStudentHistory(
         this.courseId,
         this.activityId,
         this.studentPid(),
@@ -327,7 +327,7 @@ export class SubmissionDetail implements OnDestroy {
     }
   }
 
-  private formatStudentName(row: StudentSubmissionRow | null): string {
+  private formatStudentName(row: IyowStudentSubmissionRow | null): string {
     if (row === null) {
       return '';
     }
@@ -342,11 +342,11 @@ export class SubmissionDetail implements OnDestroy {
     return row.email ?? '';
   }
 
-  private studentSortValue(row: StudentSubmissionRow): string {
+  private studentSortValue(row: IyowStudentSubmissionRow): string {
     return `${row.family_name ?? ''} ${row.given_name ?? ''} ${row.email}`.trim().toLowerCase();
   }
 
-  private matchesJumpQuery(row: StudentSubmissionRow, query: string): boolean {
+  private matchesJumpQuery(row: IyowStudentSubmissionRow, query: string): boolean {
     const submissionId = row.submission?.id;
     return [
       this.formatStudentName(row).toLowerCase(),
@@ -356,7 +356,7 @@ export class SubmissionDetail implements OnDestroy {
     ].some((value) => value.includes(query));
   }
 
-  private async navigateToSubmissionRow(row: StudentSubmissionRow | null): Promise<void> {
+  private async navigateToSubmissionRow(row: IyowStudentSubmissionRow | null): Promise<void> {
     if (row === null) {
       return;
     }

@@ -46,8 +46,8 @@ describe('IyowSubmit', () => {
       }),
     };
     const mockActivityService = overrides.activityService ?? {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() => Promise.resolve(null)),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() => Promise.resolve(null)),
       submitIyow: vi.fn(() =>
         Promise.resolve({
           id: 100,
@@ -218,8 +218,8 @@ describe('IyowSubmit', () => {
 
   it('should show error on submission failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() => Promise.resolve(null)),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() => Promise.resolve(null)),
       submitIyow: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
@@ -252,8 +252,8 @@ describe('IyowSubmit', () => {
 
   it('should show error on load failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.reject(new Error('fail'))),
-      getActiveSubmission: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyow: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyowActiveSubmission: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -264,8 +264,8 @@ describe('IyowSubmit', () => {
 
   it('should display active submission with feedback', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 100,
           response_text: '**My answer**',
@@ -292,8 +292,8 @@ describe('IyowSubmit', () => {
   it('should let the student edit a saved submission from the response text', async () => {
     const existingResponse = 'Dependency injection is useful because dependencies are provided.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 100,
           response_text: existingResponse,
@@ -323,8 +323,8 @@ describe('IyowSubmit', () => {
   it('should let the student edit a saved submission from the try again button', async () => {
     const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 101,
           response_text: existingResponse,
@@ -354,8 +354,8 @@ describe('IyowSubmit', () => {
   it('should cancel editing without a confirmation when there are no changes', async () => {
     const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 101,
           response_text: existingResponse,
@@ -395,8 +395,8 @@ describe('IyowSubmit', () => {
   it('should confirm before discarding dirty edits', async () => {
     const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 101,
           response_text: existingResponse,
@@ -442,8 +442,8 @@ describe('IyowSubmit', () => {
   it('should keep editing when discard confirmation is rejected', async () => {
     const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 101,
           response_text: existingResponse,
@@ -506,8 +506,8 @@ describe('IyowSubmit', () => {
   it('should ignore cancel requests when edit mode is not active', async () => {
     const existingResponse = 'Dependency injection keeps code testable and easier to swap.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 101,
           response_text: existingResponse,
@@ -548,14 +548,14 @@ describe('IyowSubmit', () => {
     };
     const completedSub = { ...pendingSub, feedback: 'Done!', job: { id: 77, status: 'completed' } };
 
-    const getActiveSubmission = vi
+    const getIyowActiveSubmission = vi
       .fn()
       .mockResolvedValueOnce(pendingSub)
       .mockResolvedValueOnce(completedSub);
 
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission,
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission,
     };
     const { fixture } = setup({ activityService: mockActivityService, jobSignals });
     await flush();
@@ -572,7 +572,7 @@ describe('IyowSubmit', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(getActiveSubmission).toHaveBeenCalledTimes(2);
+    expect(getIyowActiveSubmission).toHaveBeenCalledTimes(2);
   });
 
   it('should watch job after submit when job is not completed', async () => {
@@ -600,8 +600,8 @@ describe('IyowSubmit', () => {
   it('should not watch job when submit returns completed status', async () => {
     const jobSignals = new Map<number, WritableSignal<{ status: string } | null>>();
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() => Promise.resolve(null)),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() => Promise.resolve(null)),
       submitIyow: vi.fn(() =>
         Promise.resolve({
           id: 100,
@@ -630,8 +630,8 @@ describe('IyowSubmit', () => {
   it('should show spinner while submitting', async () => {
     let resolveSubmit!: (v: unknown) => void;
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() => Promise.resolve(null)),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() => Promise.resolve(null)),
       submitIyow: vi.fn(
         () =>
           new Promise((resolve) => {
@@ -665,8 +665,8 @@ describe('IyowSubmit', () => {
     let resolveSubmit!: (v: unknown) => void;
     const existingResponse = 'Dependency injection allows dependencies to be provided.';
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      getActiveSubmission: vi.fn(() =>
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyowActiveSubmission: vi.fn(() =>
         Promise.resolve({
           id: 100,
           response_text: existingResponse,

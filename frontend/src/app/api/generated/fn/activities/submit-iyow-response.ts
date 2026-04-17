@@ -34,4 +34,4 @@ export function submitIyowResponse(http: HttpClient, rootUrl: string, params: Su
   );
 }
 
-submitIyowResponse.PATH = '/api/courses/{course_id}/activities/{activity_id}/submissions';
+submitIyowResponse.PATH = '/api/courses/{course_id}/activities/iyow/{activity_id}/submissions';

@@ -32,7 +32,7 @@ describe('EditIyow', () => {
     const mockPageTitle = { title: vi.fn(), setTitle: vi.fn() };
     const mockSnackbar = { open: vi.fn() };
     const mockActivityService = overrides.activityService ?? {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
       updateIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
     };
     const mockRoute = {
@@ -78,7 +78,7 @@ describe('EditIyow', () => {
 
   it('should show error on load failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyow: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -109,7 +109,7 @@ describe('EditIyow', () => {
 
   it('should show error on submit failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
       updateIyow: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
@@ -145,7 +145,7 @@ describe('EditIyow', () => {
   it('should show spinner while submitting', async () => {
     let resolveUpdate!: (v: unknown) => void;
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
       updateIyow: vi.fn(
         () =>
           new Promise((resolve) => {
@@ -178,7 +178,7 @@ describe('EditIyow', () => {
 
   it('should populate form with empty rubric when activity rubric is null', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity, rubric: null })),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity, rubric: null })),
       updateIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
     };
     const { fixture } = setup({ activityService: mockActivityService });
@@ -228,7 +228,7 @@ describe('EditIyow', () => {
 
   it('should handle late_date in form population', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity, late_date: '2025-07-01T12:30:00Z' })),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity, late_date: '2025-07-01T12:30:00Z' })),
       updateIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
     };
     const { fixture } = setup({ activityService: mockActivityService });

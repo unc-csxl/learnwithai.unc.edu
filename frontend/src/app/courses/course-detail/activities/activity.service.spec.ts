@@ -33,7 +33,7 @@ describe('ActivityService', () => {
     const activity = { id: 10, title: 'A', prompt: 'P' };
     mockApi.invoke.mockResolvedValue(activity);
 
-    const result = await service.get(1, 10);
+    const result = await service.getIyow(1, 10);
 
     expect(result).toBe(activity);
   });
@@ -85,39 +85,39 @@ describe('ActivityService', () => {
     expect(result).toBe(submission);
   });
 
-  it('should list submissions', async () => {
+  it('should list IYOW submissions', async () => {
     const submissions = [{ id: 100 }];
     mockApi.invoke.mockResolvedValue(submissions);
 
-    const result = await service.listSubmissions(1, 10);
+    const result = await service.listIyowSubmissions(1, 10);
 
     expect(result).toBe(submissions);
   });
 
-  it('should list submissions roster', async () => {
+  it('should list IYOW submissions roster', async () => {
     const roster = [{ student_pid: 111, given_name: 'A', family_name: 'B', submission: null }];
     mockApi.invoke.mockResolvedValue(roster);
 
-    const result = await service.listSubmissionsRoster(1, 10);
+    const result = await service.listIyowSubmissionsRoster(1, 10);
 
     expect(result).toBe(roster);
     expect(mockApi.invoke).toHaveBeenCalledOnce();
   });
 
-  it('should get the active submission', async () => {
+  it('should get the active IYOW submission', async () => {
     const active = { id: 100, is_active: true };
     mockApi.invoke.mockResolvedValue(active);
 
-    const result = await service.getActiveSubmission(1, 10);
+    const result = await service.getIyowActiveSubmission(1, 10);
 
     expect(result).toBe(active);
   });
 
-  it('should get student submission history', async () => {
+  it('should get student IYOW submission history', async () => {
     const history = [{ id: 100 }, { id: 101 }];
     mockApi.invoke.mockResolvedValue(history);
 
-    const result = await service.getStudentHistory(1, 10, 111111111);
+    const result = await service.getIyowStudentHistory(1, 10, 111111111);
 
     expect(result).toBe(history);
     expect(mockApi.invoke).toHaveBeenCalledOnce();
