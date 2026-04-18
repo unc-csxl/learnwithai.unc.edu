@@ -7,19 +7,21 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { EditIyow } from './edit-iyow.component';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { ACTIVITY_TYPE_OPTIONS, activityDetailRouteParts } from '../../activity-types';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
+const defaultType = ACTIVITY_TYPE_OPTIONS[0];
 
 const baseActivity = {
   id: 10,
   title: 'Test IYOW',
   prompt: 'Explain X',
   rubric: 'Must be clear',
-  type: 'iyow',
+  type: defaultType.backendType,
   release_date: '2025-01-01T00:00:00Z',
   due_date: '2025-06-01T00:00:00Z',
   late_date: null as string | null,
@@ -104,7 +106,12 @@ describe('EditIyow', () => {
       (mockActivityService as { updateIyow: ReturnType<typeof vi.fn> }).updateIyow,
     ).toHaveBeenCalledOnce();
     expect(mockSnackbar.open).toHaveBeenCalledWith('Activity updated!');
-    expect(router.navigate).toHaveBeenCalledWith(['courses', 1, 'activities', 10]);
+    expect(router.navigate).toHaveBeenCalledWith([
+      'courses',
+      1,
+      'activities',
+      ...activityDetailRouteParts(defaultType.backendType, 10),
+    ]);
   });
 
   it('should show error on submit failure', async () => {

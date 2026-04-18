@@ -14,6 +14,7 @@ import { LayoutNavigationService } from '../../../layout/layout-navigation.servi
 import { CourseService } from '../../course.service';
 import { ActivityService } from './activity.service';
 import { Activity } from '../../../api/models';
+import { activityDetailRouteParts, activitySubmitRouteParts } from './activity-types';
 
 /** Lists activities for a course. Role-aware: instructors see all, students see released. */
 @Component({
@@ -52,7 +53,11 @@ export class Activities {
   }
 
   protected activityLink(activity: Activity): string[] {
-    return this.isStaff() ? [String(activity.id)] : [String(activity.id), 'submit'];
+    if (this.isStaff()) {
+      return activityDetailRouteParts(activity.type, activity.id);
+    }
+
+    return activitySubmitRouteParts(activity.type, activity.id);
   }
 
   private async loadData(): Promise<void> {

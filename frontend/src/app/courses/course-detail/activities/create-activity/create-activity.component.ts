@@ -37,7 +37,7 @@ export class CreateActivity {
         {
           label: 'Choose activity type',
           items: this.activityTypes.map((activityType) => ({
-            route: `/courses/${this.courseId}/activities/create/${activityType.id}`,
+            route: `/courses/${this.courseId}/activities/create/${activityType.routeSegment}`,
             label: `Create ${activityType.label}`,
             description: activityType.description,
             icon: 'add_circle',

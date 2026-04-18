@@ -9,13 +9,13 @@ import { signal, WritableSignal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { BehaviorSubject } from 'rxjs';
-import { SubmissionDetail } from './submission-detail.component';
-import { PageTitleService } from '../../../../page-title.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { IyowStudentSubmissionRow } from '../../../../api/models';
-import { AsyncJobStatus } from '../../../../api/generated/models/async-job-status';
+import { IyowSubmissionDetail } from './iyow-submission-detail.component';
+import { PageTitleService } from '../../../../../page-title.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { IyowStudentSubmissionRow } from '../../../../../api/models';
+import { AsyncJobStatus } from '../../../../../api/generated/models/async-job-status';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -92,7 +92,7 @@ const rosterRows: IyowStudentSubmissionRow[] = [
   },
 ];
 
-describe('SubmissionDetail', () => {
+describe('IyowSubmissionDetail', () => {
   function setup(
     overrides: {
       activityService?: object;
@@ -135,7 +135,7 @@ describe('SubmissionDetail', () => {
     const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
-      imports: [SubmissionDetail],
+      imports: [IyowSubmissionDetail],
       providers: [
         provideRouter([]),
         provideNoopAnimations(),
@@ -147,7 +147,7 @@ describe('SubmissionDetail', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(SubmissionDetail);
+    const fixture = TestBed.createComponent(IyowSubmissionDetail);
     if (overrides.detectChanges !== false) {
       fixture.detectChanges();
     }
@@ -424,6 +424,7 @@ describe('SubmissionDetail', () => {
       1,
       'activities',
       10,
+      'iyow',
       'submissions',
       111,
     ]);
@@ -450,6 +451,7 @@ describe('SubmissionDetail', () => {
       1,
       'activities',
       10,
+      'iyow',
       'submissions',
       222,
     ]);
@@ -688,6 +690,28 @@ describe('SubmissionDetail', () => {
     expect(mockJobUpdate.updateForJob).toHaveBeenCalledTimes(1);
   });
 
+  it('should fall back to iyow when building routes without an activity type', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      activity: { set: (value: null) => void };
+      buildSubmissionRoute: (studentPid: number, activityType?: string) => Array<string | number>;
+    };
+
+    comp.activity.set(null);
+    expect(comp.buildSubmissionRoute(222)).toEqual([
+      '/courses',
+      1,
+      'activities',
+      10,
+      'iyow',
+      'submissions',
+      222,
+    ]);
+  });
+
   it('should fall back to null when computed previous or next rows point to sparse entries', async () => {
     const { fixture } = setup({ detectChanges: false });
 
@@ -731,6 +755,7 @@ describe('SubmissionDetail', () => {
       1,
       'activities',
       10,
+      'iyow',
       'submissions',
       222,
     ]);
@@ -756,6 +781,7 @@ describe('SubmissionDetail', () => {
       1,
       'activities',
       10,
+      'iyow',
       'submissions',
       111,
     ]);
@@ -789,6 +815,7 @@ describe('SubmissionDetail', () => {
       1,
       'activities',
       10,
+      'iyow',
       'submissions',
       222,
     ]);

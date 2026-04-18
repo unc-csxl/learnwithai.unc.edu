@@ -20,19 +20,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { PageTitleService } from '../../../../page-title.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity, IyowStudentSubmissionRow } from '../../../../api/models';
+import { PageTitleService } from '../../../../../page-title.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { buildActivityContextNav } from '../../activity-nav';
+import { activitySubmissionRouteParts } from '../../activity-types';
+import { IyowActivity, IyowStudentSubmissionRow } from '../../../../../api/models';
 
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_LENGTH = 3;
 
-/** Instructor view showing activity info and a sortable table of student submissions. */
+/** Instructor view showing IYOW activity info and a sortable table of student submissions. */
 @Component({
-  selector: 'app-activity-detail',
+  selector: 'app-iyow-activity-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
@@ -45,9 +46,9 @@ const MIN_SEARCH_LENGTH = 3;
     MatInputModule,
     MatButtonModule,
   ],
-  templateUrl: './activity-detail.component.html',
+  templateUrl: './iyow-activity-detail.component.html',
 })
-export class ActivityDetail implements OnDestroy {
+export class IyowActivityDetail implements OnDestroy {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private titleService = inject(PageTitleService);
@@ -125,6 +126,16 @@ export class ActivityDetail implements OnDestroy {
     return 'Submitted';
   }
 
+  protected submissionLink(studentPid: number): Array<string | number> {
+    const activityType = this.activity()?.type ?? '';
+    return [
+      '/courses',
+      this.courseId,
+      'activities',
+      ...activitySubmissionRouteParts(activityType, this.activityId, studentPid),
+    ];
+  }
+
   private async loadData(): Promise<void> {
     try {
       const [activity, roster] = await Promise.all([
@@ -138,6 +149,7 @@ export class ActivityDetail implements OnDestroy {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
+          activityType: activity.type,
           role: 'staff',
         }),
       );

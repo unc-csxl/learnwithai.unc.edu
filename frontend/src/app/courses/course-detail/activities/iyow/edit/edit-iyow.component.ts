@@ -10,12 +10,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity } from '../../../../api/models';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { buildActivityContextNav } from '../../activity-nav';
+import { activityDetailRouteParts } from '../../activity-types';
+import { IyowActivity } from '../../../../../api/models';
 
 /** Form for instructors to edit an existing In Your Own Words activity. */
 @Component({
@@ -68,7 +69,7 @@ export class EditIyow {
     this.errorMessage.set('');
     try {
       const values = this.form.getRawValue();
-      await this.activityService.updateIyow(this.courseId, this.activityId, {
+      const activity = await this.activityService.updateIyow(this.courseId, this.activityId, {
         title: values.title,
         prompt: values.prompt,
         rubric: values.rubric,
@@ -77,7 +78,12 @@ export class EditIyow {
         late_date: values.late_date || null,
       });
       this.successSnackbar.open('Activity updated!');
-      await this.router.navigate(['courses', this.courseId, 'activities', this.activityId]);
+      await this.router.navigate([
+        'courses',
+        this.courseId,
+        'activities',
+        ...activityDetailRouteParts(activity.type, this.activityId),
+      ]);
     } catch {
       this.errorMessage.set('Failed to update activity.');
     } finally {
@@ -94,6 +100,7 @@ export class EditIyow {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
+          activityType: activity.type,
           role: 'staff',
         }),
       );

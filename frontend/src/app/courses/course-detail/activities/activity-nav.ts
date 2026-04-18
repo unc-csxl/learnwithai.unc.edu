@@ -7,6 +7,7 @@ import {
   LayoutNavigationGroup,
   LayoutNavigationSection,
 } from '../../../layout/layout-navigation.service';
+import { activityBasePathForTypeId } from './activity-types';
 
 /**
  * Builds the sidebar navigation context for an existing activity's sub-pages.
@@ -18,11 +19,12 @@ import {
 export function buildActivityContextNav(options: {
   courseId: number;
   activityId: number;
+  activityType?: string;
   role: 'staff' | 'student';
   extraGroups?: LayoutNavigationGroup[];
 }): LayoutNavigationSection {
-  const { courseId, activityId, role, extraGroups } = options;
-  const base = `/courses/${courseId}/activities/${activityId}`;
+  const { courseId, activityId, activityType, role, extraGroups } = options;
+  const base = activityBasePathForTypeId(courseId, activityId, activityType);
   const isStaff = role === 'staff';
 
   const activityGroup: LayoutNavigationGroup = {

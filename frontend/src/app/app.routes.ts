@@ -6,6 +6,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, landingGuard } from './auth.guard';
 import { operationsGuard } from './operations.guard';
+import { ACTIVITY_TYPED_ROUTES } from './courses/course-detail/activities/activity-typed-routes';
 
 /** Declares the top-level lazy routes for the frontend application. */
 export const routes: Routes = [
@@ -68,41 +69,7 @@ export const routes: Routes = [
                     (m) => m.CreateActivity,
                   ),
               },
-              {
-                path: 'create/iyow',
-                loadComponent: () =>
-                  import('./courses/course-detail/activities/create-iyow/create-iyow.component').then(
-                    (m) => m.CreateIyow,
-                  ),
-              },
-              {
-                path: ':activityId',
-                loadComponent: () =>
-                  import('./courses/course-detail/activities/activity-detail/activity-detail.component').then(
-                    (m) => m.ActivityDetail,
-                  ),
-              },
-              {
-                path: ':activityId/edit',
-                loadComponent: () =>
-                  import('./courses/course-detail/activities/edit-iyow/edit-iyow.component').then(
-                    (m) => m.EditIyow,
-                  ),
-              },
-              {
-                path: ':activityId/submit',
-                loadComponent: () =>
-                  import('./courses/course-detail/activities/iyow-submit/iyow-submit.component').then(
-                    (m) => m.IyowSubmit,
-                  ),
-              },
-              {
-                path: ':activityId/submissions/:studentPid',
-                loadComponent: () =>
-                  import('./courses/course-detail/activities/submission-detail/submission-detail.component').then(
-                    (m) => m.SubmissionDetail,
-                  ),
-              },
+              ...ACTIVITY_TYPED_ROUTES,
             ],
           },
           {

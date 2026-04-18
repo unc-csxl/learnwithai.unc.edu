@@ -126,4 +126,68 @@ describe('Activities', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Late Activity');
   });
+
+  it('should route staff activities to activity-type detail pages', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      activityLink: (activity: {
+        id: number;
+        type: string;
+        title: string;
+        due_date: string;
+        release_date: string;
+        late_date: string | null;
+        course_id: number;
+        created_at: string;
+      }) => string[];
+    };
+
+    expect(
+      component.activityLink({
+        id: 10,
+        title: 'IYOW Activity',
+        type: 'iyow',
+        due_date: '2025-12-01T00:00:00Z',
+        release_date: '2025-11-01T00:00:00Z',
+        late_date: null,
+        course_id: 1,
+        created_at: '2025-11-01T00:00:00Z',
+      }),
+    ).toEqual(['10', 'iyow']);
+  });
+
+  it('should default unknown activity types to IYOW routes', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      activityLink: (activity: {
+        id: number;
+        type: string;
+        title: string;
+        due_date: string;
+        release_date: string;
+        late_date: string | null;
+        course_id: number;
+        created_at: string;
+      }) => string[];
+    };
+
+    expect(
+      component.activityLink({
+        id: 10,
+        title: 'Unknown Activity',
+        type: 'custom_type',
+        due_date: '2025-12-01T00:00:00Z',
+        release_date: '2025-11-01T00:00:00Z',
+        late_date: null,
+        course_id: 1,
+        created_at: '2025-11-01T00:00:00Z',
+      }),
+    ).toEqual(['10', 'iyow']);
+  });
 });

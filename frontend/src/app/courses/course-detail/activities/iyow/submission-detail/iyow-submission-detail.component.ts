@@ -27,17 +27,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { PageTitleService } from '../../../../page-title.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity, IyowStudentSubmissionRow, IyowSubmission } from '../../../../api/models';
-import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
+import { PageTitleService } from '../../../../../page-title.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { buildActivityContextNav } from '../../activity-nav';
+import { routeSegmentForActivityType } from '../../activity-types';
+import { IyowActivity, IyowStudentSubmissionRow, IyowSubmission } from '../../../../../api/models';
+import { MarkdownToHtmlPipe } from '../../../../../shared/markdown-to-html.pipe';
 
-/** Instructor view showing a single student's submission detail. */
+/** Instructor view showing a single student's IYOW submission detail. */
 @Component({
-  selector: 'app-submission-detail',
+  selector: 'app-iyow-submission-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
@@ -51,9 +52,9 @@ import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
     MatInputModule,
     MarkdownToHtmlPipe,
   ],
-  templateUrl: './submission-detail.component.html',
+  templateUrl: './iyow-submission-detail.component.html',
 })
-export class SubmissionDetail implements OnDestroy {
+export class IyowSubmissionDetail implements OnDestroy {
   private activityService = inject(ActivityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -257,17 +258,19 @@ export class SubmissionDetail implements OnDestroy {
       this.titleService.setTitle(`${activity.title} — ${submissionLabel}`);
       this.jumpControl.setValue('', { emitEvent: false });
       this.watchPendingJobs(history);
+      const submissionRoute = this.buildSubmissionRoutePath(studentPid, activity.type);
       this.layoutNavigation.setContextSection(
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
+          activityType: activity.type,
           role: 'staff',
           extraGroups: [
             {
               label: 'Submission',
               items: [
                 {
-                  route: `/courses/${this.courseId}/activities/${this.activityId}/submissions/${studentPid}`,
+                  route: submissionRoute,
                   label: submissionLabel,
                   description:
                     currentStudentName === ''
@@ -365,13 +368,26 @@ export class SubmissionDetail implements OnDestroy {
   }
 
   private async navigateToStudentSubmission(studentPid: number): Promise<void> {
-    await this.router.navigate([
+    await this.router.navigate(this.buildSubmissionRoute(studentPid));
+  }
+
+  private buildSubmissionRoute(
+    studentPid: number,
+    activityType: string = this.activity()?.type ?? '',
+  ): Array<string | number> {
+    const routeSegment = routeSegmentForActivityType(activityType);
+    return [
       '/courses',
       this.courseId,
       'activities',
       this.activityId,
+      routeSegment,
       'submissions',
       studentPid,
-    ]);
+    ];
+  }
+
+  private buildSubmissionRoutePath(studentPid: number, activityType?: string): string {
+    return this.buildSubmissionRoute(studentPid, activityType).join('/');
   }
 }

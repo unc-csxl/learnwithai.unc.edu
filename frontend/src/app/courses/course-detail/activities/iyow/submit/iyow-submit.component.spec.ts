@@ -7,12 +7,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
 import { IyowSubmit } from './iyow-submit.component';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { CourseService } from '../../../course.service';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { CourseService } from '../../../../course.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -120,7 +120,7 @@ describe('IyowSubmit', () => {
           expect.objectContaining({
             items: expect.arrayContaining([
               expect.objectContaining({
-                route: '/courses/1/activities/10/submit',
+                route: '/courses/1/activities/10/iyow/submit',
                 label: 'Submissions',
               }),
             ]),
@@ -169,7 +169,10 @@ describe('IyowSubmit', () => {
         groups: expect.arrayContaining([
           expect.objectContaining({
             items: expect.arrayContaining([
-              expect.objectContaining({ route: '/courses/1/activities/10', label: 'Submissions' }),
+              expect.objectContaining({
+                route: '/courses/1/activities/10/iyow',
+                label: 'Submissions',
+              }),
               expect.objectContaining({ label: 'Activity Editor' }),
               expect.objectContaining({ label: 'Preview & Test' }),
             ]),

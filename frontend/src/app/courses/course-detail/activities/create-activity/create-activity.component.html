@@ -6,9 +6,9 @@
 <p class="mb-4">Select the kind of activity you want to create.</p>
 
 <ul class="space-y-3" aria-label="Activity type options">
-  @for (activityType of activityTypes; track activityType.id) {
+  @for (activityType of activityTypes; track activityType.routeSegment) {
     <li>
-      <a mat-stroked-button [routerLink]="[activityType.id]" class="w-full justify-start">
+      <a mat-stroked-button [routerLink]="[activityType.routeSegment]" class="w-full justify-start">
         Create {{ activityType.label }}
       </a>
       <p class="mt-1 text-sm">{{ activityType.description }}</p>
