@@ -1,15 +1,7 @@
 # Copyright (c) 2026 Kris Jordan
 # SPDX-License-Identifier: MIT
 
-from .activity import (
-    ActivityResponse,
-    CreateIyowActivityRequest,
-    IyowActivityResponse,
-    IyowSubmissionResponse,
-    StudentSubmissionRow,
-    SubmitIyowRequest,
-    UpdateIyowActivityRequest,
-)
+from .activity import ActivityResponse, StudentRosterIdentity
 from .async_job import AsyncJobInfo
 from .course import (
     AddMemberRequest,
@@ -21,6 +13,14 @@ from .course import (
     RosterMemberResponse,
     UpdateCourseRequest,
     UpdateMemberRoleRequest,
+)
+from .iyow_activity import (
+    CreateIyowActivityRequest,
+    IyowActivityResponse,
+    IyowStudentSubmissionRow,
+    IyowSubmissionResponse,
+    SubmitIyowRequest,
+    UpdateIyowActivityRequest,
 )
 from .job_control import (
     JobControlOverviewResponse,
@@ -54,6 +54,7 @@ __all__ = [
     "GrantOperatorRequest",
     "ImpersonationTokenResponse",
     "IyowActivityResponse",
+    "IyowStudentSubmissionRow",
     "IyowSubmissionResponse",
     "JobControlOverviewResponse",
     "JobFailuresResponse",
@@ -67,7 +68,7 @@ __all__ = [
     "RosterMemberResponse",
     "RosterUploadResponse",
     "RosterUploadStatusResponse",
-    "StudentSubmissionRow",
+    "StudentRosterIdentity",
     "SubmitIyowRequest",
     "UpdateMemberRoleRequest",
     "UpdateCourseRequest",

@@ -6,10 +6,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { CreateIyow } from './create-iyow.component';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -45,7 +45,7 @@ describe('CreateIyow', () => {
 
   it('should set the page title', () => {
     const { mockPageTitle, mockLayoutNavigation } = setup();
-    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Create IYOW Activity');
+    expect(mockPageTitle.setTitle).toHaveBeenCalledWith('Create In Your Own Words');
     expect(mockLayoutNavigation.setContextSection).toHaveBeenCalledWith(
       expect.objectContaining({
         visibleBaseRoutes: ['/courses/1/dashboard', '/courses/1/activities'],

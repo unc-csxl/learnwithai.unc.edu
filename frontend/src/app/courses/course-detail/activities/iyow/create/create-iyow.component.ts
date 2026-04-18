@@ -10,10 +10,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { ACTIVITY_TYPE_OPTIONS } from '../../activity-types';
 
 /** Form for instructors to create an In Your Own Words activity. */
 @Component({
@@ -38,6 +39,10 @@ export class CreateIyow {
   private layoutNavigation = inject(LayoutNavigationService);
 
   protected readonly courseId: number;
+  protected readonly activityType =
+    ACTIVITY_TYPE_OPTIONS.find((activityType) =>
+      this.route.routeConfig?.path?.endsWith(activityType.routeSegment),
+    ) ?? ACTIVITY_TYPE_OPTIONS[0];
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal('');
 
@@ -51,7 +56,7 @@ export class CreateIyow {
   });
 
   constructor() {
-    this.titleService.setTitle('Create IYOW Activity');
+    this.titleService.setTitle(`Create ${this.activityType.label}`);
     this.courseId = Number(this.route.parent?.parent?.snapshot.paramMap.get('id'));
     this.layoutNavigation.setContextSection({
       visibleBaseRoutes: [
@@ -60,12 +65,18 @@ export class CreateIyow {
       ],
       groups: [
         {
-          label: 'New activity',
+          label: 'Choose activity type',
           items: [
             {
-              route: `/courses/${this.courseId}/activities/create-iyow`,
-              label: 'Create IYOW Activity',
-              description: 'Create a new In Your Own Words activity',
+              route: `/courses/${this.courseId}/activities/create`,
+              label: 'Choose Activity Type',
+              description: 'Select the type of activity you want to create',
+              icon: 'list',
+            },
+            {
+              route: `/courses/${this.courseId}/activities/create/${this.activityType.routeSegment}`,
+              label: `Create ${this.activityType.label}`,
+              description: this.activityType.description,
               icon: 'add_circle',
             },
           ],

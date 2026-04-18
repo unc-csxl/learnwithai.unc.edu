@@ -55,15 +55,7 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header="family_name">Student</th>
             <td mat-cell *matCellDef="let row">
               @if (row.submission) {
-                <a
-                  [routerLink]="[
-                    '/courses',
-                    courseId,
-                    'activities',
-                    activityId,
-                    'submissions',
-                    row.student_pid,
-                  ]"
+                <a [routerLink]="submissionLink(row.student_pid)"
                   >{{ row.family_name }}, {{ row.given_name }}</a
                 >
               } @else {

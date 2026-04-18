@@ -9,14 +9,16 @@ import { RequestBuilder } from '../../request-builder';
 
 import { IyowSubmissionResponse } from '../../models/iyow-submission-response';
 
-export interface GetActiveSubmission$Params {
+export interface GetIyowStudentSubmissionHistory$Params {
+  student_pid: number;
   course_id: number;
   activity_id: number;
 }
 
-export function getActiveSubmission(http: HttpClient, rootUrl: string, params: GetActiveSubmission$Params, context?: HttpContext): Observable<StrictHttpResponse<(IyowSubmissionResponse | null)>> {
-  const rb = new RequestBuilder(rootUrl, getActiveSubmission.PATH, 'get');
+export function getIyowStudentSubmissionHistory(http: HttpClient, rootUrl: string, params: GetIyowStudentSubmissionHistory$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<IyowSubmissionResponse>>> {
+  const rb = new RequestBuilder(rootUrl, getIyowStudentSubmissionHistory.PATH, 'get');
   if (params) {
+    rb.path('student_pid', params.student_pid, {});
     rb.path('course_id', params.course_id, {});
     rb.path('activity_id', params.activity_id, {});
   }
@@ -26,9 +28,9 @@ export function getActiveSubmission(http: HttpClient, rootUrl: string, params: G
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<(IyowSubmissionResponse | null)>;
+      return r as StrictHttpResponse<Array<IyowSubmissionResponse>>;
     })
   );
 }
 
-getActiveSubmission.PATH = '/api/courses/{course_id}/activities/{activity_id}/submissions/active';
+getIyowStudentSubmissionHistory.PATH = '/api/courses/{course_id}/activities/iyow/{activity_id}/submissions/history/{student_pid}';

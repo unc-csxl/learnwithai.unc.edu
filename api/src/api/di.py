@@ -419,20 +419,17 @@ ActivityServiceDI: TypeAlias = Annotated[ActivityService, Depends(activity_servi
 
 
 def iyow_activity_service_factory(
-    activity_repo: ActivityRepositoryDI,
+    activity_svc: ActivityServiceDI,
     iyow_activity_repo: IyowActivityRepositoryDI,
-    membership_repo: MembershipRepositoryDI,
 ) -> IyowActivityService:
     """Creates the IYOW activity service for the current request."""
-    return IyowActivityService(activity_repo, iyow_activity_repo, membership_repo)
+    return IyowActivityService(activity_svc, iyow_activity_repo)
 
 
 IyowActivityServiceDI: TypeAlias = Annotated[IyowActivityService, Depends(iyow_activity_service_factory)]
 
 
 def iyow_submission_service_factory(
-    activity_repo: ActivityRepositoryDI,
-    iyow_activity_repo: IyowActivityRepositoryDI,
     submission_repo: SubmissionRepositoryDI,
     iyow_submission_repo: IyowSubmissionRepositoryDI,
     async_job_repo: AsyncJobRepositoryDI,
@@ -441,8 +438,6 @@ def iyow_submission_service_factory(
 ) -> IyowSubmissionService:
     """Creates the IYOW submission service for the current request."""
     return IyowSubmissionService(
-        activity_repo,
-        iyow_activity_repo,
         submission_repo,
         iyow_submission_repo,
         async_job_repo,

@@ -712,6 +712,65 @@
         }
       }
     },
+    "/api/courses/{course_id}/activities/{activity_id}": {
+      "delete": {
+        "tags": [
+          "Activities"
+        ],
+        "summary": "Delete an activity",
+        "description": "Deletes an activity. Only instructors may delete.",
+        "operationId": "delete_activity",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Activity Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Not authenticated."
+          },
+          "403": {
+            "description": "Insufficient permissions."
+          },
+          "404": {
+            "description": "Activity not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/courses/{course_id}/activities/iyow": {
       "post": {
         "tags": [
@@ -779,14 +838,14 @@
         }
       }
     },
-    "/api/courses/{course_id}/activities/{activity_id}": {
+    "/api/courses/{course_id}/activities/iyow/{activity_id}": {
       "get": {
         "tags": [
           "Activities"
         ],
         "summary": "Get activity detail",
         "description": "Returns full activity detail including type-specific fields.\n\nStudents do not see the rubric.",
-        "operationId": "get_activity",
+        "operationId": "get_iyow_activity",
         "security": [
           {
             "HTTPBearer": []
@@ -917,66 +976,9 @@
             }
           }
         }
-      },
-      "delete": {
-        "tags": [
-          "Activities"
-        ],
-        "summary": "Delete an activity",
-        "description": "Deletes an activity. Only instructors may delete.",
-        "operationId": "delete_activity",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "course_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Course Id"
-            }
-          },
-          {
-            "name": "activity_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Activity Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "401": {
-            "description": "Not authenticated."
-          },
-          "403": {
-            "description": "Insufficient permissions."
-          },
-          "404": {
-            "description": "Activity not found."
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
-    "/api/courses/{course_id}/activities/{activity_id}/submissions": {
+    "/api/courses/{course_id}/activities/iyow/{activity_id}/submissions": {
       "post": {
         "tags": [
           "Activities"
@@ -1050,7 +1052,7 @@
         ],
         "summary": "List submissions for an activity",
         "description": "Returns submissions. Staff sees all active; students see own history.",
-        "operationId": "list_submissions",
+        "operationId": "list_iyow_submissions",
         "security": [
           {
             "HTTPBearer": []
@@ -1086,7 +1088,7 @@
                   "items": {
                     "$ref": "#/components/schemas/IyowSubmissionResponse"
                   },
-                  "title": "Response List Submissions"
+                  "title": "Response List Iyow Submissions"
                 }
               }
             }
@@ -1113,14 +1115,14 @@
         }
       }
     },
-    "/api/courses/{course_id}/activities/{activity_id}/submissions/roster": {
+    "/api/courses/{course_id}/activities/iyow/{activity_id}/submissions/roster": {
       "get": {
         "tags": [
           "Activities"
         ],
         "summary": "List enrolled students with their submissions",
         "description": "Returns every enrolled student paired with their active submission.\n\nStudents who have not submitted are included with a ``null`` submission.\nOnly instructors and TAs may access this endpoint.",
-        "operationId": "list_submissions_roster",
+        "operationId": "list_iyow_submissions_roster",
         "security": [
           {
             "HTTPBearer": []
@@ -1154,9 +1156,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/StudentSubmissionRow"
+                    "$ref": "#/components/schemas/IyowStudentSubmissionRow"
                   },
-                  "title": "Response List Submissions Roster"
+                  "title": "Response List Iyow Submissions Roster"
                 }
               }
             }
@@ -1183,14 +1185,14 @@
         }
       }
     },
-    "/api/courses/{course_id}/activities/{activity_id}/submissions/active": {
+    "/api/courses/{course_id}/activities/iyow/{activity_id}/submissions/active": {
       "get": {
         "tags": [
           "Activities"
         ],
         "summary": "Get the student's active submission",
         "description": "Returns the student's current active submission, if any.",
-        "operationId": "get_active_submission",
+        "operationId": "get_iyow_active_submission",
         "security": [
           {
             "HTTPBearer": []
@@ -1230,7 +1232,7 @@
                       "type": "null"
                     }
                   ],
-                  "title": "Response Get Active Submission"
+                  "title": "Response Get Iyow Active Submission"
                 }
               }
             }
@@ -1257,14 +1259,14 @@
         }
       }
     },
-    "/api/courses/{course_id}/activities/{activity_id}/submissions/history/{student_pid}": {
+    "/api/courses/{course_id}/activities/iyow/{activity_id}/submissions/history/{student_pid}": {
       "get": {
         "tags": [
           "Activities"
         ],
         "summary": "Get a student's full submission history",
         "description": "Returns all submissions (active + inactive) for a student on an activity.\n\nOnly instructors and TAs may access this endpoint.",
-        "operationId": "get_student_submission_history",
+        "operationId": "get_iyow_student_submission_history",
         "security": [
           {
             "HTTPBearer": []
@@ -1309,7 +1311,7 @@
                   "items": {
                     "$ref": "#/components/schemas/IyowSubmissionResponse"
                   },
-                  "title": "Response Get Student Submission History"
+                  "title": "Response Get Iyow Student Submission History"
                 }
               }
             }
@@ -2874,6 +2876,67 @@
         "title": "IyowActivityResponse",
         "description": "Response for an IYOW activity including type-specific detail."
       },
+      "IyowStudentSubmissionRow": {
+        "properties": {
+          "student_pid": {
+            "type": "integer",
+            "title": "Student Pid"
+          },
+          "given_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Given Name"
+          },
+          "family_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "submission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IyowSubmissionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_pid",
+          "given_name",
+          "family_name",
+          "email",
+          "submission"
+        ],
+        "title": "IyowStudentSubmissionRow",
+        "description": "One row in the instructor submissions roster view.\n\nIncludes every enrolled student. Students who have not submitted\nhave ``None`` for the submission fields."
+      },
       "IyowSubmissionResponse": {
         "properties": {
           "id": {
@@ -3624,67 +3687,6 @@
         ],
         "title": "RosterUploadStatusResponse",
         "description": "Detailed status of a roster upload job."
-      },
-      "StudentSubmissionRow": {
-        "properties": {
-          "student_pid": {
-            "type": "integer",
-            "title": "Student Pid"
-          },
-          "given_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Given Name"
-          },
-          "family_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Family Name"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
-          },
-          "submission": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/IyowSubmissionResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "student_pid",
-          "given_name",
-          "family_name",
-          "email",
-          "submission"
-        ],
-        "title": "StudentSubmissionRow",
-        "description": "One row in the instructor submissions roster view.\n\nIncludes every enrolled student. Students who have not submitted\nhave ``None`` for the submission fields."
       },
       "SubmitIyowRequest": {
         "properties": {

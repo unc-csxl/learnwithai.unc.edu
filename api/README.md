@@ -30,6 +30,8 @@ The main route files are:
 - `routes/auth.py`
 - `routes/me.py`
 - `routes/courses.py`
+- `routes/activities.py`
+- `routes/activities_iyow.py`
 - `routes/roster_uploads.py`
 - `routes/joke_generation.py`
 - `routes/ws.py` for `/api/ws/jobs`

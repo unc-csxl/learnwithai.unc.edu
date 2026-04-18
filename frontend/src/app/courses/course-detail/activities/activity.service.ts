@@ -6,22 +6,22 @@
 import { Injectable, inject } from '@angular/core';
 import { Api } from '../../../api/generated/api';
 import { listActivities } from '../../../api/generated/fn/activities/list-activities';
-import { getActivity } from '../../../api/generated/fn/activities/get-activity';
+import { getIyowActivity } from '../../../api/generated/fn/activities/get-iyow-activity';
 import { createIyowActivity } from '../../../api/generated/fn/activities/create-iyow-activity';
 import { updateIyowActivity as updateIyowActivityFn } from '../../../api/generated/fn/activities/update-iyow-activity';
 import { deleteActivity as deleteActivityFn } from '../../../api/generated/fn/activities/delete-activity';
 import { submitIyowResponse } from '../../../api/generated/fn/activities/submit-iyow-response';
-import { listSubmissions } from '../../../api/generated/fn/activities/list-submissions';
-import { listSubmissionsRoster } from '../../../api/generated/fn/activities/list-submissions-roster';
-import { getActiveSubmission } from '../../../api/generated/fn/activities/get-active-submission';
-import { getStudentSubmissionHistory } from '../../../api/generated/fn/activities/get-student-submission-history';
+import { listIyowSubmissions } from '../../../api/generated/fn/activities/list-iyow-submissions';
+import { listIyowSubmissionsRoster } from '../../../api/generated/fn/activities/list-iyow-submissions-roster';
+import { getIyowActiveSubmission } from '../../../api/generated/fn/activities/get-iyow-active-submission';
+import { getIyowStudentSubmissionHistory } from '../../../api/generated/fn/activities/get-iyow-student-submission-history';
 import {
   Activity,
   IyowActivity,
   IyowSubmission,
   CreateIyowActivity,
+  IyowStudentSubmissionRow,
   UpdateIyowActivity,
-  StudentSubmissionRow,
 } from '../../../api/models';
 
 /** Handles HTTP communication with the student activities API. */
@@ -34,9 +34,9 @@ export class ActivityService {
     return this.api.invoke(listActivities, { course_id: courseId });
   }
 
-  /** Gets a single activity detail. */
-  get(courseId: number, activityId: number): Promise<IyowActivity> {
-    return this.api.invoke(getActivity, { course_id: courseId, activity_id: activityId });
+  /** Gets a single IYOW activity detail. */
+  getIyow(courseId: number, activityId: number): Promise<IyowActivity> {
+    return this.api.invoke(getIyowActivity, { course_id: courseId, activity_id: activityId });
   }
 
   /** Creates an IYOW activity. */
@@ -71,31 +71,37 @@ export class ActivityService {
     });
   }
 
-  /** Lists submissions for an activity. */
-  listSubmissions(courseId: number, activityId: number): Promise<IyowSubmission[]> {
-    return this.api.invoke(listSubmissions, { course_id: courseId, activity_id: activityId });
+  /** Lists IYOW submissions for an activity. */
+  listIyowSubmissions(courseId: number, activityId: number): Promise<IyowSubmission[]> {
+    return this.api.invoke(listIyowSubmissions, { course_id: courseId, activity_id: activityId });
   }
 
-  /** Lists all enrolled students paired with their active submission (instructor view). */
-  listSubmissionsRoster(courseId: number, activityId: number): Promise<StudentSubmissionRow[]> {
-    return this.api.invoke(listSubmissionsRoster, {
+  /** Lists all enrolled students paired with their active IYOW submission (instructor view). */
+  listIyowSubmissionsRoster(
+    courseId: number,
+    activityId: number,
+  ): Promise<IyowStudentSubmissionRow[]> {
+    return this.api.invoke(listIyowSubmissionsRoster, {
       course_id: courseId,
       activity_id: activityId,
     });
   }
 
-  /** Gets the student's current active submission. */
-  getActiveSubmission(courseId: number, activityId: number): Promise<IyowSubmission | null> {
-    return this.api.invoke(getActiveSubmission, { course_id: courseId, activity_id: activityId });
+  /** Gets the student's current active IYOW submission. */
+  getIyowActiveSubmission(courseId: number, activityId: number): Promise<IyowSubmission | null> {
+    return this.api.invoke(getIyowActiveSubmission, {
+      course_id: courseId,
+      activity_id: activityId,
+    });
   }
 
-  /** Gets all submissions for a specific student on an activity (instructor). */
-  getStudentHistory(
+  /** Gets all IYOW submissions for a specific student on an activity (instructor). */
+  getIyowStudentHistory(
     courseId: number,
     activityId: number,
     studentPid: number,
   ): Promise<IyowSubmission[]> {
-    return this.api.invoke(getStudentSubmissionHistory, {
+    return this.api.invoke(getIyowStudentSubmissionHistory, {
       course_id: courseId,
       activity_id: activityId,
       student_pid: studentPid,

@@ -23,15 +23,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PageTitleService } from '../../../../page-title.service';
-import { SuccessSnackbarService } from '../../../../success-snackbar.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { CourseService } from '../../../course.service';
-import { ActivityService } from '../activity.service';
-import { buildActivityContextNav } from '../activity-nav';
-import { IyowActivity, IyowSubmission } from '../../../../api/models';
-import { MarkdownToHtmlPipe } from '../../../../shared/markdown-to-html.pipe';
+import { PageTitleService } from '../../../../../page-title.service';
+import { SuccessSnackbarService } from '../../../../../success-snackbar.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { CourseService } from '../../../../course.service';
+import { ActivityService } from '../../activity.service';
+import { buildActivityContextNav } from '../../activity-nav';
+import { IyowActivity, IyowSubmission } from '../../../../../api/models';
+import { MarkdownToHtmlPipe } from '../../../../../shared/markdown-to-html.pipe';
 
 /** Student view for submitting an IYOW response and viewing feedback. */
 @Component({
@@ -155,8 +155,8 @@ export class IyowSubmit implements OnDestroy {
   private async loadData(): Promise<void> {
     try {
       const [activity, active, courses] = await Promise.all([
-        this.activityService.get(this.courseId, this.activityId),
-        this.activityService.getActiveSubmission(this.courseId, this.activityId),
+        this.activityService.getIyow(this.courseId, this.activityId),
+        this.activityService.getIyowActiveSubmission(this.courseId, this.activityId),
         this.courseService.getMyCourses(),
       ]);
       const course = courses.find((candidate) => candidate.id === this.courseId);
@@ -168,6 +168,7 @@ export class IyowSubmit implements OnDestroy {
         buildActivityContextNav({
           courseId: this.courseId,
           activityId: this.activityId,
+          activityType: activity.type,
           role: isStaff ? 'staff' : 'student',
         }),
       );
@@ -196,7 +197,10 @@ export class IyowSubmit implements OnDestroy {
 
   private async refreshActiveSubmission(): Promise<void> {
     try {
-      const active = await this.activityService.getActiveSubmission(this.courseId, this.activityId);
+      const active = await this.activityService.getIyowActiveSubmission(
+        this.courseId,
+        this.activityId,
+      );
       this.setActiveSubmission(active);
     } catch {
       /* swallow */

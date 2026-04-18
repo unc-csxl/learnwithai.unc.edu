@@ -7,15 +7,15 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { StudentSubmissionRow } from '../../models/student-submission-row';
+import { IyowActivityResponse } from '../../models/iyow-activity-response';
 
-export interface ListSubmissionsRoster$Params {
+export interface GetIyowActivity$Params {
   course_id: number;
   activity_id: number;
 }
 
-export function listSubmissionsRoster(http: HttpClient, rootUrl: string, params: ListSubmissionsRoster$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<StudentSubmissionRow>>> {
-  const rb = new RequestBuilder(rootUrl, listSubmissionsRoster.PATH, 'get');
+export function getIyowActivity(http: HttpClient, rootUrl: string, params: GetIyowActivity$Params, context?: HttpContext): Observable<StrictHttpResponse<IyowActivityResponse>> {
+  const rb = new RequestBuilder(rootUrl, getIyowActivity.PATH, 'get');
   if (params) {
     rb.path('course_id', params.course_id, {});
     rb.path('activity_id', params.activity_id, {});
@@ -26,9 +26,9 @@ export function listSubmissionsRoster(http: HttpClient, rootUrl: string, params:
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<StudentSubmissionRow>>;
+      return r as StrictHttpResponse<IyowActivityResponse>;
     })
   );
 }
 
-listSubmissionsRoster.PATH = '/api/courses/{course_id}/activities/{activity_id}/submissions/roster';
+getIyowActivity.PATH = '/api/courses/{course_id}/activities/iyow/{activity_id}';

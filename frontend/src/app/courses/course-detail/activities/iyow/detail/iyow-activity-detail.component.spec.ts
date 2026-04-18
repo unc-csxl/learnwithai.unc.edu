@@ -6,22 +6,24 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { ActivityDetail } from './activity-detail.component';
-import { PageTitleService } from '../../../../page-title.service';
-import { JobUpdateService } from '../../../../job-update.service';
-import { LayoutNavigationService } from '../../../../layout/layout-navigation.service';
-import { ActivityService } from '../activity.service';
-import { StudentSubmissionRow } from '../../../../api/models';
-import { AsyncJobStatus } from '../../../../api/generated/models/async-job-status';
+import { IyowActivityDetail } from './iyow-activity-detail.component';
+import { PageTitleService } from '../../../../../page-title.service';
+import { JobUpdateService } from '../../../../../job-update.service';
+import { LayoutNavigationService } from '../../../../../layout/layout-navigation.service';
+import { ActivityService } from '../../activity.service';
+import { ACTIVITY_TYPE_OPTIONS } from '../../activity-types';
+import { IyowStudentSubmissionRow } from '../../../../../api/models';
+import { AsyncJobStatus } from '../../../../../api/generated/models/async-job-status';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve));
+const defaultType = ACTIVITY_TYPE_OPTIONS[0];
 
 const baseActivity = {
   id: 10,
   title: 'Test IYOW',
   prompt: 'Explain X',
   rubric: null as string | null,
-  type: 'iyow',
+  type: defaultType.backendType,
   release_date: '2025-01-01T00:00:00Z',
   due_date: '2025-06-01T00:00:00Z',
   late_date: null as string | null,
@@ -29,7 +31,7 @@ const baseActivity = {
   created_at: '2025-01-01T00:00:00Z',
 };
 
-const rosterRows: StudentSubmissionRow[] = [
+const rosterRows: IyowStudentSubmissionRow[] = [
   {
     student_pid: 111,
     given_name: 'Alice',
@@ -62,7 +64,7 @@ const rosterRows: StudentSubmissionRow[] = [
   },
 ];
 
-describe('ActivityDetail', () => {
+describe('IyowActivityDetail', () => {
   function setup(overrides: { activityService?: object } = {}) {
     const mockPageTitle = { title: vi.fn(), setTitle: vi.fn() };
     const mockJobUpdate = {
@@ -71,8 +73,8 @@ describe('ActivityDetail', () => {
       updateForJob: vi.fn(),
     };
     const mockActivityService = overrides.activityService ?? {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([...rosterRows])),
     };
     const mockRoute = {
       parent: { parent: { snapshot: { paramMap: new Map([['id', '1']]) } } },
@@ -82,7 +84,7 @@ describe('ActivityDetail', () => {
     const mockLayoutNavigation = { setContextSection: vi.fn(), clearContext: vi.fn() };
 
     TestBed.configureTestingModule({
-      imports: [ActivityDetail],
+      imports: [IyowActivityDetail],
       providers: [
         provideRouter([]),
         provideNoopAnimations(),
@@ -94,7 +96,7 @@ describe('ActivityDetail', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(ActivityDetail);
+    const fixture = TestBed.createComponent(IyowActivityDetail);
     fixture.detectChanges();
 
     return { fixture, mockPageTitle, mockJobUpdate, mockActivityService, mockLayoutNavigation };
@@ -122,8 +124,8 @@ describe('ActivityDetail', () => {
 
   it('should show error on load failure', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.reject(new Error('fail'))),
-      listSubmissionsRoster: vi.fn(() => Promise.reject(new Error('fail'))),
+      getIyow: vi.fn(() => Promise.reject(new Error('fail'))),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.reject(new Error('fail'))),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -152,14 +154,14 @@ describe('ActivityDetail', () => {
 
   it('should keep the activity information card limited to release and due dates', async () => {
     const mockActivityService = {
-      get: vi.fn(() =>
+      getIyow: vi.fn(() =>
         Promise.resolve({
           ...baseActivity,
           late_date: '2025-07-01T00:00:00Z',
           rubric: 'Must explain clearly',
         }),
       ),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([])),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([])),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -191,10 +193,32 @@ describe('ActivityDetail', () => {
     expect(link!.textContent).toContain('Anderson, Alice');
   });
 
+  it('should fall back to the registry default route segment when activity type is unavailable', async () => {
+    const { fixture } = setup();
+    await flush();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance as unknown as {
+      activity: { set: (value: null) => void };
+      submissionLink: (studentPid: number) => Array<string | number>;
+    };
+
+    comp.activity.set(null);
+    expect(comp.submissionLink(111)).toEqual([
+      '/courses',
+      1,
+      'activities',
+      '10',
+      defaultType.routeSegment,
+      'submissions',
+      '111',
+    ]);
+  });
+
   it('should show "No students found" when roster is empty', async () => {
     const mockActivityService = {
-      get: vi.fn(() => Promise.resolve({ ...baseActivity })),
-      listSubmissionsRoster: vi.fn(() => Promise.resolve([])),
+      getIyow: vi.fn(() => Promise.resolve({ ...baseActivity })),
+      listIyowSubmissionsRoster: vi.fn(() => Promise.resolve([])),
     };
     const { fixture } = setup({ activityService: mockActivityService });
     await flush();
@@ -244,13 +268,13 @@ describe('ActivityDetail', () => {
   it('should return correct status labels', async () => {
     const { fixture } = setup();
     const comp = fixture.componentInstance as unknown as {
-      statusLabel: (row: StudentSubmissionRow) => string;
+      statusLabel: (row: IyowStudentSubmissionRow) => string;
     };
 
     expect(comp.statusLabel(rosterRows[0])).toBe('Graded');
     expect(comp.statusLabel(rosterRows[1])).toBe('Not submitted');
 
-    const processingRow: StudentSubmissionRow = {
+    const processingRow: IyowStudentSubmissionRow = {
       ...rosterRows[0],
       submission: {
         ...rosterRows[0].submission!,
@@ -259,7 +283,7 @@ describe('ActivityDetail', () => {
     };
     expect(comp.statusLabel(processingRow)).toBe('Processing');
 
-    const submittedRow: StudentSubmissionRow = {
+    const submittedRow: IyowStudentSubmissionRow = {
       ...rosterRows[0],
       submission: { ...rosterRows[0].submission!, feedback: null, job: null },
     };
@@ -367,7 +391,7 @@ describe('ActivityDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      filteredRows: { (): StudentSubmissionRow[] };
+      filteredRows: { (): IyowStudentSubmissionRow[] };
       sortDirection: { (): string };
     };
 
@@ -391,7 +415,7 @@ describe('ActivityDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      filteredRows: { (): StudentSubmissionRow[] };
+      filteredRows: { (): IyowStudentSubmissionRow[] };
       sortDirection: { (): string };
     };
 
@@ -414,7 +438,7 @@ describe('ActivityDetail', () => {
     fixture.detectChanges();
 
     const comp = fixture.componentInstance as unknown as {
-      filteredRows: { (): StudentSubmissionRow[] };
+      filteredRows: { (): IyowStudentSubmissionRow[] };
       sortDirection: { (): string };
     };
 

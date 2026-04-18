@@ -37,10 +37,10 @@ export type { AsyncJobStatus } from './generated/models/async-job-status';
 export type { ActivityResponse as Activity } from './generated/models/activity-response';
 export type { IyowActivityResponse as IyowActivity } from './generated/models/iyow-activity-response';
 export type { IyowSubmissionResponse as IyowSubmission } from './generated/models/iyow-submission-response';
+export type { IyowStudentSubmissionRow } from './generated/models/iyow-student-submission-row';
 export type { CreateIyowActivityRequest as CreateIyowActivity } from './generated/models/create-iyow-activity-request';
 export type { UpdateIyowActivityRequest as UpdateIyowActivity } from './generated/models/update-iyow-activity-request';
 export type { SubmitIyowRequest as SubmitIyow } from './generated/models/submit-iyow-request';
-export type { StudentSubmissionRow } from './generated/models/student-submission-row';
 
 // Operator / Admin
 export type { OperatorProfile } from './generated/models/operator-profile';

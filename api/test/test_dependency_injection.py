@@ -194,11 +194,10 @@ def test_activity_service_factory_returns_service() -> None:
 def test_iyow_activity_service_factory_returns_service() -> None:
     from learnwithai.activities.iyow.service import IyowActivityService
 
-    activity_repo = MagicMock()
+    activity_svc = MagicMock()
     iyow_activity_repo = MagicMock()
-    membership_repo = MagicMock()
 
-    result = iyow_activity_service_factory(activity_repo, iyow_activity_repo, membership_repo)
+    result = iyow_activity_service_factory(activity_svc, iyow_activity_repo)
 
     assert isinstance(result, IyowActivityService)
 
@@ -206,9 +205,7 @@ def test_iyow_activity_service_factory_returns_service() -> None:
 def test_iyow_submission_service_factory_returns_service() -> None:
     from learnwithai.activities.iyow.submission_service import IyowSubmissionService
 
-    result = iyow_submission_service_factory(
-        MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock()
-    )
+    result = iyow_submission_service_factory(MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock())
 
     assert isinstance(result, IyowSubmissionService)
 

@@ -9,13 +9,13 @@ import { RequestBuilder } from '../../request-builder';
 
 import { IyowSubmissionResponse } from '../../models/iyow-submission-response';
 
-export interface ListSubmissions$Params {
+export interface ListIyowSubmissions$Params {
   course_id: number;
   activity_id: number;
 }
 
-export function listSubmissions(http: HttpClient, rootUrl: string, params: ListSubmissions$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<IyowSubmissionResponse>>> {
-  const rb = new RequestBuilder(rootUrl, listSubmissions.PATH, 'get');
+export function listIyowSubmissions(http: HttpClient, rootUrl: string, params: ListIyowSubmissions$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<IyowSubmissionResponse>>> {
+  const rb = new RequestBuilder(rootUrl, listIyowSubmissions.PATH, 'get');
   if (params) {
     rb.path('course_id', params.course_id, {});
     rb.path('activity_id', params.activity_id, {});
@@ -31,4 +31,4 @@ export function listSubmissions(http: HttpClient, rootUrl: string, params: ListS
   );
 }
 
-listSubmissions.PATH = '/api/courses/{course_id}/activities/{activity_id}/submissions';
+listIyowSubmissions.PATH = '/api/courses/{course_id}/activities/iyow/{activity_id}/submissions';

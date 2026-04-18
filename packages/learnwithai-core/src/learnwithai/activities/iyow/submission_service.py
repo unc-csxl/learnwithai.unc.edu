@@ -7,7 +7,6 @@ from datetime import datetime
 
 from ...errors import AuthorizationError
 from ...interfaces import JobQueue
-from ...repositories.activity_repository import ActivityRepository
 from ...repositories.async_job_repository import AsyncJobRepository
 from ...repositories.membership_repository import MembershipRepository
 from ...repositories.submission_repository import SubmissionRepository
@@ -18,7 +17,7 @@ from ...tables.membership import MembershipType
 from ...tables.submission import Submission
 from ...tables.user import User
 from .models import IYOW_FEEDBACK_KIND, IyowFeedbackJob
-from .repository import IyowActivityRepository, IyowSubmissionRepository
+from .repository import IyowSubmissionRepository
 from .tables import IyowSubmission
 
 
@@ -27,8 +26,6 @@ class IyowSubmissionService:
 
     def __init__(
         self,
-        activity_repo: ActivityRepository,
-        iyow_activity_repo: IyowActivityRepository,
         submission_repo: SubmissionRepository,
         iyow_submission_repo: IyowSubmissionRepository,
         async_job_repo: AsyncJobRepository,
@@ -38,16 +35,12 @@ class IyowSubmissionService:
         """Initializes the service with its dependencies.
 
         Args:
-            activity_repo: Repository for base activity records.
-            iyow_activity_repo: Repository for IYOW activity details.
             submission_repo: Repository for base submission records.
             iyow_submission_repo: Repository for IYOW submission details.
             async_job_repo: Repository for async job tracking.
             membership_repo: Repository for course membership lookups.
             job_queue: Queue used to dispatch feedback jobs.
         """
-        self._activity_repo = activity_repo
-        self._iyow_activity_repo = iyow_activity_repo
         self._submission_repo = submission_repo
         self._iyow_submission_repo = iyow_submission_repo
         self._async_job_repo = async_job_repo
