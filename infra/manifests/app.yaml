@@ -41,6 +41,9 @@ spec:
     type: Docker
     dockerStrategy:
       dockerfilePath: infra/Dockerfile
+      buildArgs:
+        - name: ENVIRONMENT
+          value: "${ENVIRONMENT}"
   output:
     to:
       kind: ImageStreamTag
@@ -93,7 +96,7 @@ spec:
                 name: learnwithai-secrets
           env:
             - name: ENVIRONMENT
-              value: "production"
+              value: "${ENVIRONMENT}"
             - name: STATIC_DIR
               value: "/app/static"
             - name: LOG_LEVEL

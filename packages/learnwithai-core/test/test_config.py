@@ -177,29 +177,40 @@ def test_environment_flags_reflect_current_environment() -> None:
     # Arrange
     development_settings = build_settings(environment="development")
     test_settings = build_settings(environment="test")
+    stage_settings = build_settings(environment="stage")
     production_settings = build_settings(environment="production")
 
     # Act
     development_flags = (
         development_settings.is_development,
         development_settings.is_test,
+        development_settings.is_stage,
         development_settings.is_production,
     )
     test_flags = (
         test_settings.is_development,
         test_settings.is_test,
+        test_settings.is_stage,
         test_settings.is_production,
+    )
+    stage_flags = (
+        stage_settings.is_development,
+        stage_settings.is_test,
+        stage_settings.is_stage,
+        stage_settings.is_production,
     )
     production_flags = (
         production_settings.is_development,
         production_settings.is_test,
+        production_settings.is_stage,
         production_settings.is_production,
     )
 
     # Assert
-    assert development_flags == (True, False, False)
-    assert test_flags == (False, True, False)
-    assert production_flags == (False, False, True)
+    assert development_flags == (True, False, False, False)
+    assert test_flags == (False, True, False, False)
+    assert stage_flags == (False, False, True, False)
+    assert production_flags == (False, False, False, True)
 
 
 def test_get_settings_returns_cached_settings_instance() -> None:

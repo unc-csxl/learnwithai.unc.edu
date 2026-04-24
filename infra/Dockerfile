@@ -3,6 +3,10 @@
 # -----------------------------------------------------------------------------
 FROM node:24-slim AS frontend-build
 
+# `ENVIRONMENT=stage` builds the development bundle (dev login button visible);
+# any other value uses the default production bundle.
+ARG ENVIRONMENT=production
+
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
 WORKDIR /build/frontend
@@ -10,7 +14,11 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY frontend/ ./
-RUN pnpm build
+RUN if [ "$ENVIRONMENT" = "stage" ]; then \
+        pnpm build --configuration=development; \
+    else \
+        pnpm build; \
+    fi
 
 # -----------------------------------------------------------------------------
 # Stage 2 – Production Python image
@@ -40,7 +48,8 @@ COPY --from=frontend-build /build/frontend/dist/learnwithai/browser/ /app/static
 # Switch to non-root user
 USER app
 
-ENV ENVIRONMENT=production \
+ARG ENVIRONMENT=production
+ENV ENVIRONMENT=${ENVIRONMENT} \
     PATH=/app/.venv/bin:$PATH \
     STATIC_DIR=/app/static \
     PYTHONUNBUFFERED=1

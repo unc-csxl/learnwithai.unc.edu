@@ -36,7 +36,7 @@ spec:
                 name: learnwithai-secrets
           env:
             - name: ENVIRONMENT
-              value: "production"
+              value: "${ENVIRONMENT}"
             - name: LOG_LEVEL
               value: "INFO"
           resources:

@@ -40,6 +40,8 @@ Usage:
 Options:
   --repo-url <url>               Git repository URL for OKD to clone.
   --git-ref <ref>                Git branch or ref to build from. Default: main.
+  --environment <name>           Target environment baked into the image and runtime
+                                 env. One of: production, stage. Default: production.
   --key-path <path>              Private SSH key path for the OKD source clone secret.
   --rotate-deploy-key            Generate a fresh GitHub deploy key even if one exists.
   --github-webhook-secret <val>  Override the GitHub webhook secret value.
@@ -102,7 +104,7 @@ extract_repo_host() {
 }
 
 apply_manifest() {
-    envsubst '${NAMESPACE} ${GIT_REPO_URL} ${GIT_REF}' < "$1" | oc apply -f -
+    envsubst '${NAMESPACE} ${GIT_REPO_URL} ${GIT_REF} ${ENVIRONMENT}' < "$1" | oc apply -f -
 }
 
 resolve_runtime_secrets_file() {
@@ -211,6 +213,7 @@ print_webhook_summary() {
 NAMESPACE=""
 GIT_REPO_URL="${GIT_REPO_URL:-}"
 GIT_REF="${GIT_REF:-main}"
+ENVIRONMENT="${ENVIRONMENT:-production}"
 KEY_PATH="${OKD_DEPLOY_KEY_PATH:-}"
 GITHUB_WEBHOOK_SECRET="${GITHUB_WEBHOOK_SECRET:-}"
 GENERIC_WEBHOOK_SECRET="${GENERIC_WEBHOOK_SECRET:-}"
@@ -227,6 +230,10 @@ while [ $# -gt 0 ]; do
             ;;
         --git-ref|--ref)
             GIT_REF="$2"
+            shift 2
+            ;;
+        --environment)
+            ENVIRONMENT="$2"
             shift 2
             ;;
         --key-path)
@@ -269,6 +276,11 @@ done
 
 [ -n "$NAMESPACE" ] || fail "Usage: $0 <namespace> [options]"
 
+case "$ENVIRONMENT" in
+    production|stage) ;;
+    *) fail "--environment must be one of: production, stage (got: $ENVIRONMENT)" ;;
+esac
+
 require_command oc
 require_command envsubst
 require_command curl
@@ -298,6 +310,7 @@ fi
 export NAMESPACE
 export GIT_REPO_URL
 export GIT_REF
+export ENVIRONMENT
 
 info "Target namespace: $NAMESPACE"
 info "Git source: $GIT_REPO_URL @ $GIT_REF"

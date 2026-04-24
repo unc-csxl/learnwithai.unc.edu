@@ -9,9 +9,10 @@
 # This workflow is intentionally developer-focused. It:
 #   1. scales the app and worker deployments down to 0
 #   2. drops and recreates the application database in PostgreSQL
-#   3. runs a one-off bootstrap Job from the app image with a mounted bootstrap
-#      script from the local checkout that creates SQLModel tables and inserts
-#      a dummy user
+#   3. runs a one-off Job from the app image that invokes
+#      `packages/learnwithai-core/scripts/reset_database.py`, which (re)creates
+#      the SQLModel schema and seeds development data. The Job inherits the
+#      app deployment's ENVIRONMENT (must be `development` or `stage`).
 #   4. restores the app and worker replica counts
 #
 # Usage:
@@ -134,30 +135,6 @@ secret_value() {
     oc get secret "$secret_name" -n "$NAMESPACE" -o "go-template={{index .data \"$key\"}}" | base64 -d
 }
 
-deployment_env_value() {
-    local deployment_name="$1"
-    local key="$2"
-
-    oc exec "deployment/$deployment_name" -n "$NAMESPACE" -- sh -lc "printenv \"$key\""
-}
-
-postgres_setting() {
-    local key="$1"
-    local value=""
-
-    if value="$(deployment_env_value learnwithai-postgres "$key" 2>/dev/null)" && [ -n "$value" ]; then
-        echo "$value"
-        return
-    fi
-
-    if value="$(secret_value learnwithai-postgres-credentials "$key" 2>/dev/null)" && [ -n "$value" ]; then
-        echo "$value"
-        return
-    fi
-
-    fail "Could not resolve $key from the running PostgreSQL deployment or learnwithai-postgres-credentials secret."
-}
-
 wait_for_scaledown() {
     local label="$1"
 
@@ -177,8 +154,21 @@ info "Target namespace: $NAMESPACE"
 APP_REPLICAS="$(get_replicas learnwithai-app)"
 WORKER_REPLICAS="$(get_replicas learnwithai-worker)"
 
-POSTGRESQL_USER="$(postgres_setting POSTGRESQL_USER)"
-POSTGRESQL_DATABASE="$(postgres_setting POSTGRESQL_DATABASE)"
+POSTGRESQL_USER="$(secret_value learnwithai-postgres-credentials POSTGRESQL_USER)"
+POSTGRESQL_DATABASE="$(secret_value learnwithai-postgres-credentials POSTGRESQL_DATABASE)"
+
+[ -n "$POSTGRESQL_USER" ] || fail "Could not read POSTGRESQL_USER from secret learnwithai-postgres-credentials in namespace $NAMESPACE."
+[ -n "$POSTGRESQL_DATABASE" ] || fail "Could not read POSTGRESQL_DATABASE from secret learnwithai-postgres-credentials in namespace $NAMESPACE."
+
+APP_ENVIRONMENT="$(oc get deployment/learnwithai-app -n "$NAMESPACE" -o jsonpath='{.spec.template.spec.containers[?(@.name=="app")].env[?(@.name=="ENVIRONMENT")].value}' 2>/dev/null || true)"
+if [ -z "$APP_ENVIRONMENT" ]; then
+    APP_ENVIRONMENT="production"
+fi
+case "$APP_ENVIRONMENT" in
+    development|stage) ;;
+    *) fail "reset_db.sh refuses to seed dev data in environment '$APP_ENVIRONMENT'. Re-deploy with --environment stage to enable seeding." ;;
+esac
+info "App deployment ENVIRONMENT=$APP_ENVIRONMENT"
 
 BOOTSTRAP_JOB="learnwithai-db-bootstrap-$(date +%s)"
 BOOTSTRAP_IMAGE="image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/learnwithai-app:latest"
@@ -220,8 +210,7 @@ cat > "$JOB_MANIFEST" <<EOF
                         "imagePullPolicy": "Always",
                         "command": [
                             "/app/.venv/bin/python",
-                            "-c",
-                            "import learnwithai.tables; from learnwithai.db import create_db_and_tables; create_db_and_tables(); print('Created tables.')"
+                            "/app/packages/learnwithai-core/scripts/reset_database.py"
                         ],
                         "envFrom": [
                             {
@@ -233,7 +222,7 @@ cat > "$JOB_MANIFEST" <<EOF
                         "env": [
                             {
                                 "name": "ENVIRONMENT",
-                                "value": "production"
+                                "value": "$APP_ENVIRONMENT"
                             }
                         ]
                     }

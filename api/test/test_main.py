@@ -79,6 +79,19 @@ def test_app_excludes_dev_routes_in_production() -> None:
     assert "/api/dev/reset-db" not in route_paths
 
 
+def test_app_includes_dev_routes_in_stage() -> None:
+    # Arrange
+    stage_settings = Settings.model_construct(_fields_set=None, environment="stage", app_name="learnwithai")
+
+    # Act
+    stage_app = create_app(stage_settings)
+    route_paths = {route.path for route in stage_app.routes if isinstance(route, APIRoute)}
+
+    # Assert
+    assert "/api/auth/as/{pid}" in route_paths
+    assert "/api/dev/reset-db" in route_paths
+
+
 def test_app_exposes_expected_openapi_tags() -> None:
     # Arrange
     expected_tag_names = {tag["name"] for tag in OPENAPI_TAGS}

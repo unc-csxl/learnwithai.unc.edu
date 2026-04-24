@@ -24,8 +24,8 @@ def main() -> None:
     """Reset the development database and insert seed data."""
     settings = Settings()
 
-    if settings.environment != "development":
-        print("This script can only be run in development.", file=sys.stderr)
+    if settings.environment not in {"development", "stage"}:
+        print("This script can only be run in development or stage.", file=sys.stderr)
         print("Add ENVIRONMENT=development to your .env file.", file=sys.stderr)
         raise SystemExit(1)
 

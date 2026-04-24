@@ -63,7 +63,7 @@ def mount_spa(application: FastAPI, static_dir: Path) -> None:
 
 
 def configure_spa(application: FastAPI, settings: Settings) -> None:
-    """Enables SPA/static file serving when running in production."""
+    """Enables SPA/static file serving when running in production or stage."""
     static_dir = resolve_static_dir(settings)
-    if settings.is_production and static_dir.is_dir():
+    if (settings.is_production or settings.is_stage) and static_dir.is_dir():
         mount_spa(application, static_dir)  # pragma: no cover
