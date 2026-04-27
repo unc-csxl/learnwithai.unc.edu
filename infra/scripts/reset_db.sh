@@ -180,7 +180,7 @@ wait_for_scaledown 'app.kubernetes.io/name=learnwithai-app'
 wait_for_scaledown 'app.kubernetes.io/name=learnwithai-worker'
 
 info "Dropping and recreating database $POSTGRESQL_DATABASE..."
-oc exec deployment/learnwithai-postgres -n "$NAMESPACE" -- sh -lc "psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c \"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRESQL_DATABASE' AND pid <> pg_backend_pid();\" -c \"DROP DATABASE IF EXISTS \\\"$POSTGRESQL_DATABASE\\\";\" -c \"CREATE DATABASE \\\"$POSTGRESQL_DATABASE\\\" OWNER \\\"$POSTGRESQL_USER\\\";\""
+oc exec deployment/learnwithai-postgres -n "$NAMESPACE" -- sh -lc "psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c \"ALTER USER \\\"$POSTGRESQL_USER\\\" CREATEDB;\" -c \"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRESQL_DATABASE' AND pid <> pg_backend_pid();\" -c \"DROP DATABASE IF EXISTS \\\"$POSTGRESQL_DATABASE\\\";\" -c \"CREATE DATABASE \\\"$POSTGRESQL_DATABASE\\\" OWNER \\\"$POSTGRESQL_USER\\\";\""
 
 info "Running SQLModel bootstrap job $BOOTSTRAP_JOB..."
 oc delete job "$BOOTSTRAP_JOB" -n "$NAMESPACE" --ignore-not-found=true >/dev/null 2>&1 || true
